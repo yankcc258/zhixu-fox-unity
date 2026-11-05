@@ -43,8 +43,9 @@ namespace Kiko.EditorTools
                 AssetDatabase.CreateAsset(rp, rpPath);
             }
             rp.supportsHDR = false; // UniWindowController：URP 下 HDR 必须关，不然背景透明会丢
-            rp.msaaSampleCount = 4;
-            rp.renderScale = 1f;
+            rp.msaaSampleCount = 2;
+            rp.renderScale = 2f; // 2 倍超采样再缩回窗口大小（Tauri 版也是这样），1080p 上头发和蕾丝才不糊
+            QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
             var so = new SerializedObject(rp);
             var alpha = so.FindProperty("m_AllowPostProcessAlphaOutput"); // 「Alpha Processing」
             if (alpha != null) alpha.boolValue = true;
@@ -157,6 +158,26 @@ namespace Kiko.EditorTools
             d.SetFloat("_UseRim", useRim ? 1 : 0);
             if (useRim) { d.SetColor("_RimColor", rim); d.SetFloat("_RimFresnelPower", F(s, "_RimFresnelPower", 3.5f)); }
 
+            // 身体：40D 透肤丝袜。贴图在丝袜区域预先混进肤色（正面透肉的样子），lilToon 的「边缘阴影」只在丝袜区域把侧面压暗
+            // （= Tauri 版自写着色器的 mix(肤色, 黑丝, mix(1, 0.62, facing^2))），贴图和遮罩由 tools 里的脚本从 kiko.vrm 生成
+            if (s.name.Contains("Body_00_SKIN"))
+            {
+                var sheer = AssetDatabase.LoadAssetAtPath<Texture2D>(Root + "/Textures/body_sheer.png");
+                var mask = AssetDatabase.LoadAssetAtPath<Texture2D>(Root + "/Textures/body_sheer_mask.png");
+                if (sheer && mask)
+                {
+                    d.SetTexture("_MainTex", sheer);
+                    d.SetFloat("_UseRimShade", 1);
+                    d.SetTexture("_RimShadeMask", mask);
+                    d.SetColor("_RimShadeColor", new Color(0.30f, 0.28f, 0.33f, 1f));
+                    d.SetFloat("_RimShadeBorder", 0.35f);
+                    d.SetFloat("_RimShadeBlur", 0.75f);
+                    d.SetFloat("_RimShadeFresnelPower", 2f);
+                    d.SetFloat("_RimShadeNormalStrength", 1f);
+                }
+                else Debug.LogWarning("[Kiko] 没找到 body_sheer.png / body_sheer_mask.png，丝袜不透");
+            }
+
             if (outline)
             {
                 // MToon 世界坐标宽度（米）→ lilToon 宽度（厘米）
@@ -232,7 +253,7 @@ namespace Kiko.EditorTools
                 scenes = new[] { ScenePath },
                 locationPathName = BuildPath,
                 target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.None,
+                options = BuildOptions.CompressWithLz4HC, // 贴图还没压成 BC7 前，先靠 LZ4HC 把包压小
             });
             var mb = r.summary.totalSize / 1048576.0;
             Debug.Log($"[Kiko] ④ 打包 {r.summary.result}：{BuildPath}，{mb:F1} MB，{r.summary.totalTime.TotalSeconds:F0} 秒，错误 {r.summary.totalErrors}");

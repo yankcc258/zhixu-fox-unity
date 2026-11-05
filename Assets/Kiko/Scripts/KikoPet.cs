@@ -48,6 +48,7 @@ namespace Kiko
         float scale = 1f;
         string logPath;
         float nextStat;
+        double lastCpu, lastCpuT;
 
         void Awake()
         {
@@ -122,6 +123,8 @@ namespace Kiko
             UpdateLook();
             UpdatePose(dt);
             UpdateFace(dt);
+            // 省电：没人碰她、也没在掉落时 30 帧，鼠标在身上/拖着/掉落时 60 帧
+            Application.targetFrameRate = state == State.Idle && !over && Time.time > flinchUntil ? 30 : 60;
             if (Time.time > nextStat) { nextStat = Time.time + 30f; LogStats(); }
         }
 
@@ -265,7 +268,12 @@ namespace Kiko
         void LogStats()
         {
             var p = Process.GetCurrentProcess();
-            Log($"stats ws={p.WorkingSet64 / 1048576}MB private={p.PrivateMemorySize64 / 1048576}MB mono={System.GC.GetTotalMemory(false) / 1048576}MB fps={1f / Mathf.Max(Time.smoothDeltaTime, 1e-4f):F0} cpu={p.TotalProcessorTime.TotalSeconds:F1}s");
+            var (ws, commit) = Win32.Memory;
+            double cpu = p.TotalProcessorTime.TotalSeconds, now = Time.realtimeSinceStartup;
+            // CPU 占用 = 这 30 秒里用掉的 CPU 秒数 / 30 秒 / 逻辑核心数
+            double pct = lastCpuT > 0 ? (cpu - lastCpu) / (now - lastCpuT) / System.Environment.ProcessorCount * 100 : 0;
+            lastCpu = cpu; lastCpuT = now;
+            Log($"stats ws={ws}MB commit={commit}MB mono={System.GC.GetTotalMemory(false) / 1048576}MB fps={1f / Mathf.Max(Time.smoothDeltaTime, 1e-4f):F0} cpu={pct:F1}% (全机) gpu={SystemInfo.graphicsDeviceName}");
         }
 
         void Log(string s)

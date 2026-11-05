@@ -94,6 +94,26 @@ namespace Kiko
         public static bool LeftDown => (GetAsyncKeyState(0x01) & 0x8000) != 0;
         public static bool RightDown => (GetAsyncKeyState(0x02) & 0x8000) != 0;
         public static bool ShiftDown => (GetAsyncKeyState(0x10) & 0x8000) != 0;
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct PROCESS_MEMORY_COUNTERS
+        {
+            public uint cb, PageFaultCount;
+            public UIntPtr PeakWorkingSetSize, WorkingSetSize, QuotaPeakPagedPoolUsage, QuotaPagedPoolUsage,
+                QuotaPeakNonPagedPoolUsage, QuotaNonPagedPoolUsage, PagefileUsage, PeakPagefileUsage;
+        }
+        [DllImport("kernel32.dll")] static extern IntPtr GetCurrentProcess();
+        [DllImport("psapi.dll")] static extern bool GetProcessMemoryInfo(IntPtr p, out PROCESS_MEMORY_COUNTERS c, uint cb);
+
+        /// (工作集 MB, 提交内存 MB)。Mono 的 Process.WorkingSet64 在 Unity 里是 0，所以直接问 Windows
+        public static (long ws, long commit) Memory
+        {
+            get
+            {
+                if (!GetProcessMemoryInfo(GetCurrentProcess(), out var c, (uint)Marshal.SizeOf<PROCESS_MEMORY_COUNTERS>())) return (0, 0);
+                return ((long)c.WorkingSetSize.ToUInt64() / 1048576, (long)c.PagefileUsage.ToUInt64() / 1048576);
+            }
+        }
 #else
         // 编辑器里：用 Unity 自己的窗口坐标模拟，方便在 Game 视图里点着试
         static Vector2Int _fakePos;
@@ -113,6 +133,7 @@ namespace Kiko
         public static bool LeftDown => UnityEngine.Input.GetMouseButton(0);
         public static bool RightDown => UnityEngine.Input.GetMouseButton(1);
         public static bool ShiftDown => UnityEngine.Input.GetKey(KeyCode.LeftShift);
+        public static (long ws, long commit) Memory => (0, 0);
 #endif
     }
 }
