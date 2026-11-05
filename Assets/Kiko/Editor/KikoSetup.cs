@@ -76,15 +76,17 @@ namespace Kiko.EditorTools
             PlayerSettings.SplashScreen.show = false;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
 
-            // 新旧输入都开（编辑器里试玩用旧的 Input）
+            // 只用旧的 Input Manager：没装 Input System 包时选 Both 会让 UniWindowController 编译失败（ENABLE_INPUT_SYSTEM）。改这个要重启编辑器
             var ps = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset").FirstOrDefault();
             if (ps)
             {
                 var pso = new SerializedObject(ps);
                 var ih = pso.FindProperty("activeInputHandler");
-                if (ih != null) { ih.intValue = 2; pso.ApplyModifiedPropertiesWithoutUndo(); }
+                if (ih != null && ih.intValue != 0) { ih.intValue = 0; pso.ApplyModifiedPropertiesWithoutUndo(); Debug.LogWarning("[Kiko] Active Input Handling 改成了 Input Manager (Old)，请重启 Unity 编辑器"); }
             }
             AssetDatabase.SaveAssets();
+            // 换了渲染管线以后 lilToon 要按 URP 重新生成着色器，不然全是洋红色
+            if (!EditorApplication.ExecuteMenuItem("Assets/lilToon/[Shader] Refresh shaders")) Debug.LogWarning("[Kiko] 没找到 lilToon 的 Refresh shaders 菜单，请手动点 Assets/lilToon/[Shader] Refresh shaders");
             Debug.Log("[Kiko] ① 项目设置完成：URP " + rpPath + "，D3D11，flip model 关");
         }
 
