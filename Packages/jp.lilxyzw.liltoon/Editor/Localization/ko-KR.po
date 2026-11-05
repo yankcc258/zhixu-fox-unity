@@ -1,0 +1,1689 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko-KR\n"
+
+msgid "sLanguageWarning"
+msgstr "기계 번역을 사용하므로 번역이 정확하지 않을 수 있습니다."
+
+msgid "sEditorMode"
+msgstr "편집 모드"
+
+msgid "sEditorModeSimple"
+msgstr "간단 설정"
+
+msgid "sEditorModeAdvanced"
+msgstr "상세 설정"
+
+msgid "sEditorModePreset"
+msgstr "프리셋"
+
+msgid "sEditorModeShaderSetting"
+msgstr "셰이더 설정"
+
+msgid "sHelpSelectOverlay"
+msgstr "현재 lilToonOverlay가 선택되어 있습니다. 일반 용도에서는 lilToon으로 변경하세요."
+
+msgid "sColor"
+msgstr "색상"
+
+msgid "Mode"
+msgstr "모드"
+
+msgid "sAlpha"
+msgstr "불투명도"
+
+msgid "sColorAlpha"
+msgstr "색상 / 불투명도"
+
+msgid "sGamma"
+msgstr "감마"
+
+msgid "sHue"
+msgstr "색조"
+
+msgid "sSaturation"
+msgstr "채도"
+
+msgid "sValue"
+msgstr "명도"
+
+msgid "sStrength"
+msgstr "강도"
+
+msgid "sStrengthMask"
+msgstr "마스크와 강도"
+
+msgid "sStrengthR"
+msgstr "강도 (R)"
+
+msgid "sLength"
+msgstr "길이"
+
+msgid "sLengthMask"
+msgstr "길이 마스크"
+
+msgid "sTexture"
+msgstr "텍스처"
+
+msgid "sTextureRGB"
+msgstr "색상 (RGB)"
+
+msgid "sTextureRGBA"
+msgstr "색상 (RGB) 및 불투명도 (A)"
+
+msgid "sMask"
+msgstr "마스크"
+
+msgid "sMaskType"
+msgstr "마스크 타입"
+
+msgid "sBlendR"
+msgstr "혼합 (R)"
+
+msgid "sBlendMode"
+msgstr "혼합 모드"
+
+msgid "sBlendModeNormal"
+msgstr "표준"
+
+msgid "sBlendModeAdd"
+msgstr "선형 닷지(추가)"
+
+msgid "sBlendModeScreen"
+msgstr "스크린"
+
+msgid "sBlendModeMul"
+msgstr "곱하기"
+
+msgid "sBorder"
+msgstr "범위"
+
+msgid "sBorderAO"
+msgstr "AO 및 그림자 범위"
+
+msgid "sBorderR"
+msgstr "범위 (R)"
+
+msgid "sBorderRGB"
+msgstr "범위 (RGB = 1st/2nd/3rd)"
+
+msgid "sBlur"
+msgstr "흐림"
+
+msgid "sBlurR"
+msgstr "흐림 (R)"
+
+msgid "sBlurRGB"
+msgstr "흐림 (RGB = 1st/2nd/3rd)"
+
+msgid "sBlurMask"
+msgstr "흐림 효과 마스크"
+
+msgid "sAlphaR"
+msgstr "알파 (R)"
+
+msgid "sMainColorPower"
+msgstr "메인 컬러의 강도"
+
+msgid "Cubemap Fallback"
+msgstr "큐브맵 폴백"
+
+msgid "Override"
+msgstr "오버라이드"
+
+msgid "sEnableLighting"
+msgstr "라이트 밝기 반영"
+
+msgid "sUVSetting"
+msgstr "UV 설정"
+
+msgid "sUVAnimation"
+msgstr "UV 애니메이션"
+
+msgid "sOffset"
+msgstr "오프셋"
+
+msgid "sScroll"
+msgstr "스크롤"
+
+msgid "sAngle"
+msgstr "각도"
+
+msgid "sRotate"
+msgstr "회전 속도"
+
+msgid "sAsMSDF"
+msgstr "MSDF 텍스처"
+
+msgid "sAsDecal"
+msgstr "데칼로 사용"
+
+msgid "UV Mode"
+msgstr "UV 모드"
+
+msgid "sAnimation"
+msgstr "애니메이션"
+
+msgid "sXFrames"
+msgstr "X축 프레임 수"
+
+msgid "sYFrames"
+msgstr "Y축 프레임 수"
+
+msgid "sFrames"
+msgstr "총 프레임 수"
+
+msgid "sFPS"
+msgstr "FPS"
+
+msgid "sXRatio"
+msgstr "X축 비율"
+
+msgid "sYRatio"
+msgstr "Y축 비율"
+
+msgid "sFixBorder"
+msgstr "경계 조정"
+
+msgid "sConvertGif"
+msgstr "GIF 변환"
+
+msgid "sMirrorMode"
+msgstr "미러 모드"
+
+msgid "sMirrorModeNormal"
+msgstr "보통"
+
+msgid "sMirrorModeFlip"
+msgstr "반전"
+
+msgid "sMirrorModeLeft"
+msgstr "왼쪽만"
+
+msgid "sMirrorModeRight"
+msgstr "오른쪽만"
+
+msgid "sMirrorModeRightFlip"
+msgstr "오른쪽만 · 반전"
+
+msgid "sCopyMode"
+msgstr "복제 모드"
+
+msgid "sCopyModeNormal"
+msgstr "보통"
+
+msgid "sCopyModeSymmetry"
+msgstr "대칭"
+
+msgid "sCopyModeFlip"
+msgstr "반전"
+
+msgid "sPosition"
+msgstr "위치"
+
+msgid "sPositionX"
+msgstr "X좌표"
+
+msgid "sPositionY"
+msgstr "Y좌표"
+
+msgid "sScale"
+msgstr "크기"
+
+msgid "sScaleX"
+msgstr "X축 크기"
+
+msgid "sScaleY"
+msgstr "Y축 크기"
+
+msgid "sVector"
+msgstr "방향"
+
+msgid "sVertex"
+msgstr "버텍스"
+
+msgid "sVertexColor"
+msgstr "버텍스 컬러"
+
+msgid "sThreshold"
+msgstr "임계값"
+
+msgid "sDensity"
+msgstr "밀도"
+
+msgid "sSensitivity"
+msgstr "감도"
+
+msgid "sNormalStrength"
+msgstr "노멀 맵 강도"
+
+msgid "sColorAlphaZeroWarn"
+msgstr "이 속성을 활성화하려면 알파 값을 높이세요."
+
+msgid "sApplyTransparency"
+msgstr "투명도 적용"
+
+msgid "sVRParallaxStrength"
+msgstr "VR 패럴랙스 강도"
+
+msgid "sShadowMask"
+msgstr "그림자 영향도"
+
+msgid "sBackfaceMask"
+msgstr "뒷면에서는 비활성화"
+
+msgid "sRandomize"
+msgstr "임의화"
+
+msgid " (Size)"
+msgstr " (크기)"
+
+msgid "sLimShadowStrength"
+msgstr "그림자 강도"
+
+msgid "sLimOutline"
+msgstr "윤곽선 색상"
+
+msgid "sLimEmission"
+msgstr "발광색"
+
+msgid "sLimEmission2nd"
+msgstr "발광색 2nd"
+
+msgid "sBaseSetting"
+msgstr "기본 설정"
+
+msgid "sInvisible"
+msgstr "숨기기"
+
+msgid "sAsUnlit"
+msgstr "Unlit 처리"
+
+msgid "sAsUnlitWarn"
+msgstr "\"Unlit 처리\"에 0이 아닌 값이 설정되어 있습니다. 머티리얼이나 아바타 사이에 밝기 차이가 생길 수 있습니다."
+
+msgid "sShaderType"
+msgstr "셰이더 유형"
+
+msgid "sShaderTypeNormal"
+msgstr "Normal (일반 버전)"
+
+msgid "sShaderTypeLite"
+msgstr "Lite (경량 버전)"
+
+msgid "sRenderingMode"
+msgstr "렌더링 모드"
+
+msgid "sRenderingModeOpaque"
+msgstr "불투명"
+
+msgid "sRenderingModeCutout"
+msgstr "컷아웃"
+
+msgid "sRenderingModeTransparent"
+msgstr "반투명"
+
+msgid "sRenderingModeRefraction"
+msgstr "[고부하] 굴절"
+
+msgid "sRenderingModeRefractionBlur"
+msgstr "[고부하] 굴절 흐림"
+
+msgid "sRenderingModeFur"
+msgstr "[고부하] 퍼"
+
+msgid "sRenderingModeFurCutout"
+msgstr "[고부하] 퍼 (컷아웃)"
+
+msgid "sRenderingModeFurTwoPass"
+msgstr "[고부하] 퍼 (2 패스)"
+
+msgid "sRenderingModeGem"
+msgstr "[고부하] 보석"
+
+msgid "sTransparentMode"
+msgstr "투명 모드"
+
+msgid "sTransparentModeNormal"
+msgstr "일반"
+
+msgid "sTransparentModeOnePass"
+msgstr "1 패스"
+
+msgid "sTransparentModeTwoPass"
+msgstr "2 패스"
+
+msgid "sColorType"
+msgstr "컬러 타입"
+
+msgid "sColorTypeNormal"
+msgstr "일반"
+
+msgid "sColorTypeLUT"
+msgstr "LUT"
+
+msgid "sAsOverlay"
+msgstr "오버레이로 사용"
+
+msgid "sCutoff"
+msgstr "컷오프"
+
+msgid "sSubpassCutoff"
+msgstr "서브패스 컷오프 (완전 투명 범위)"
+
+msgid "Cull Mode"
+msgstr "컬링 모드"
+
+msgid "sCullMode"
+msgstr "컬링 모드"
+
+msgid "sCullModeOff"
+msgstr "Off"
+
+msgid "sCullModeFront"
+msgstr "Front"
+
+msgid "sCullModeBack"
+msgstr "Back"
+
+msgid "sFlipBackfaceNormal"
+msgstr "뒷면 노멀 반전"
+
+msgid "sShiftBackfaceUV"
+msgstr "뒷면 UV 이동"
+
+msgid "sBackfaceForceShadow"
+msgstr "뒷면 그림자 강제 적용"
+
+msgid "sAAShading"
+msgstr "안티앨리어싱 셰이딩"
+
+msgid "[VRCLV] Rim Border"
+msgstr "[VRCLV] 림 경계"
+
+msgid "[VRCLV] Rim Blur"
+msgstr "[VRCLV] 림 블러"
+
+msgid "sDither"
+msgstr "디더링"
+
+msgid "Max Value"
+msgstr "최댓값"
+
+msgid "sSimpleStencilSettings"
+msgstr "간이 스텐실 설정"
+
+msgid "sStencilModeNormal"
+msgstr "일반"
+
+msgid "sStencilModeWriter"
+msgstr "쓰기"
+
+msgid "sStencilModeReader"
+msgstr "읽기"
+
+msgid "sStencilModeReaderInvert"
+msgstr "읽기 (반전)"
+
+msgid "sStencilModeReaderFade"
+msgstr "읽기 (반투명)"
+
+msgid "sTransparentPresetsPreWriteDepth"
+msgstr "깊이 미리 쓰기"
+
+msgid "sTransparentPresetsColorTransparent"
+msgstr "색상 투과"
+
+msgid "sTransparentPresetsBackAndFront"
+msgstr "뒷면 및 앞면"
+
+msgid "sTransparentPresetsCutoutAndTransparent"
+msgstr "컷아웃 및 반투명"
+
+msgid "sTransparentPresetsFadeStencil"
+msgstr "페이드 스텐실"
+
+msgid "sOutType"
+msgstr "출력 유형"
+
+msgid "sOutTypeNormal"
+msgstr "일반"
+
+msgid "sOutTypeFlat"
+msgstr "플랫"
+
+msgid "sOutTypeMono"
+msgstr "단색"
+
+msgid "sLightingSettings"
+msgstr "라이팅 설정"
+
+msgid "sVertexLightStrength"
+msgstr "버텍스 라이트 강도"
+
+msgid "sLightMinLimit"
+msgstr "밝기 하한"
+
+msgid "sLightMaxLimit"
+msgstr "밝기 상한"
+
+msgid "sMonochromeLighting"
+msgstr "라이팅 흑백화"
+
+msgid "sLightDirectionOverride"
+msgstr "라이트 방향 오버라이드"
+
+msgid "sObjectFollowing"
+msgstr "오브젝트의 방향 추종"
+
+msgid "sDirectionalLightStrength"
+msgstr "[HDRP] 디렉셔널 라이트 강도"
+
+msgid "sBeforeExposureLimit"
+msgstr "[HDRP] 노출 전 한계값"
+
+msgid "sLightingPreset"
+msgstr "프리셋 적용"
+
+msgid "sLightingPresetDefault"
+msgstr "기본"
+
+msgid "sLightingPresetStable"
+msgstr "안정"
+
+msgid "sLightingPresetSemiMonochrome"
+msgstr "세미 모노크롬"
+
+msgid "sHelpRenderingTransparent"
+msgstr "반투명 머티리얼끼리 겹치면 한쪽이 보이지 않을 수 있습니다. 이 경우 앞쪽 머티리얼의 Render Queue 값을 높이세요."
+
+msgid "sHelpRenderingFur"
+msgstr "퍼포먼스를 위해 퍼에 적용되는 기능이 제한되어 있습니다."
+
+msgid "sHelpTransparentForWorld"
+msgstr "반투명 머티리얼에서 Render Queue를 2999 이하로 설정하면 뒤쪽에 있는 다른 머티리얼이 보이지 않아 의상이나 헤어가 사라지는 등의 문제가 발생할 수 있습니다. 월드용이라면 3000 이상으로 설정하거나 ZWrite를 끄는 것을 권장합니다."
+
+msgid "sHelpGrabPass"
+msgstr "굴절·보석은 GrabPass를 사용하기 때문에 모바일 GPU에서 성능에 큰 영향을 미칠 수 있습니다."
+
+msgid "sHelpGeometryShader"
+msgstr "지오메트리 셰이더는 iOS나 Mac에서 작동하지 않으므로 다른 렌더링 모드로 변경하는 것이 좋습니다."
+
+msgid "sHelpOnePassVertexLight"
+msgstr "1 패스 사용 시에는 버텍스 라이트 강도를 1.0으로 설정하는 것이 좋습니다."
+
+msgid "sHelpCullMode"
+msgstr "표시가 이상하면 컬링 모드를 Off 또는 Back으로 설정하세요."
+
+msgid "sHelpZWrite"
+msgstr "표시가 이상하면 ZWrite를 켜세요."
+
+msgid "sAlphaBoostFA"
+msgstr "[Built-in RP] 알파 부스트 (포인트 / 스폿 라이트)"
+
+msgid "sLightBlending"
+msgstr "[Built-in RP] 라이트 혼합"
+
+msgid "sBlendingAdd"
+msgstr "가산"
+
+msgid "sBlendingMax"
+msgstr "최댓값"
+
+msgid "sMaskTiling"
+msgstr "마스크 UV 타일링"
+
+msgid "sMaskOffset"
+msgstr "마스크 UV 오프셋"
+
+msgid "sNoise"
+msgstr "노이즈"
+
+msgid "sNoiseR"
+msgstr "노이즈 (R)"
+
+msgid "sNoiseStrength"
+msgstr "노이즈 강도"
+
+msgid "sTriMask"
+msgstr "TriMask (Mat/Rim/Emi)"
+
+msgid "sTriMaskRGB"
+msgstr "마스크 (R:MatCap G:Rim B:Emission)"
+
+msgid "sApplyTo"
+msgstr "적용 대상"
+
+msgid "sMainUV"
+msgstr "UV 설정"
+
+msgid "sMainUVTips"
+msgstr "UV 위치, 크기 및 애니메이션을 설정할 수 있습니다."
+
+msgid "sCustomSafetyFallback"
+msgstr "커스텀 세이프티 폴백"
+
+msgid "sFallbackShaderType"
+msgstr "셰이더 유형"
+
+msgid "sFallbackRenderingMode"
+msgstr "렌더링 모드"
+
+msgid "sFallbackFacing"
+msgstr "컬링 방식"
+
+msgid "sFallbackResult"
+msgstr "결과"
+
+msgid "sFallbackToonstandardShading"
+msgstr "셰이딩"
+
+msgid "Shadow Ramp"
+msgstr "그림자 램프"
+
+msgid "sColors"
+msgstr "색상 설정"
+
+msgid "sMainColorSetting"
+msgstr "메인 컬러 / 불투명도 설정"
+
+msgid "sMainColorSettingSimple"
+msgstr "메인 컬러 / 불투명도 설정"
+
+msgid "sMainColorTips"
+msgstr "색상과 투명도를 설정할 수 있습니다."
+
+msgid "sMainColorAlpha"
+msgstr "메인 컬러 / 불투명도"
+
+msgid "sMainColor"
+msgstr "메인 컬러"
+
+msgid "sMainColor2nd"
+msgstr "메인 컬러 2nd"
+
+msgid "sMainColor3rd"
+msgstr "메인 컬러 3rd"
+
+msgid "sColorAdjust"
+msgstr "색조 보정"
+
+msgid "sGradationMap"
+msgstr "그라데이션 맵"
+
+msgid "sNotAlphaIsTransparency"
+msgstr "이 텍스처에는 Alpha Is Transparency가 설정되어 있지 않습니다."
+
+msgid "sAlphaMask"
+msgstr "알파 마스크"
+
+msgid "sAlphaMaskWarnOpaque"
+msgstr "알파 마스크를 사용하려면 '렌더링 모드'를 컷아웃 또는 반투명으로 변경해야 합니다."
+
+msgid "sAlphaMaskModeNone"
+msgstr "없음"
+
+msgid "sAlphaMaskModeReplace"
+msgstr "대체"
+
+msgid "sAlphaMaskModeMul"
+msgstr "곱하기"
+
+msgid "sAlphaMaskModeAdd"
+msgstr "더하기"
+
+msgid "sAlphaMaskModeSub"
+msgstr "빼기"
+
+msgid "sShadowSetting"
+msgstr "그림자 설정"
+
+msgid "sShadowTips"
+msgstr "그림자 색상과 범위를 설정할 수 있습니다."
+
+msgid "sShadow"
+msgstr "그림자"
+
+msgid "sReceiveShadow"
+msgstr "그림자 받기"
+
+msgid "sShadowColor"
+msgstr "그림자 색상"
+
+msgid "sShadow1stColor"
+msgstr "그림자 색상 1"
+
+msgid "sShadow2ndColor"
+msgstr "그림자 색상 2"
+
+msgid "sShadow3rdColor"
+msgstr "그림자 색상 3"
+
+msgid "sShadowEnvStrength"
+msgstr "그림자 색상에 대한 환경광 영향도"
+
+msgid "sShadowBorderColor"
+msgstr "경계 색상"
+
+msgid "sShadowBorderRange"
+msgstr "경계 폭"
+
+msgid "sIgnoreBorderProperties"
+msgstr "범위 설정 무시"
+
+msgid "Shadow Caster Bias"
+msgstr "Shadow Caster Bias"
+
+msgid "AO Map"
+msgstr "AO 맵"
+
+msgid "sFlat"
+msgstr "플랫"
+
+msgid "sBacklightSetting"
+msgstr "백라이트 설정"
+
+msgid "sBacklight"
+msgstr "백라이트"
+
+msgid "sBacklightTips"
+msgstr "라이트가 모델 뒤에 있을 때 백라이트를 추가할 수 있습니다."
+
+msgid "sDirectivity"
+msgstr "지향성"
+
+msgid "sViewDirectionStrength"
+msgstr "뷰 방향의 영향도"
+
+msgid "sOutlineSetting"
+msgstr "윤곽선 설정"
+
+msgid "sOutlineTips"
+msgstr "윤곽선 색상과 굵기를 설정할 수 있습니다."
+
+msgid "sOutline"
+msgstr "윤곽선"
+
+msgid "sHighlight"
+msgstr "하이라이트"
+
+msgid "sWidth"
+msgstr "마스크와 굵기"
+
+msgid "sWidthR"
+msgstr "굵기 (R)"
+
+msgid "sFixWidth"
+msgstr "거리에 따른 굵기 보정"
+
+msgid "sVertexR2Width"
+msgstr "R → 굵기"
+
+msgid "sVertexRGBA2Normal"
+msgstr "RGBA → 노멀 및 굵기"
+
+msgid "Z Bias"
+msgstr "Z Bias"
+
+msgid "sDeleteMesh0"
+msgstr "굵기 0의 버텍스 삭제"
+
+msgid "sDisableInVR"
+msgstr "VR에서 사용 안 함"
+
+msgid "sRefractionSetting"
+msgstr "굴절 설정"
+
+msgid "sRefractionTips"
+msgstr "굴절 강도와 색상을 설정할 수 있습니다."
+
+msgid "sRefraction"
+msgstr "굴절"
+
+msgid "sRefractionFresnel"
+msgstr "프레넬"
+
+msgid "sColorFromMain"
+msgstr "메인 컬러에서 색상 가져오기"
+
+msgid "sFurSetting"
+msgstr "퍼 설정"
+
+msgid "sFurTips"
+msgstr "퍼의 길이, 방향 및 질감을 설정할 수 있습니다."
+
+msgid "sFur"
+msgstr "퍼"
+
+msgid "sAntiLight"
+msgstr "안티 라이트"
+
+msgid "sGravity"
+msgstr "중력"
+
+msgid "sAO"
+msgstr "AO"
+
+msgid "sVertexColor2Vector"
+msgstr "버텍스 컬러 → 방향"
+
+msgid "sLayerNum"
+msgstr "레이어 수"
+
+msgid "sRootWidth"
+msgstr "퍼 시작 부분 굵기"
+
+msgid "sTouchStrength"
+msgstr "접촉 강도"
+
+msgid "sTessellationSetting"
+msgstr "테셀레이션 (초고부하)"
+
+msgid "sTessellation"
+msgstr "테셀레이션"
+
+msgid "sTessellationTips"
+msgstr "테셀레이션을 설정할 수 있습니다."
+
+msgid "sTessellationEdge"
+msgstr "임계 길이"
+
+msgid "sTessellationShrink"
+msgstr "축소 보정"
+
+msgid "sTessellationFactor"
+msgstr "최대 분할 수"
+
+msgid "sRimShadeSetting"
+msgstr "림쉐이드"
+
+msgid "RimShade"
+msgstr "림쉐이드"
+
+msgid "sEmissionSetting"
+msgstr "발광 설정"
+
+msgid "sEmissionTips"
+msgstr "발광 색상과 블링크를 설정할 수 있습니다."
+
+msgid "sEmission"
+msgstr "발광 텍스처"
+
+msgid "sEmission2nd"
+msgstr "발광 텍스처 2nd"
+
+msgid "sBlinkStrength"
+msgstr "블링크 강도"
+
+msgid "sBlinkType"
+msgstr "블링크 타입"
+
+msgid "sBlinkSpeed"
+msgstr "블링크 속도"
+
+msgid "sBlinkOffset"
+msgstr "블링크 오프셋"
+
+msgid "sGradation"
+msgstr "그라데이션"
+
+msgid "sGradTexSpeed"
+msgstr "텍스처 및 변화 속도"
+
+msgid "sGradColor"
+msgstr "색상"
+
+msgid "sParallaxDepth"
+msgstr "패럴랙스 강도"
+
+msgid "sFluorescence"
+msgstr "형광"
+
+msgid "sParallax"
+msgstr "패럴랙스 맵"
+
+msgid "sParallaxTips"
+msgstr "패럴랙스를 설정할 수 있습니다."
+
+msgid "sParallaxR"
+msgstr "패럴랙스 (R)"
+
+msgid "sParallaxOffset"
+msgstr "오프셋"
+
+msgid "sPOM"
+msgstr "[고부하] POM"
+
+msgid "sDistanceFade"
+msgstr "거리 페이드"
+
+msgid "sDistanceFadeTips"
+msgstr "거리에 따라 색상을 변경할 수 있습니다."
+
+msgid "sStartDistance"
+msgstr "시작 거리"
+
+msgid "sEndDistance"
+msgstr "종료 거리"
+
+msgid "sAudioLink"
+msgstr "AudioLink"
+
+msgid "sAudioLinkTips"
+msgstr "AudioLink 시스템에 맞춰 머티리얼의 외형을 변경할 수 있습니다."
+
+msgid "sAudioLinkUVMode"
+msgstr "UV 모드"
+
+msgid "sAudioLinkUVModeNone"
+msgstr "없음"
+
+msgid "sAudioLinkUVModeRim"
+msgstr "림"
+
+msgid "sAudioLinkUVModeUV"
+msgstr "UV"
+
+msgid "sAudioLinkUVModeMask"
+msgstr "마스크"
+
+msgid "sAudioLinkUVModePosition"
+msgstr "좌표"
+
+msgid "sAudioLinkMaskRGB"
+msgstr "RGB = 지연 / 대역 / 강도"
+
+msgid "sAudioLinkMaskRGBSpectrum"
+msgstr "RGB = 음량 / 대역 / 강도"
+
+msgid "Offset"
+msgstr "오프셋"
+
+msgid "sAudioLinkBand"
+msgstr "대역"
+
+msgid "sAudioLinkBandBass"
+msgstr "저음"
+
+msgid "sAudioLinkBandLowMid"
+msgstr "중저음"
+
+msgid "sAudioLinkBandHighMid"
+msgstr "중고음"
+
+msgid "sAudioLinkBandTreble"
+msgstr "고음"
+
+msgid "sAudioLinkStartPosition"
+msgstr "시작 위치"
+
+msgid "sAudioLinkMovingVector"
+msgstr "이동 방향"
+
+msgid "sAudioLinkNormalStrength"
+msgstr "법선 방향의 강도"
+
+msgid "sAudioLinkAsLocal"
+msgstr "로컬"
+
+msgid "sAudioLinkLocalMap"
+msgstr "로컬 맵"
+
+msgid "sAudioLinkLocalMapBPM"
+msgstr "BPM"
+
+msgid "sAudioLinkLocalMapNotes"
+msgstr "BPM 배율"
+
+msgid "sAudioLinkDefaultValue"
+msgstr "AudioLink 비활성화 시 기본값"
+
+msgid "sDissolve"
+msgstr "디졸브"
+
+msgid "sDissolveTips"
+msgstr "머티리얼이 녹는 듯한 효과를 설정할 수 있습니다."
+
+msgid "sDissolveWarnOpaque"
+msgstr "디졸브를 사용하려면 '렌더링 모드'를 컷아웃 또는 반투명으로 변경해야 합니다."
+
+msgid "sDissolveMode"
+msgstr "디졸브 모드"
+
+msgid "sDissolveModeNone"
+msgstr "없음"
+
+msgid "sDissolveModeAlpha"
+msgstr "알파"
+
+msgid "sDissolveModeUV"
+msgstr "UV"
+
+msgid "sDissolveModePosition"
+msgstr "좌표"
+
+msgid "sDissolveShape"
+msgstr "모양"
+
+msgid "sDissolveShapePoint"
+msgstr "점"
+
+msgid "sDissolveShapeLine"
+msgstr "선"
+
+msgid "sIDMask"
+msgstr "ID 마스크"
+
+msgid "sUDIMDiscard"
+msgstr "UV 타일 제거"
+
+msgid "sUDIMDiscardUV"
+msgstr "제거할 UV"
+
+msgid "sUDIMDiscardMode"
+msgstr "제거 모드"
+
+msgid "sEncryption"
+msgstr "암호화"
+
+msgid "sEncryptionTips"
+msgstr "4개의 키를 사용해 메시를 복호화할 수 있습니다."
+
+msgid "sIgnoreEncryption"
+msgstr "암호화 무시"
+
+msgid "sKeys"
+msgstr "키"
+
+msgid "sNormalMapReflection"
+msgstr "노멀 맵 광택 설정"
+
+msgid "sNormalMapSetting"
+msgstr "노멀 맵 설정"
+
+msgid "sNormalMapTips"
+msgstr "노멀 맵을 설정할 수 있습니다."
+
+msgid "sNormalMap"
+msgstr "노멀 맵"
+
+msgid "sNormalMap2nd"
+msgstr "노멀 맵 2nd"
+
+msgid "sNormalRGB"
+msgstr "노멀 (RGB)"
+
+msgid "sAnisotropy"
+msgstr "이방성"
+
+msgid "sTangentWidth"
+msgstr "탄젠트 방향 폭"
+
+msgid "sBitangentWidth"
+msgstr "바이탄젠트 방향 폭"
+
+msgid "sReflectionsSetting"
+msgstr "광택 설정"
+
+msgid "sReflectionsTips"
+msgstr "반사와 광택을 설정할 수 있습니다."
+
+msgid "sReflection"
+msgstr "반사"
+
+msgid "sSmoothness"
+msgstr "평활도 (Smoothness)"
+
+msgid "sSmoothnessR"
+msgstr "평활도 (Smoothness) (R)"
+
+msgid "sMetallic"
+msgstr "메탈릭"
+
+msgid "sMetallicR"
+msgstr "메탈릭 (R)"
+
+msgid "sReflectance"
+msgstr "반사율"
+
+msgid "sSpecularMode"
+msgstr "광택 타입"
+
+msgid "sSpecularNone"
+msgstr "무효"
+
+msgid "sSpecularReal"
+msgstr "리얼"
+
+msgid "sSpecularToon"
+msgstr "툰"
+
+msgid "sMultiLightSpecular"
+msgstr "복수 라이트에서 광택 생성"
+
+msgid "sApplyReflection"
+msgstr "환경광 반사"
+
+msgid "sMatCapSetting"
+msgstr "매트캡 설정"
+
+msgid "sMatCap"
+msgstr "매트캡 (MatCap)"
+
+msgid "sMatCap2nd"
+msgstr "매트캡 2nd"
+
+msgid "sBlendUV1"
+msgstr "UV1 혼합"
+
+msgid "sMatCapZRotCancel"
+msgstr "Z축 회전 취소"
+
+msgid "sFixPerspective"
+msgstr "원근 보정"
+
+msgid "sHelpMatCapBlending"
+msgstr "곱하기 모드에서는 '라이트 밝기 반영' 값을 0으로 설정하세요."
+
+msgid "sMatCapCustomNormal"
+msgstr "커스텀 노멀 맵"
+
+msgid "sRimLightSetting"
+msgstr "림 라이트 설정"
+
+msgid "sRimLight"
+msgstr "림 라이트"
+
+msgid "sFresnelPower"
+msgstr "프레넬 강도"
+
+msgid "sRimLightDirection"
+msgstr "라이트 방향의 영향도"
+
+msgid "sRimDirectionRange"
+msgstr "다이렉트 라이트 범위"
+
+msgid "sRimIndirectionRange"
+msgstr "간접광 범위"
+
+msgid "sGlitterSetting"
+msgstr "Glitter 설정"
+
+msgid "sGlitter"
+msgstr "Glitter"
+
+msgid "Shape"
+msgstr "모양"
+
+msgid "Atras"
+msgstr "아틀라스"
+
+msgid "sParticleSize"
+msgstr "파티클 크기"
+
+msgid "sContrast"
+msgstr "콘트라스트"
+
+msgid "sPostContrast"
+msgstr "콘트라스트 (후처리)"
+
+msgid "sAngleLimit"
+msgstr "각도 제한"
+
+msgid "sColorRandomness"
+msgstr "랜덤 컬러"
+
+msgid "sGemSetting"
+msgstr "보석 설정"
+
+msgid "sGem"
+msgstr "보석"
+
+msgid "sChromaticAberration"
+msgstr "색수차"
+
+msgid "sEnvironmentColor"
+msgstr "환경광 색상"
+
+msgid "sParticleLoop"
+msgstr "파티클 루프 수"
+
+msgid "sStencilSetting"
+msgstr "스텐실 설정"
+
+msgid "sStencilTips"
+msgstr "스텐실 (Stencil, 눈썹을 헤어 위에 표시하는 등)을 설정할 수 있습니다."
+
+msgid "sAdvanced"
+msgstr "확장 설정"
+
+msgid "sRenderingSetting"
+msgstr "렌더링 설정"
+
+msgid "sRenderingTips"
+msgstr "세부 렌더링 옵션을 설정할 수 있습니다."
+
+msgid "sZClip"
+msgstr "ZClip"
+
+msgid "sZWrite"
+msgstr "ZWrite"
+
+msgid "sZTest"
+msgstr "ZTest"
+
+msgid "sOffsetFactor"
+msgstr "Offset Factor"
+
+msgid "sOffsetUnits"
+msgstr "Offset Units"
+
+msgid "sColorMask"
+msgstr "Color Mask"
+
+msgid "sAlphaToMask"
+msgstr "AlphaToMask"
+
+msgid "sForward"
+msgstr "Forward"
+
+msgid "sForwardAdd"
+msgstr "ForwardAdd"
+
+msgid "sSrcBlendRGB"
+msgstr "SrcBlend RGB"
+
+msgid "sDstBlendRGB"
+msgstr "DstBlend RGB"
+
+msgid "sSrcBlendAlpha"
+msgstr "SrcBlend Alpha"
+
+msgid "sDstBlendAlpha"
+msgstr "DstBlend Alpha"
+
+msgid "sBlendOpRGB"
+msgstr "BlendOp RGB"
+
+msgid "sBlendOpAlpha"
+msgstr "BlendOp Alpha"
+
+msgid "sRenderingReset"
+msgstr "렌더링 설정 초기화"
+
+msgid "sLightBakeSetting"
+msgstr "라이트 베이크"
+
+msgid "sOptimization"
+msgstr "최적화"
+
+msgid "sOptimizationTips"
+msgstr "머티리얼을 최적화하여 부하를 줄일 수 있습니다."
+
+msgid "sCustomProperties"
+msgstr "커스텀 프로퍼티"
+
+msgid "sCustomPropertiesTips"
+msgstr "사용자가 추가한 속성이 표시됩니다."
+
+msgid "sBake"
+msgstr "베이크"
+
+msgid "sBakeAll"
+msgstr "모든 레이어 베이크"
+
+msgid "sBake1st"
+msgstr "색상 변경 베이크"
+
+msgid "sBake2nd"
+msgstr "레이어 2 베이크"
+
+msgid "sBake3rd"
+msgstr "레이어 3 베이크"
+
+msgid "sBakeAlphamask"
+msgstr "알파 마스크 베이크"
+
+msgid "sSelectAlphamask"
+msgstr "알파 마스크를 선택하세요."
+
+msgid "sRemoveUnused"
+msgstr "사용하지 않는 텍스처 제거"
+
+msgid "sConvertLite"
+msgstr "lilToonLite로 변환"
+
+msgid "sConvertMulti"
+msgstr "lilToonMulti로 변환"
+
+msgid "sConvertMToon"
+msgstr "MToon (VRM)로 변환"
+
+msgid "sOptimizeForEvents"
+msgstr "이벤트 제출용 최적화"
+
+msgid "sYes"
+msgstr "예"
+
+msgid "sNo"
+msgstr "아니요"
+
+msgid "sOK"
+msgstr "확인"
+
+msgid "sCancel"
+msgstr "취소"
+
+msgid "sNone"
+msgstr "없음"
+
+msgid "sComplete"
+msgstr "완료되었습니다."
+
+msgid "sCopy"
+msgstr "복사"
+
+msgid "sPaste"
+msgstr "붙여넣기"
+
+msgid "sPasteWithTexture"
+msgstr "붙여넣기 (텍스처 포함)"
+
+msgid "sReset"
+msgstr "초기화"
+
+msgid "sOpenManual"
+msgstr "매뉴얼 표시"
+
+msgid "sFixNow"
+msgstr "자동 수정"
+
+msgid "sDialogResetUV"
+msgstr "UV 설정 초기화"
+
+msgid "sDialogResetUVMes"
+msgstr "UV 설정을 초기화하시겠습니까?"
+
+msgid "sDialogCannotBake"
+msgstr "베이크를 실행할 수 없습니다."
+
+msgid "sDialogNoNeedBake"
+msgstr "베이크할 필요가 없습니다."
+
+msgid "sDialogSetMainTex"
+msgstr "메인 컬러에 텍스처를 설정해야 합니다."
+
+msgid "sDialogNoChange"
+msgstr "색상을 변경하지 않았습니다."
+
+msgid "sDialogNotUse2nd"
+msgstr "메인 컬러 2nd 레이어를 사용하고 있지 않습니다."
+
+msgid "sDialogNotUse3rd"
+msgstr "메인 컬러 3rd 레이어를 사용하고 있지 않습니다."
+
+msgid "sDialogNotUseAll"
+msgstr "색상을 변경하지 않았으며 메인 컬러 2nd·3rd 레이어도 사용하고 있지 않습니다."
+
+msgid "sDialogRunBake"
+msgstr "베이크를 실행하시겠습니까?"
+
+msgid "sDialogBakeMain"
+msgstr "메인 컬러를 베이크하시겠습니까?"
+
+msgid "sDialogBakeShadow"
+msgstr "그림자 텍스처를 베이크하시겠습니까?"
+
+msgid "sDialogBakeMatCap"
+msgstr "매트캡을 베이크하시겠습니까?"
+
+msgid "sDialogBakeTriMask"
+msgstr "TriMask (MatCap / Rim / Emission 마스크)를 베이크하시겠습니까?"
+
+msgid "sDialogBakeOutline"
+msgstr "윤곽선 색상 텍스처를 베이크하시겠습니까?"
+
+msgid "sDialogGifToAtlas"
+msgstr "GIF를 아틀라스화"
+
+msgid "sDialogTexPow2"
+msgstr "텍스처 해상도를 2의 거듭제곱에 맞추시겠습니까?"
+
+msgid "sDialogImportOldVer"
+msgstr "임포트하려는 패키지는 이미 임포트된 lilToon보다 이전 버전입니다. 계속 진행하시겠습니까?"
+
+msgid "sDialogImportPackage"
+msgstr "UPM 버전의 lilToon이 이미 임포트되어 있습니다. unitypackage 버전 임포트를 계속 진행하시겠습니까? (스크립트 오류 등이 발생할 수 있습니다.)"
+
+msgid "sWarnOptimiseMeshData"
+msgstr "Unity 버그로 인해 필요한 버텍스 데이터까지 삭제될 수 있습니다. 문제가 발생하면 'Project Settings/Player/Optimize Mesh Data'를 끄세요."
+
+msgid "sPresets"
+msgstr "프리셋"
+
+msgid "sPresetsNotAvailable"
+msgstr "이 셰이더에서는 프리셋을 사용할 수 없습니다."
+
+msgid "sPresetIsMaterial"
+msgstr "현재 선택한 항목은 머티리얼이 아닙니다."
+
+msgid "sPresetRefresh"
+msgstr "목록 업데이트"
+
+msgid "sPresetSave"
+msgstr "프리셋 저장"
+
+msgid "sPresetCategory"
+msgstr "카테고리"
+
+msgid "sPresetCategorySkin"
+msgstr "피부"
+
+msgid "sPresetCategoryHair"
+msgstr "헤어"
+
+msgid "sPresetCategoryCloth"
+msgstr "천"
+
+msgid "sPresetCategoryNature"
+msgstr "자연물"
+
+msgid "sPresetCategoryInorganic"
+msgstr "무기물"
+
+msgid "sPresetCategoryEffect"
+msgstr "효과"
+
+msgid "sPresetCategoryOther"
+msgstr "기타"
+
+msgid "sPresetName"
+msgstr "프리셋 이름"
+
+msgid "sPresetSaveTarget"
+msgstr "저장 대상"
+
+msgid "sPresetTexture"
+msgstr "저장 대상 텍스처"
+
+msgid "sPresetShader"
+msgstr "셰이더"
+
+msgid "sPresetQueue"
+msgstr "Render Queue"
+
+msgid "sPresetStencil"
+msgstr "스텐실"
+
+msgid "sPresetMainTex2Outline"
+msgstr "메인 텍스처를 윤곽선에 적용"
+
+msgid "sPresetMain"
+msgstr "메인 컬러"
+
+msgid "sPresetMain2"
+msgstr "메인 컬러 2nd"
+
+msgid "sPresetMain2Mask"
+msgstr "메인 컬러 2nd 마스크"
+
+msgid "sPresetMain3"
+msgstr "메인 컬러 3rd"
+
+msgid "sPresetMain3Mask"
+msgstr "메인 컬러 3rd 마스크"
+
+msgid "sPresetShadowBorder"
+msgstr "그림자 AO"
+
+msgid "sPresetShadowBlur"
+msgstr "그림자 흐림"
+
+msgid "sPresetShadowStrength"
+msgstr "그림자 마스크"
+
+msgid "sPresetShadowColor"
+msgstr "그림자 색상"
+
+msgid "sPresetShadowColor2"
+msgstr "그림자 색상 2"
+
+msgid "sPresetEmissionColor"
+msgstr "발광색"
+
+msgid "sPresetEmissionMask"
+msgstr "발광 마스크"
+
+msgid "sPresetEmissionGrad"
+msgstr "발광 그라데이션"
+
+msgid "sPresetEmission2Color"
+msgstr "발광 2nd 색상"
+
+msgid "sPresetEmission2Mask"
+msgstr "발광 2nd 마스크"
+
+msgid "sPresetEmission2Grad"
+msgstr "발광 2nd 그라데이션"
+
+msgid "sPresetNormal"
+msgstr "노멀 맵"
+
+msgid "sPresetNormal2"
+msgstr "노멀 맵 2nd"
+
+msgid "sPresetNormal2Mask"
+msgstr "노멀 맵 2nd 마스크"
+
+msgid "sPresetReflectionSmoothness"
+msgstr "평활도 (Smoothness)"
+
+msgid "sPresetReflectionMetallic"
+msgstr "메탈릭"
+
+msgid "sPresetReflectionColor"
+msgstr "반사 색상"
+
+msgid "sPresetMatcap"
+msgstr "매트캡"
+
+msgid "sPresetMatcapMask"
+msgstr "매트캡 마스크"
+
+msgid "sPresetRim"
+msgstr "림 라이트 색상"
+
+msgid "sPresetParallax"
+msgstr "패럴랙스 맵"
+
+msgid "sPresetOutlineTex"
+msgstr "윤곽선 색상"
+
+msgid "sPresetOutlineWidth"
+msgstr "윤곽선 굵기"
+
+msgid "sPresetFurNormal"
+msgstr "퍼 노멀 맵"
+
+msgid "sPresetFurNoise"
+msgstr "퍼 노이즈"
+
+msgid "sPresetFurMask"
+msgstr "퍼 마스크"
+
+msgid "sShaderSetting"
+msgstr "셰이더 설정 (모든 머티리얼 공통)"
+
+msgid "sHelpShaderSetting"
+msgstr "여기에서 끈 기능은 셰이더에서 제거됩니다. 불필요한 기능을 꺼서 아바타 용량과 처리 부하를 줄일 수 있습니다."
+
+msgid "sSettingLock"
+msgstr "잠금"
+
+msgid "sShaderSettingOptimizeInTestBuild"
+msgstr "테스트 빌드에서도 최적화"
+
+msgid "sShaderSettingOptimizeInEditor"
+msgstr "[Debug] 에디터에서도 최적화"
+
+msgid "sSettingClippingCanceller"
+msgstr "거리 클리핑 방지"
+
+msgid "sSettingTexOutlineColor"
+msgstr "윤곽선 색상 텍스처"
+
+msgid "sSettingDefaultValue"
+msgstr "초기값 (Fix Lighting 및 라이팅 프리셋에 사용)"
+
+msgid "sSettingBuildSizeOptimization"
+msgstr "빌드 크기 최적화 (모든 머티리얼 공통)"
+
+msgid "sSettingApplyShadowFA"
+msgstr "ForwardAdd로 그림자 활성화"
+
+msgid "sSettingUseForwardAdd"
+msgstr "ForwardAdd 사용"
+
+msgid "sSettingUseForwardAddShadow"
+msgstr "ForwardAdd 패스에서 그림자 받기"
+
+msgid "sSettingUseVertexLight"
+msgstr "버텍스 라이트 사용"
+
+msgid "sSettingUseLightmap"
+msgstr "라이트 맵 사용"
+
+msgid "sManualURL"
+msgstr "https://lilxyzw.github.io/lilToon/#/en-us/"
+
+msgid "sAnchorBaseSetting"
+msgstr "base/base"
+
+msgid "sAnchorLighting"
+msgstr "base/lighting"
+
+msgid "sAnchorUVSetting"
+msgstr "base/uv"
+
+msgid "sAnchorMainColor"
+msgstr "color/maincolor"
+
+msgid "sAnchorMainColor1"
+msgstr "color/maincolor"
+
+msgid "sAnchorMainColor2"
+msgstr "color/maincolor_layer"
+
+msgid "sAnchorAlphaMask"
+msgstr "color/alphamask"
+
+msgid "sAnchorShadow"
+msgstr "color/shadow"
+
+msgid "sAnchorRimShade"
+msgstr "color/rimshade"
+
+msgid "sAnchorEmission"
+msgstr "color/emission"
+
+msgid "sAnchorNormalMap"
+msgstr "reflections/normal"
+
+msgid "sAnchorAnisotropy"
+msgstr "reflections/anisotropy"
+
+msgid "sAnchorBacklight"
+msgstr "reflections/backlight"
+
+msgid "sAnchorReflection"
+msgstr "reflections/reflection"
+
+msgid "sAnchorMatCap"
+msgstr "reflections/matcap"
+
+msgid "sAnchorRimLight"
+msgstr "reflections/rimlight"
+
+msgid "sAnchorGlitter"
+msgstr "reflections/glitter"
+
+msgid "sAnchorGem"
+msgstr "reflections/gem"
+
+msgid "sAnchorOutline"
+msgstr "advanced/outline"
+
+msgid "sAnchorParallax"
+msgstr "advanced/parallax"
+
+msgid "sAnchorDistanceFade"
+msgstr "advanced/distancefade"
+
+msgid "sAnchorAudioLink"
+msgstr "advanced/audiolink"
+
+msgid "sAnchorDissolve"
+msgstr "advanced/dissolve"
+
+msgid "sAnchorIDMask"
+msgstr "advanced/idmask"
+
+msgid "sAnchorUDIMDiscard"
+msgstr "advanced/uvtilediscard"
+
+msgid "sAnchorEncryption"
+msgstr "advanced/encryption"
+
+msgid "sAnchorStencil"
+msgstr "advanced/stencil"
+
+msgid "sAnchorRendering"
+msgstr "advanced/rendering"
+
+msgid "sAnchorTessellation"
+msgstr "advanced/tessellation"
+
+msgid "sAnchorRefraction"
+msgstr "advanced/refraction"
+
+msgid "sAnchorFur"
+msgstr "advanced/fur"
+
+msgid "sAnchorOptimization"
+msgstr "other?id=Optimization"
+
+msgid "sAnchorShaderSetting"
+msgstr "other?id=Shader-Setting"
+
+msgid "sReadmeURL"
+msgstr "https://lilxyzw.github.io/lilToon/#/ja-jp/"
+
+msgid "sReadmeAnchorProblem"
+msgstr "other/qa"
+
+msgid "sHelp"
+msgstr "도움말"
+
+msgid "sCommonProblems"
+msgstr "일반적인 문제"
+
+msgid "sUtilGif2AtlasPow2"
+msgstr "텍스처 해상도를 2의 거듭제곱에 맞추시겠습니까?"
+
+msgid "sUtilDotTexRedRatio"
+msgstr "축소 비율을 선택하세요."
+
+msgid "sUtilShaderNotFound"
+msgstr "셰이더를 찾을 수 없습니다."
+
+msgid "sUtilSelectPresets"
+msgstr "프리셋을 선택하세요."
+
+msgid "sUtilMaterialAlreadyExist"
+msgstr "머티리얼이 이미 존재할 수 있습니다. 덮어쓰시겠습니까?"
+
+msgid "sUtilInvalidFormat"
+msgstr "잘못된 형식입니다."
