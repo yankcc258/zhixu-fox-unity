@@ -98,6 +98,13 @@ namespace Kiko.EditorTools
             AssetDatabase.ImportAsset(VrmPath, ImportAssetOptions.ForceUpdate);
             var importer = AssetImporter.GetAtPath(VrmPath) as ScriptedImporter;
             if (!importer) { Debug.LogError("[Kiko] 找不到 VRM 导入器：" + VrmPath + "（UniVRM 装好了吗？）"); return; }
+            // 已经重映射过的话，VRM 里就读不到原来的 MToon 材质了：先把映射拿掉、重新导入，拿到原始参数再换
+            var old = importer.GetExternalObjectMap().Where(kv => kv.Key.type == typeof(Material)).Select(kv => kv.Key).ToList();
+            if (old.Count > 0)
+            {
+                foreach (var id in old) importer.RemoveRemap(id);
+                importer.SaveAndReimport();
+            }
             var lil = Shader.Find("lilToon");
             if (!lil) { Debug.LogError("[Kiko] 找不到 lilToon 着色器"); return; }
             Directory.CreateDirectory(Root + "/Materials");
