@@ -311,6 +311,14 @@ namespace Kiko.EditorTools
         // ---------------- 命令行入口 ----------------
         public static void Step1() => SetupProject();
 
+        // GitHub Actions（game-ci/unity-builder 的 buildMethod）：材质、场景都已经提交在仓库里，只要设好项目再打包
+        public static void Ci()
+        {
+            SetupProject();
+            AssetDatabase.Refresh();
+            Build();
+        }
+
         public static void Step2()
         {
             ConvertMaterials();

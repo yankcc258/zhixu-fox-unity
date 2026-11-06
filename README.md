@@ -45,6 +45,10 @@ $U = "C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe"
 日志里搜 `[Kiko]` 看每一步的结果；报错就把 step*.log 里 `error` 附近几行发给露娜。
 跑完以后把 Unity 生成的 `.meta`、`ProjectSettings/`、`Assets/Kiko/Settings|Materials|Scenes` 提交上来（`Library/`、`Builds/` 不提交，.gitignore 已排除）。
 
+### GitHub Actions 自动打包
+`.github/workflows/build.yml`（game-ci）：Actions 页面手动点 Run workflow，或推 `v*` 标签自动发 Release。
+第一次要在仓库 Settings → Secrets 里加 `UNITY_EMAIL`、`UNITY_PASSWORD`、`UNITY_LICENSE`（`C:\ProgramData\Unity\Unity_lic.ulf` 全文），只能主人自己加。
+
 ## 目录
 - `Assets/Kiko/Models/kiko.vrm`：和 Tauri 版 b18 同一个模型（kiko_white_v12）
 - `Assets/Kiko/Scripts/`：`KikoPet`（行为）、`KikoPose`（姿势表，数值和 vrm.js 一样，three.js 欧拉角自动换算）、`Win32`（窗口位置/任务栏/鼠标）
