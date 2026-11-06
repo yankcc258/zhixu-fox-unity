@@ -24,6 +24,7 @@ namespace Kiko
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
         [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 14f;
         [Tooltip("每节往上翘的角度")] public float tailLift = 9f;
+        [Tooltip("尾巴整体放大（主人：没辨别度 → 尾巴超级大）")] public float tailScale = 1.8f;
 
         Vrm10Instance vrm;
         Camera cam;
@@ -79,6 +80,19 @@ namespace Kiko
             if (!vrm) { Log("没找到 Vrm10Instance"); return; }
             var json = Resources.Load<TextAsset>("kiko_acts");
             if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
+            // 屑狐狸表情（主人：表情太乖了）：覆盖/新增几种心情的表情，数据在 Resources/kiko_exp_kuzu.json
+            var kuzu = Resources.Load<TextAsset>("kiko_exp_kuzu");
+            if (acts != null && kuzu)
+            {
+                var k = JsonUtility.FromJson<KikoActData>(kuzu.text);
+                foreach (var e in k.exps)
+                {
+                    var m = new Dictionary<string, float>();
+                    for (int i = 0; i < e.names.Length; i++) m[e.names[i]] = e.values[i];
+                    acts.Exp[e.mood] = m;
+                }
+                Log($"kuzu exps {k.exps.Length}");
+            }
             else Log("没找到 Resources/kiko_acts.json");
             var mj = Resources.Load<TextAsset>("kiko_motions");
             if (mj) { motions = KikoMotionData.Load(mj.text); Log($"motions {string.Join(",", motions.Keys)}"); }
@@ -164,7 +178,9 @@ namespace Kiko
                 nd = Vector3.RotateTowards(nd, Vector3.up * d.magnitude, tailLift * Mathf.Deg2Rad, 0);
                 b.rotation = Quaternion.FromToRotation(d, nd) * b.rotation;
             }
-            Log($"tail posed: {chain.Count} bones side {tailSide} lift {tailLift}");
+            // 整条尾巴放大：只缩放第一节，后面的骨骼和蒙皮跟着变大（弹簧骨在这之后才初始化，长度按放大后的算）
+            if (chain.Count > 0 && Mathf.Abs(tailScale - 1f) > 0.01f) chain[0].localScale *= tailScale;
+            Log($"tail posed: {chain.Count} bones side {tailSide} lift {tailLift} scale {tailScale}");
         }
 
         // 排查「看不见尾巴」：尾巴网格在不在、用的什么着色器、尾尖在哪
@@ -496,7 +512,7 @@ namespace Kiko
         void DebugKeys()
         {
 #if UNITY_EDITOR
-            string[] moods = { "idle", "happy", "angry", "surprised", "smug", "sleepy", "pat", "wave", "pout", "excited" };
+            string[] moods = { "idle", "happy", "angry", "surprised", "smug", "scheme", "pat", "tease", "pout", "excited" };
             for (int i = 0; i < moods.Length; i++)
                 if (Input.GetKeyDown(KeyCode.Alpha0 + i)) { SetMood(moods[i], 4f); Log("debug mood " + moods[i]); }
             if (Input.GetKeyDown(KeyCode.F9) || Input.GetKeyDown(KeyCode.P))
@@ -543,7 +559,7 @@ namespace Kiko
             }
             // 表情特写
             var head = rig[HumanBodyBones.Head];
-            foreach (var m in new[] { "idle", "happy", "smug", "surprised", "angry", "pout", "sleepy", "pat", "excited", "smirk", "bleh" })
+            foreach (var m in new[] { "idle", "happy", "smug", "surprised", "angry", "pout", "sleepy", "pat", "excited", "smirk", "bleh", "scheme", "tease" })
             {
                 cam.transform.SetPositionAndRotation(camPos, camRot);
                 SetMood(m, 0); Calm();

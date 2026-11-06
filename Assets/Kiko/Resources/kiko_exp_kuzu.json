@@ -1,0 +1,15 @@
+{
+  "exps": [
+    { "mood": "idle",    "names": ["m_Fcl_MTH_SkinFung_R", "m_Fcl_HA_Fung1", "m_Fcl_EYE_Fun", "blink", "m_Fcl_BRW_Fun"], "values": [0.5, 0.6, 0.15, 0.2, 0.25] },
+    { "mood": "smug",    "names": ["m_Fcl_MTH_SkinFung_R", "m_Fcl_MTH_Fun", "m_Fcl_HA_Fung1", "m_Fcl_BRW_Angry", "m_Fcl_BRW_Fun", "blink", "m_Fcl_EYE_Fun"], "values": [1, 0.5, 1, 0.3, 0.35, 0.42, 0.2] },
+    { "mood": "smirk",   "names": ["m_Fcl_MTH_SkinFung_R", "m_Fcl_MTH_Fun", "m_Fcl_HA_Fung1", "m_Fcl_BRW_Angry", "m_Fcl_BRW_Fun", "blink", "m_Fcl_EYE_Fun"], "values": [1, 0.5, 1, 0.3, 0.35, 0.42, 0.2] },
+    { "mood": "scheme",  "names": ["m_Fcl_MTH_Fun", "m_Fcl_HA_Fung1", "m_Fcl_HA_Fung2", "m_Fcl_BRW_Angry", "blink", "m_Fcl_EYE_Fun", "aa"], "values": [0.9, 1, 0.6, 0.55, 0.45, 0.3, 0.12] },
+    { "mood": "tease",   "names": ["blinkLeft", "m_Fcl_MTH_SkinFung_L", "m_Fcl_HA_Fung1", "m_Fcl_MTH_Fun", "m_Fcl_BRW_Fun", "ih"], "values": [1, 0.8, 0.8, 0.4, 0.5, 0.2] },
+    { "mood": "bleh",    "names": ["blinkLeft", "m_Fcl_MTH_SkinFung_L", "m_Fcl_HA_Fung1", "m_Fcl_MTH_Fun", "m_Fcl_BRW_Fun", "ih"], "values": [1, 0.8, 0.8, 0.4, 0.5, 0.2] },
+    { "mood": "happy",   "names": ["happy", "aa", "m_Fcl_HA_Fung1", "m_Fcl_BRW_Fun"], "values": [0.75, 0.18, 0.8, 0.3] },
+    { "mood": "excited", "names": ["happy", "aa", "m_Fcl_HA_Fung1", "m_Fcl_BRW_Fun", "m_Fcl_EYE_Spread"], "values": [0.65, 0.45, 1, 0.5, 0.2] },
+    { "mood": "pat",     "names": ["relaxed", "m_Fcl_MTH_SkinFung_R", "m_Fcl_HA_Fung1", "blink", "m_Fcl_BRW_Fun"], "values": [0.45, 0.7, 0.6, 0.35, 0.3] },
+    { "mood": "angry",   "names": ["angry", "m_Fcl_BRW_Angry", "m_Fcl_HA_Fung1", "m_Fcl_HA_Fung2", "ee"], "values": [0.75, 0.6, 1, 0.5, 0.15] },
+    { "mood": "pout",    "names": ["angry", "ou", "m_Fcl_BRW_Angry", "blink"], "values": [0.3, 0.6, 0.4, 0.2] }
+  ]
+}
