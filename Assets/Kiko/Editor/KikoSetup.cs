@@ -238,7 +238,7 @@ namespace Kiko.EditorTools
         }
 
         // ---------- 头发 / 耳朵 / 尾巴的「蓬松感」（主人：看上去就是一块）----------
-        // 原来的阴影色只比底色暗 9%，白毛整片一个颜色，没有体积。这里：
+        // 原来的阴影色只比底色暗 9%，白毛整片一个颜色，没有体积。这里（第一版太蓝太重，白发变紫，已调淡）：
         //  ① 两层冷色阴影、边缘软（球面一样慢慢暗下去）② 边缘阴影把轮廓一圈压暗（圆鼓鼓的感觉）③ 发丝法线加强
         //  ④ 尾巴换成 lilToon 的毛皮着色器：表面长出一层层短毛（几何着色器），轮廓真的毛茸茸
         public static bool FurTail = true;
@@ -248,31 +248,31 @@ namespace Kiko.EditorTools
             bool hair = n.Contains("_HAIR"), tail = n.Contains("FoxTail"), ear = n.Contains("CatEar");
             if (!hair && !tail && !ear) return;
             d.SetFloat("_UseShadow", 1);
-            d.SetColor("_ShadowColor", new Color(0.78f, 0.81f, 0.94f, 1f));
-            d.SetFloat("_ShadowBorder", 0.58f);
-            d.SetFloat("_ShadowBlur", 0.38f);
-            d.SetColor("_Shadow2ndColor", new Color(0.60f, 0.63f, 0.84f, 1f));
-            d.SetFloat("_Shadow2ndBorder", 0.28f);
-            d.SetFloat("_Shadow2ndBlur", 0.30f);
+            d.SetColor("_ShadowColor", new Color(0.87f, 0.89f, 0.96f, 1f));
+            d.SetFloat("_ShadowBorder", 0.55f);
+            d.SetFloat("_ShadowBlur", 0.45f);
+            d.SetColor("_Shadow2ndColor", new Color(0.76f, 0.79f, 0.90f, 1f));
+            d.SetFloat("_Shadow2ndBorder", 0.25f);
+            d.SetFloat("_Shadow2ndBlur", 0.35f);
             d.SetFloat("_UseRimShade", 1);
-            d.SetColor("_RimShadeColor", new Color(0.66f, 0.70f, 0.90f, 1f));
-            d.SetFloat("_RimShadeBorder", 0.45f);
-            d.SetFloat("_RimShadeBlur", 0.55f);
-            d.SetFloat("_RimShadeFresnelPower", 1.6f);
-            if (d.GetFloat("_UseBumpMap") > 0.5f) d.SetFloat("_BumpScale", hair ? 1.6f : 1.2f);
+            d.SetColor("_RimShadeColor", new Color(0.82f, 0.85f, 0.94f, 1f));
+            d.SetFloat("_RimShadeBorder", 0.5f);
+            d.SetFloat("_RimShadeBlur", 0.6f);
+            d.SetFloat("_RimShadeFresnelPower", 2f);
+            if (d.GetFloat("_UseBumpMap") > 0.5f) d.SetFloat("_BumpScale", hair ? 1.3f : 1.1f);
             if (tail && FurTail)
             {
                 var noise = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/jp.lilxyzw.liltoon/Texture/lil_noise_fur.png");
                 d.SetTexture("_FurNoiseMask", noise);
                 d.SetTextureScale("_FurNoiseMask", new Vector2(14, 14));
-                d.SetVector("_FurVector", new Vector4(0, 0, 1, 0.032f)); // 法线方向长 3.2cm
+                d.SetVector("_FurVector", new Vector4(0, 0, 1, 0.03f)); // 法线方向长 3cm
                 d.SetFloat("_FurGravity", 0.35f);
                 d.SetFloat("_FurRandomize", 0.25f);
-                d.SetFloat("_FurAO", 0.45f);       // 毛根暗一点 → 有层次
+                d.SetFloat("_FurAO", 0.3f);       // 毛根暗一点 → 有层次
                 d.SetFloat("_FurLayerNum", 3);
                 d.SetFloat("_FurRootOffset", -0.25f);
                 d.SetFloat("_FurCutoutLength", 0.7f);
-                d.SetColor("_FurRimColor", new Color(0.55f, 0.6f, 0.8f, 1f));
+                d.SetColor("_FurRimColor", new Color(0.92f, 0.94f, 1f, 1f));
                 d.SetFloat("_FurRimFresnelPower", 3f);
             }
         }
