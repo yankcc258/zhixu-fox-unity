@@ -225,7 +225,7 @@ namespace Kiko
             float sway = tailWag * (Mathf.Sin(t * 1.15f) * 0.7f + Mathf.Sin(t * 0.41f + 1.3f) * 0.3f);
             float ix = Mathf.Clamp(winVel.x / 1500f, -1.5f, 1.5f) * tailInertia;
             float iy = Mathf.Clamp(winVel.y / 1800f, -0.9f, 0.9f) * tailInertia;
-            var dir = new Vector3(sway + ix, -1f + iy, -0.15f).normalized;
+            var dir = new Vector3(sway + ix, -1f + iy, -0.5f).normalized; // z 往后：垂在腿后面，不挡吊带袜
             var sb = vrm.Runtime.SpringBone;
             foreach (var j in tailJoints)
             {
@@ -609,6 +609,13 @@ namespace Kiko
                 yield return new WaitForSeconds(0.4f);
                 yield return Shot(dir, $"turn_{yaw:000}");
             }
+            // 尾巴摆动（正面，3 秒 24 帧，拼成 GIF 用）
+            cam.transform.SetPositionAndRotation(camPos, camRot);
+            for (int f = 0; f < 24; f++)
+            {
+                yield return new WaitForSeconds(0.125f);
+                yield return Shot(dir, $"sway_{f:00}", 0.5f);
+            }
             // 表情特写
             var head = rig[HumanBodyBones.Head];
             foreach (var m in new[] { "idle", "happy", "smug", "surprised", "angry", "pout", "sleepy", "pat", "excited", "smirk", "bleh", "scheme", "tease" })
@@ -639,10 +646,10 @@ namespace Kiko
             Log("shots → " + dir);
         }
 
-        System.Collections.IEnumerator Shot(string dir, string name)
+        System.Collections.IEnumerator Shot(string dir, string name, float res = 3f)
         {
             yield return new WaitForEndOfFrame();
-            var rt = RenderTexture.GetTemporary(baseWidth * 3, baseHeight * 3, 24, RenderTextureFormat.ARGB32);
+            var rt = RenderTexture.GetTemporary(Mathf.RoundToInt(baseWidth * res), Mathf.RoundToInt(baseHeight * res), 24, RenderTextureFormat.ARGB32);
             var old = cam.targetTexture;
             cam.targetTexture = rt;
             cam.Render();
@@ -655,7 +662,7 @@ namespace Kiko
             RenderTexture.active = prev;
             RenderTexture.ReleaseTemporary(rt);
             File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
-            Log("shot " + name);
+            if (!name.StartsWith("sway")) Log("shot " + name);
             Destroy(tex);
         }
 #else
