@@ -178,6 +178,8 @@ namespace Kiko.EditorTools
             int alphaMode = Mathf.RoundToInt(F(s, "_AlphaMode"));
             bool outline = Mathf.RoundToInt(F(s, "_OutlineWidthMode")) > 0 && F(s, "_OutlineWidth") > 0;
             int mode = alphaMode == 1 ? 1 : alphaMode == 2 ? 2 : 0; // lilToon RenderingMode: Opaque 0 / Cutout 1 / Transparent 2
+            bool tail = s.name.Contains("FoxTail");
+            if (tail && FurTail) { mode = 7; outline = false; } // FurTwoPass：底下一层不透明裁切 + 上面半透明毛尖，不怕和裙子排序打架
             LilSetup(d, mode, outline);
 
             d.SetTexture("_MainTex", T(s, "_MainTex"));
@@ -231,6 +233,47 @@ namespace Kiko.EditorTools
                 // MToon 世界坐标宽度（米）→ lilToon 宽度（厘米）
                 d.SetFloat("_OutlineWidth", F(s, "_OutlineWidth") * 100f);
                 d.SetColor("_OutlineColor", C(s, "_OutlineColor", Color.black));
+            }
+            Fluffy(s, d);
+        }
+
+        // ---------- 头发 / 耳朵 / 尾巴的「蓬松感」（主人：看上去就是一块）----------
+        // 原来的阴影色只比底色暗 9%，白毛整片一个颜色，没有体积。这里：
+        //  ① 两层冷色阴影、边缘软（球面一样慢慢暗下去）② 边缘阴影把轮廓一圈压暗（圆鼓鼓的感觉）③ 发丝法线加强
+        //  ④ 尾巴换成 lilToon 的毛皮着色器：表面长出一层层短毛（几何着色器），轮廓真的毛茸茸
+        public static bool FurTail = true;
+        static void Fluffy(Material s, Material d)
+        {
+            string n = s.name;
+            bool hair = n.Contains("_HAIR"), tail = n.Contains("FoxTail"), ear = n.Contains("CatEar");
+            if (!hair && !tail && !ear) return;
+            d.SetFloat("_UseShadow", 1);
+            d.SetColor("_ShadowColor", new Color(0.78f, 0.81f, 0.94f, 1f));
+            d.SetFloat("_ShadowBorder", 0.58f);
+            d.SetFloat("_ShadowBlur", 0.38f);
+            d.SetColor("_Shadow2ndColor", new Color(0.60f, 0.63f, 0.84f, 1f));
+            d.SetFloat("_Shadow2ndBorder", 0.28f);
+            d.SetFloat("_Shadow2ndBlur", 0.30f);
+            d.SetFloat("_UseRimShade", 1);
+            d.SetColor("_RimShadeColor", new Color(0.66f, 0.70f, 0.90f, 1f));
+            d.SetFloat("_RimShadeBorder", 0.45f);
+            d.SetFloat("_RimShadeBlur", 0.55f);
+            d.SetFloat("_RimShadeFresnelPower", 1.6f);
+            if (d.GetFloat("_UseBumpMap") > 0.5f) d.SetFloat("_BumpScale", hair ? 1.6f : 1.2f);
+            if (tail && FurTail)
+            {
+                var noise = AssetDatabase.LoadAssetAtPath<Texture2D>("Packages/jp.lilxyzw.liltoon/Texture/lil_noise_fur.png");
+                d.SetTexture("_FurNoiseMask", noise);
+                d.SetTextureScale("_FurNoiseMask", new Vector2(14, 14));
+                d.SetVector("_FurVector", new Vector4(0, 0, 1, 0.032f)); // 法线方向长 3.2cm
+                d.SetFloat("_FurGravity", 0.35f);
+                d.SetFloat("_FurRandomize", 0.25f);
+                d.SetFloat("_FurAO", 0.45f);       // 毛根暗一点 → 有层次
+                d.SetFloat("_FurLayerNum", 3);
+                d.SetFloat("_FurRootOffset", -0.25f);
+                d.SetFloat("_FurCutoutLength", 0.7f);
+                d.SetColor("_FurRimColor", new Color(0.55f, 0.6f, 0.8f, 1f));
+                d.SetFloat("_FurRimFresnelPower", 3f);
             }
         }
 
