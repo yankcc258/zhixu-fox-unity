@@ -23,7 +23,7 @@ namespace Kiko
         public float gravity = 2600f;
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
         [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 12f;
-        [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 42f;
+        [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 12f; // 根部先往后伸再垂：尾巴很粗，离腿太近会把大腿裹进去
         [Tooltip("后面每节往上翘的角度（垂下去再勾回来，J 字形，尾尖不拖地）")] public float tailLift = 13f;
         [Tooltip("尾巴整体放大（主人：没辨别度 → 尾巴超级大）")] public float tailScale = 1.6f;
         [Header("尾巴物理（主人：要朝下、随重力晃来晃去）")]
@@ -225,7 +225,7 @@ namespace Kiko
             float sway = tailWag * (Mathf.Sin(t * 1.15f) * 0.7f + Mathf.Sin(t * 0.41f + 1.3f) * 0.3f);
             float ix = Mathf.Clamp(winVel.x / 1500f, -1.5f, 1.5f) * tailInertia;
             float iy = Mathf.Clamp(winVel.y / 1800f, -0.9f, 0.9f) * tailInertia;
-            var dir = new Vector3(sway + ix, -1f + iy, -0.5f).normalized; // z 往后：垂在腿后面，不挡吊带袜
+            var dir = new Vector3(sway + ix, -1f + iy, -0.9f).normalized; // z 往后：垂在腿后面，不挡吊带袜
             var sb = vrm.Runtime.SpringBone;
             foreach (var j in tailJoints)
             {
