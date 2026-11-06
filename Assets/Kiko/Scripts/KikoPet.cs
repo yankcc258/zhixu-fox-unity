@@ -499,7 +499,7 @@ namespace Kiko
             string[] moods = { "idle", "happy", "angry", "surprised", "smug", "sleepy", "pat", "wave", "pout", "excited" };
             for (int i = 0; i < moods.Length; i++)
                 if (Input.GetKeyDown(KeyCode.Alpha0 + i)) { SetMood(moods[i], 4f); Log("debug mood " + moods[i]); }
-            if (Input.GetKeyDown(KeyCode.F11) && !shooting) StartCoroutine(ShotSet());
+            if ((Input.GetKeyDown(KeyCode.F9) || Input.GetKeyDown(KeyCode.P)) && !shooting) StartCoroutine(ShotSet());
             if (Input.GetKeyDown(KeyCode.F1) && acts != null)
             {
                 var names = acts.Clips.Keys.Where(n => !n.StartsWith("Peek")).OrderBy(n => n).ToList();
@@ -510,7 +510,7 @@ namespace Kiko
 #endif
         }
 
-        // ---------- 效果图（编辑器里按 F11）：转一圈 + 表情特写 + 几个动作，存到 persistentDataPath/shots ----------
+        // ---------- 效果图（编辑器里按 P 或 F9；F11 会被编辑器吃掉）：转一圈 + 表情特写 + 几个动作，存到 persistentDataPath/shots ----------
         bool shooting;
 #if UNITY_EDITOR
         System.Collections.IEnumerator ShotSet()
