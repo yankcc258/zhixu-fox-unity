@@ -309,7 +309,7 @@ namespace Kiko
         // 待机小动作：心情是 idle、没在做动作、鼠标没停在她身上时，每 6–15 秒随机一个
         void IdleFidget()
         {
-            if (acts == null || action != null || motion != null || state != State.Idle || mood != "idle" || over || Time.time < idleNext) return;
+            if (shooting || acts == null || action != null || motion != null || state != State.Idle || mood != "idle" || over || Time.time < idleNext) return;
             if (acts.IdleClips.Length == 0) return;
             Act(acts.IdleClips[Random.Range(0, acts.IdleClips.Length)]);
             idleNext = Time.time + 6f + Random.Range(0f, 9f);
@@ -324,7 +324,7 @@ namespace Kiko
             // 头在画面上方 ~15% 处；鼠标相对头的位置，离开窗口越远越饱和
             var headPx = new Vector2(win.x + win.width * 0.5f, win.y + win.height * 0.15f);
             var d = new Vector2(c.x - headPx.x, c.y - headPx.y) / (win.height * 0.8f);
-            var want = new Vector2(Mathf.Clamp(d.x, -1, 1), Mathf.Clamp(d.y, -1, 1));
+            var want = shooting ? Vector2.zero : new Vector2(Mathf.Clamp(d.x, -1, 1), Mathf.Clamp(d.y, -1, 1));
             look = Vector2.Lerp(look, want, 1 - Mathf.Exp(-Time.deltaTime * 6));
             // 眼睛：看相机前方的一个点（屏幕左右 = 世界 -x/+x，因为相机转了 180°）
             var head = rig[HumanBodyBones.Head].position;
@@ -471,6 +471,7 @@ namespace Kiko
             }
             // 自动眨眼
             bool eyesShut = acts != null && acts.EyesShut.Contains(mood);
+            if (shooting && blinkT < 0) blinkNext = now + 1f; // 拍照时不眨眼
             if (!eyesShut && now > blinkNext && blinkT < 0) blinkT = 0;
             float blink = 0;
             if (blinkT >= 0)
@@ -498,6 +499,7 @@ namespace Kiko
             string[] moods = { "idle", "happy", "angry", "surprised", "smug", "sleepy", "pat", "wave", "pout", "excited" };
             for (int i = 0; i < moods.Length; i++)
                 if (Input.GetKeyDown(KeyCode.Alpha0 + i)) { SetMood(moods[i], 4f); Log("debug mood " + moods[i]); }
+            if (Input.GetKeyDown(KeyCode.F11) && !shooting) StartCoroutine(ShotSet());
             if (Input.GetKeyDown(KeyCode.F1) && acts != null)
             {
                 var names = acts.Clips.Keys.Where(n => !n.StartsWith("Peek")).OrderBy(n => n).ToList();
@@ -507,6 +509,78 @@ namespace Kiko
             }
 #endif
         }
+
+        // ---------- 效果图（编辑器里按 F11）：转一圈 + 表情特写 + 几个动作，存到 persistentDataPath/shots ----------
+        bool shooting;
+#if UNITY_EDITOR
+        System.Collections.IEnumerator ShotSet()
+        {
+            shooting = true;
+            var dir = Path.Combine(Application.persistentDataPath, "shots");
+            Directory.CreateDirectory(dir);
+            var camPos = cam.transform.position;
+            var camRot = cam.transform.rotation;
+            void Calm() { action = null; StopMotion(); }
+            SetMood("idle", 0); Calm();
+            yield return new WaitForSeconds(1.5f);
+            // 转一圈（相机绕她转，光不动）
+            foreach (var yaw in new[] { 0f, 35f, 90f, 145f, 180f })
+            {
+                cam.transform.SetPositionAndRotation(Quaternion.Euler(0, yaw, 0) * camPos, Quaternion.Euler(0, 180 + yaw, 0));
+                yield return new WaitForSeconds(0.4f);
+                yield return Shot(dir, $"turn_{yaw:000}");
+            }
+            // 表情特写
+            var head = rig[HumanBodyBones.Head];
+            foreach (var m in new[] { "idle", "happy", "smug", "surprised", "angry", "pout", "sleepy", "pat", "excited", "smirk", "bleh" })
+            {
+                cam.transform.SetPositionAndRotation(camPos, camRot);
+                SetMood(m, 0); Calm();
+                yield return new WaitForSeconds(1.0f);
+                var hp = head.position;
+                cam.transform.SetPositionAndRotation(new Vector3(hp.x, hp.y + 0.05f, hp.z + 1.5f), Quaternion.Euler(0, 180, 0));
+                yield return Shot(dir, "face_" + m);
+            }
+            // 动作（取中间好看的一帧）
+            cam.transform.SetPositionAndRotation(camPos, camRot);
+            SetMood("idle", 0); Calm();
+            yield return new WaitForSeconds(1f);
+            foreach (var (n, t) in new[] { ("Cheer", 1.4f), ("Wave", 2.0f), ("IdleC", 3f), ("IdleD", 4.5f), ("IdleE", 3f), ("Shy", 0.9f), ("Stretch", 1.2f), ("Hang", 1.2f) })
+            {
+                Calm();
+                yield return new WaitForSeconds(0.6f);
+                Act(n);
+                yield return new WaitForSeconds(t);
+                yield return Shot(dir, "act_" + n);
+            }
+            Calm();
+            SetMood("idle", 0);
+            cam.transform.SetPositionAndRotation(camPos, camRot);
+            shooting = false;
+            Log("shots → " + dir);
+        }
+
+        System.Collections.IEnumerator Shot(string dir, string name)
+        {
+            yield return new WaitForEndOfFrame();
+            var rt = RenderTexture.GetTemporary(1020, 1320, 24, RenderTextureFormat.ARGB32);
+            var old = cam.targetTexture;
+            cam.targetTexture = rt;
+            cam.Render();
+            cam.targetTexture = old;
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
+            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+            tex.Apply();
+            RenderTexture.active = prev;
+            RenderTexture.ReleaseTemporary(rt);
+            File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
+            Destroy(tex);
+        }
+#else
+        System.Collections.IEnumerator ShotSet() { yield break; }
+#endif
 
         // ---------- 日志：判 Go/No-go 用的内存、帧率 ----------
         void LogStats()
