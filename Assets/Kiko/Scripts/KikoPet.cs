@@ -22,9 +22,15 @@ namespace Kiko
         [Tooltip("掉落加速度（像素/秒²，和 Tauri 版一样）")]
         public float gravity = 2600f;
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
-        [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 9f;
-        [Tooltip("每节往上翘的角度")] public float tailLift = 20f; // 大尾巴往上卷，别横着伸出窗口
+        [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 12f;
+        [Tooltip("每节往上翘的角度（负 = 往下垂）")] public float tailLift = -4f;
         [Tooltip("尾巴整体放大（主人：没辨别度 → 尾巴超级大）")] public float tailScale = 1.8f;
+        [Header("尾巴物理（主人：要朝下、随重力晃来晃去）")]
+        [Tooltip("弹簧硬度：越小越软、越容易被重力拉下去")] public float tailStiff = 0.45f;
+        [Tooltip("重力")] public float tailGravity = 0.9f;
+        [Tooltip("阻尼：越小晃得越久")] public float tailDrag = 0.22f;
+        [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.35f;
+        [Tooltip("窗口被拖动时尾巴甩的强度")] public float tailInertia = 1f;
 
         Vrm10Instance vrm;
         Camera cam;
@@ -97,6 +103,7 @@ namespace Kiko
             var mj = Resources.Load<TextAsset>("kiko_motions");
             if (mj) { motions = KikoMotionData.Load(mj.text); Log($"motions {string.Join(",", motions.Keys)}"); }
             PoseTail();
+            SetupTailPhysics();
             vrm.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.SpecifiedTransform;
             lookTarget = new GameObject("LookTarget").transform;
             vrm.LookAtTarget = lookTarget;
@@ -183,6 +190,46 @@ namespace Kiko
             Log($"tail posed: {chain.Count} bones side {tailSide} lift {tailLift} scale {tailScale}");
         }
 
+        // ---------- 尾巴物理：软一点、重一点，靠重力垂下来；待机慢慢摆，窗口被拖动时往反方向甩 ----------
+        readonly List<VRM10SpringBoneJoint> tailJoints = new();
+        Vector2Int lastWin;
+        Vector2 winVel;
+        void SetupTailPhysics()
+        {
+            foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
+            {
+                if (!j.name.StartsWith("J_Opt_C_FoxTail")) continue;
+                j.m_stiffnessForce = tailStiff;
+                j.m_gravityPower = tailGravity;
+                j.m_dragForce = tailDrag;
+                j.m_gravityDir = Vector3.down;
+                tailJoints.Add(j);
+            }
+            Log($"tail joints {tailJoints.Count} stiff {tailStiff} gravity {tailGravity} drag {tailDrag}");
+        }
+
+        void UpdateTail(float dt)
+        {
+            if (tailJoints.Count == 0 || dt <= 0) return;
+            var w = Win32.WindowRect.position;
+            if (lastWin == default) lastWin = w;
+            var v = (Vector2)(w - lastWin) / dt;
+            lastWin = w;
+            winVel = Vector2.Lerp(winVel, v, 1 - Mathf.Exp(-dt * 8));
+            float t = Time.time;
+            // 屏幕向右 = 世界 -x（相机转了 180°）；窗口往右移 → 尾巴往左甩 = 世界 +x。窗口往下掉（y 变大）→ 尾巴往上飘
+            float sway = tailWag * (Mathf.Sin(t * 1.15f) * 0.7f + Mathf.Sin(t * 0.41f + 1.3f) * 0.3f);
+            float ix = Mathf.Clamp(winVel.x / 1500f, -1.5f, 1.5f) * tailInertia;
+            float iy = Mathf.Clamp(winVel.y / 1800f, -0.9f, 0.9f) * tailInertia;
+            var dir = new Vector3(sway + ix, -1f + iy, -0.15f).normalized;
+            var sb = vrm.Runtime.SpringBone;
+            foreach (var j in tailJoints)
+            {
+                j.m_gravityDir = dir;
+                sb.SetJointLevel(j.transform, j.Blittable);
+            }
+        }
+
         // 排查「看不见尾巴」：尾巴网格在不在、用的什么着色器、尾尖在哪
         void LogTail()
         {
@@ -222,6 +269,7 @@ namespace Kiko
             UpdateLook();
             UpdatePose(dt);
             UpdateFace(dt);
+            UpdateTail(dt);
             // 省电：没人碰她、也没在掉落时 30 帧，鼠标在身上/拖着/掉落时 60 帧
             Application.targetFrameRate = state == State.Idle && !over && Time.time > flinchUntil ? 30 : 60;
             if (Time.time > nextStat) { nextStat = Time.time + 30f; LogStats(); }
