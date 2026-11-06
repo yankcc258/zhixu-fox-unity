@@ -107,6 +107,7 @@ namespace Kiko.EditorTools
             }
             var lil = Shader.Find("lilToon");
             if (!lil) { Debug.LogError("[Kiko] 找不到 lilToon 着色器"); return; }
+            PrepareExternalTextures();
             Directory.CreateDirectory(Root + "/Materials");
             int n = 0;
             foreach (var src in AssetDatabase.LoadAllAssetRepresentationsAtPath(VrmPath).OfType<Material>())
@@ -124,11 +125,51 @@ namespace Kiko.EditorTools
             Debug.Log($"[Kiko] ② {n} 个材质换成 lilToon（{Root}/Materials），已重映射到 kiko.vrm");
         }
 
+        // ---------- 贴图换成压缩过的外部 PNG（UniVRM 导入的子资源贴图是不压缩的 RGBA32：2048² 一张 21MB，打包 157MB、内存 360MB）----------
+        // Tools/extract_textures.py 把 kiko.vrm 里的图片原样导出到 Textures/vrm/ + index.json（文件名、原名、尺寸、是否法线）
+        [Serializable] class TexItem { public string file; public string name; public int w; public int h; public bool normal; }
+        [Serializable] class TexIndex { public TexItem[] items; }
+        static TexIndex _texIndex;
+
+        static void PrepareExternalTextures()
+        {
+            var json = AssetDatabase.LoadAssetAtPath<TextAsset>(Root + "/Textures/vrm/index.json");
+            if (!json) { Debug.LogWarning("[Kiko] 没有 Textures/vrm/index.json，贴图保持不压缩"); _texIndex = null; return; }
+            _texIndex = JsonUtility.FromJson<TexIndex>(json.text);
+            int changed = 0;
+            foreach (var it in _texIndex.items)
+            {
+                var ti = AssetImporter.GetAtPath($"{Root}/Textures/vrm/{it.file}") as TextureImporter;
+                if (!ti) continue;
+                var type = it.normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+                if (ti.textureType == type && ti.textureCompression == TextureImporterCompression.CompressedHQ && ti.anisoLevel == 8) continue;
+                ti.textureType = type;
+                ti.sRGBTexture = !it.normal;
+                ti.mipmapEnabled = true;
+                ti.anisoLevel = 8;
+                ti.maxTextureSize = 2048;
+                ti.textureCompression = TextureImporterCompression.CompressedHQ; // PC 上 = BC7（法线 BC5），约原来的 1/4
+                ti.SaveAndReimport();
+                changed++;
+            }
+            Debug.Log($"[Kiko] 外部贴图 {_texIndex.items.Length} 张（这次改了导入设置 {changed} 张）");
+        }
+
+        /// VRM 子资源贴图 → 同名同尺寸的外部 PNG（唯一匹配才换；几张 64² 的小饰品贴图同名同尺寸，就留着不换）
+        static Texture Ext(Texture t)
+        {
+            if (!t || _texIndex == null || AssetDatabase.GetAssetPath(t) != VrmPath) return t;
+            var c = _texIndex.items.Where(i => i.name == t.name && i.w == t.width && i.h == t.height).ToList();
+            if (c.Count != 1) return t;
+            var ext = AssetDatabase.LoadAssetAtPath<Texture2D>($"{Root}/Textures/vrm/{c[0].file}");
+            return ext ? ext : t;
+        }
+
         static string Safe(string s) => string.Concat(s.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
 
         static float F(Material m, string p, float d = 0) => m.HasProperty(p) ? m.GetFloat(p) : d;
         static Color C(Material m, string p, Color d) => m.HasProperty(p) ? m.GetColor(p) : d;
-        static Texture T(Material m, string p) => m.HasProperty(p) ? m.GetTexture(p) : null;
+        static Texture T(Material m, string p) => Ext(m.HasProperty(p) ? m.GetTexture(p) : null);
 
         /// MToon10 的参数按意思搬到 lilToon（阴影色/贴图、阴影边界和软硬、边缘光、描边、透明方式、双面）
         static void FromMToon(Material s, Material d)

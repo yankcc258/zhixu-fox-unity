@@ -1,0 +1,235 @@
+{
+ "items": [
+  {
+   "file": "00__01.png",
+   "name": "_01",
+   "w": 512,
+   "h": 512,
+   "normal": false
+  },
+  {
+   "file": "01_Shader_NoneBlack.png",
+   "name": "Shader_NoneBlack",
+   "w": 8,
+   "h": 8,
+   "normal": false
+  },
+  {
+   "file": "02_Shader_NoneNormal.png",
+   "name": "Shader_NoneNormal",
+   "w": 8,
+   "h": 8,
+   "normal": true
+  },
+  {
+   "file": "03__02.png",
+   "name": "_02",
+   "w": 1024,
+   "h": 512,
+   "normal": false
+  },
+  {
+   "file": "04__03.png",
+   "name": "_03",
+   "w": 1024,
+   "h": 512,
+   "normal": false
+  },
+  {
+   "file": "05__04.png",
+   "name": "_04",
+   "w": 1024,
+   "h": 1024,
+   "normal": false
+  },
+  {
+   "file": "06__05.png",
+   "name": "_05",
+   "w": 1024,
+   "h": 1024,
+   "normal": true
+  },
+  {
+   "file": "07__06.png",
+   "name": "_06",
+   "w": 1024,
+   "h": 512,
+   "normal": false
+  },
+  {
+   "file": "08__07.png",
+   "name": "_07",
+   "w": 1024,
+   "h": 256,
+   "normal": false
+  },
+  {
+   "file": "09__09.png",
+   "name": "_09",
+   "w": 1024,
+   "h": 256,
+   "normal": false
+  },
+  {
+   "file": "10__10.png",
+   "name": "_10",
+   "w": 2048,
+   "h": 2048,
+   "normal": false
+  },
+  {
+   "file": "11__11.png",
+   "name": "_11",
+   "w": 2048,
+   "h": 2048,
+   "normal": true
+  },
+  {
+   "file": "12__12.png",
+   "name": "_12",
+   "w": 1024,
+   "h": 1024,
+   "normal": false
+  },
+  {
+   "file": "13_N00_000_00_HairBack_00_nml.png",
+   "name": "N00_000_00_HairBack_00_nml",
+   "w": 512,
+   "h": 512,
+   "normal": true
+  },
+  {
+   "file": "14__13.png",
+   "name": "_13",
+   "w": 2048,
+   "h": 2048,
+   "normal": false
+  },
+  {
+   "file": "15__14.png",
+   "name": "_14",
+   "w": 2048,
+   "h": 2048,
+   "normal": false
+  },
+  {
+   "file": "16__15.png",
+   "name": "_15",
+   "w": 2048,
+   "h": 2048,
+   "normal": false
+  },
+  {
+   "file": "17__16.png",
+   "name": "_16",
+   "w": 2048,
+   "h": 2048,
+   "normal": false
+  },
+  {
+   "file": "18__17.png",
+   "name": "_17",
+   "w": 2048,
+   "h": 2048,
+   "normal": false
+  },
+  {
+   "file": "19__18.png",
+   "name": "_18",
+   "w": 512,
+   "h": 1024,
+   "normal": false
+  },
+  {
+   "file": "20__19.png",
+   "name": "_19",
+   "w": 512,
+   "h": 512,
+   "normal": false
+  },
+  {
+   "file": "21__20.png",
+   "name": "_20",
+   "w": 512,
+   "h": 512,
+   "normal": false
+  },
+  {
+   "file": "22__21.png",
+   "name": "_21",
+   "w": 512,
+   "h": 1024,
+   "normal": false
+  },
+  {
+   "file": "23__22.png",
+   "name": "_22",
+   "w": 512,
+   "h": 1024,
+   "normal": false
+  },
+  {
+   "file": "24_N00_000_Hair_00_nml.png",
+   "name": "N00_000_Hair_00_nml",
+   "w": 512,
+   "h": 1024,
+   "normal": true
+  },
+  {
+   "file": "26_MatcapWarp.png",
+   "name": "MatcapWarp",
+   "w": 8,
+   "h": 8,
+   "normal": false
+  },
+  {
+   "file": "27_N00_000_00_Face_00_out.png",
+   "name": "N00_000_00_Face_00_out",
+   "w": 256,
+   "h": 256,
+   "normal": false
+  },
+  {
+   "file": "28_seeko_acc.png",
+   "name": "seeko_acc",
+   "w": 64,
+   "h": 64,
+   "normal": false
+  },
+  {
+   "file": "29_seeko_acc.png",
+   "name": "seeko_acc",
+   "w": 1024,
+   "h": 128,
+   "normal": false
+  },
+  {
+   "file": "30_seeko_acc.png",
+   "name": "seeko_acc",
+   "w": 64,
+   "h": 64,
+   "normal": false
+  },
+  {
+   "file": "31_seeko_acc.png",
+   "name": "seeko_acc",
+   "w": 64,
+   "h": 64,
+   "normal": false
+  },
+  {
+   "file": "32_kiko_body_acc.png",
+   "name": "kiko_body_acc",
+   "w": 64,
+   "h": 64,
+   "normal": false
+  },
+  {
+   "file": "33_kiko_body_acc.png",
+   "name": "kiko_body_acc",
+   "w": 64,
+   "h": 64,
+   "normal": false
+  }
+ ]
+}

@@ -67,24 +67,30 @@ namespace Kiko
             vrm.LookAtTarget = lookTarget;
         }
 
-        void Start()
+        System.Collections.IEnumerator Start()
         {
-            uwc.isTransparent = true;
-            uwc.isTopmost = true;
-            uwc.isHitTestEnabled = true;
-            uwc.hitTestType = UniWindowController.HitTestType.Opacity;
-
             // 窗口大小：按工作区高度放大（1080p ≈ 1，2K ≈ 1.35），和 Tauri 版 figScale 一样
             var wa = Win32.WorkArea;
             scale = Mathf.Clamp(Mathf.Round(wa.height / 1040f * 20f) / 20f, 1f, 1.6f);
             int w = Mathf.RoundToInt(baseWidth * scale), h = Mathf.RoundToInt(baseHeight * scale);
 #if !UNITY_EDITOR
-            Screen.SetResolution(w, h, FullScreenMode.Windowed);
+            // 先改大小、等两帧再开透明：SetResolution 会让 Unity 重新套窗口样式（标题栏、白底），在透明之后调就把透明冲掉了
+            if (Screen.width != w || Screen.height != h) Screen.SetResolution(w, h, FullScreenMode.Windowed);
+            yield return null;
+            yield return null;
+#endif
+            uwc.isTransparent = false;
+            uwc.isTransparent = true;
+            uwc.isTopmost = true;
+            uwc.isHitTestEnabled = true;
+            uwc.hitTestType = UniWindowController.HitTestType.Opacity;
+#if !UNITY_EDITOR
+            yield return null;
             Win32.MoveWindow(new Vector2Int(wa.xMax - w - 16, wa.yMax - h));
 #endif
-            Log($"workArea {wa} scale {scale} window {w}x{h}");
+            Log($"workArea {wa} scale {scale} window {w}x{h} screen {Screen.width}x{Screen.height} transparent {uwc.isTransparent}");
 
-            if (!vrm) return;
+            if (!vrm) yield break;
             // 场景里摆好的预制体没有 ControlRig，自己做「规范化骨骼」：记下 T-pose 时每根骨头的世界旋转，
             // 之后 实际世界旋转 = 规范化世界旋转 × 静止世界旋转
             foreach (var b in KikoPose.Bones)
@@ -98,6 +104,23 @@ namespace Kiko
                 vel[b] = Vector3.zero;
             }
             FrameCamera();
+            ready = true;
+            Invoke(nameof(LogTail), 3f);
+        }
+
+        bool ready;
+
+        // 排查「看不见尾巴」：尾巴网格在不在、用的什么着色器、尾尖在哪
+        void LogTail()
+        {
+            foreach (var r in vrm.GetComponentsInChildren<Renderer>(true))
+                foreach (var m in r.sharedMaterials)
+                    if (m && m.name.Contains("FoxTail"))
+                        Log($"tail renderer {r.name} enabled={r.enabled} active={r.gameObject.activeInHierarchy} visible={r.isVisible} bounds={r.bounds.center:F3}/{r.bounds.size:F3} shader={m.shader.name} queue={m.renderQueue} cutoff={(m.HasProperty("_Cutoff") ? m.GetFloat("_Cutoff") : -1):F2}");
+            foreach (var t in vrm.GetComponentsInChildren<Transform>(true))
+                if (t.name.StartsWith("J_Opt_C_FoxTail")) Log($"tail bone {t.name} pos={t.position:F3}");
+            rig.TryGetValue(HumanBodyBones.Hips, out var hips);
+            if (hips) Log($"hips pos={hips.position:F3} cam={cam.transform.position:F3}");
         }
 
         void FrameCamera()
@@ -116,7 +139,7 @@ namespace Kiko
 
         void Update()
         {
-            if (!vrm) return;
+            if (!vrm || !ready) return;
             float dt = Mathf.Min(Time.deltaTime, 0.05f);
             stateT += dt;
             UpdateInput(dt);
