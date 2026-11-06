@@ -516,6 +516,12 @@ namespace Kiko
 
         // ---------- 效果图（编辑器里按 P 或 F9；F11 会被编辑器吃掉）：转一圈 + 表情特写 + 几个动作，存到 persistentDataPath/shots ----------
         bool shooting;
+        /// 菜单 Kiko/5 调用（键盘在远程操作时不一定进得了 Game 视图）
+        public void StartShots()
+        {
+            Log($"shots requested (ready={ready}, shooting={shooting})");
+            if (ready && !shooting) StartCoroutine(ShotSet());
+        }
 #if UNITY_EDITOR
         System.Collections.IEnumerator ShotSet()
         {

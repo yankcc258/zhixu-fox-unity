@@ -308,6 +308,15 @@ namespace Kiko.EditorTools
             if (Application.isBatchMode && r.summary.result != BuildResult.Succeeded) EditorApplication.Exit(1);
         }
 
+        // ---------------- ⑤ 效果图 ----------------
+        [MenuItem("Kiko/5 拍效果图（先进 Play 模式）")]
+        public static void Shots()
+        {
+            var pet = UnityEngine.Object.FindAnyObjectByType<KikoPet>();
+            if (!Application.isPlaying || !pet) { Debug.LogWarning("[Kiko] 先点 Play，等她站好再点这个"); return; }
+            pet.StartShots();
+        }
+
         // ---------------- 命令行入口 ----------------
         public static void Step1() => SetupProject();
 
