@@ -643,6 +643,15 @@ namespace Kiko
                 cam.transform.SetPositionAndRotation(new Vector3(hp.x, hp.y + 0.05f, hp.z + 1.5f), Quaternion.Euler(0, 180, 0));
                 yield return Shot(dir, "face_" + m);
             }
+            // 领口特写（A2 铃铛/细绳）
+            cam.transform.SetPositionAndRotation(camPos, camRot);
+            SetMood("idle", 0); Calm();
+            yield return new WaitForSeconds(0.8f);
+            var nk = rig[HumanBodyBones.Neck].position;
+            cam.transform.SetPositionAndRotation(new Vector3(nk.x, nk.y - 0.06f, nk.z + 1.0f), Quaternion.Euler(0, 180, 0));
+            yield return Shot(dir, "detail_collar");
+            cam.transform.SetPositionAndRotation(Quaternion.Euler(0, 35, 0) * new Vector3(nk.x, nk.y - 0.06f, nk.z + 1.0f), Quaternion.Euler(0, 215, 0));
+            yield return Shot(dir, "detail_collar35");
             // 动作（取中间好看的一帧）
             cam.transform.SetPositionAndRotation(camPos, camRot);
             SetMood("idle", 0); Calm();
