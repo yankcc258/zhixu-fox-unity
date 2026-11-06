@@ -499,7 +499,11 @@ namespace Kiko
             string[] moods = { "idle", "happy", "angry", "surprised", "smug", "sleepy", "pat", "wave", "pout", "excited" };
             for (int i = 0; i < moods.Length; i++)
                 if (Input.GetKeyDown(KeyCode.Alpha0 + i)) { SetMood(moods[i], 4f); Log("debug mood " + moods[i]); }
-            if ((Input.GetKeyDown(KeyCode.F9) || Input.GetKeyDown(KeyCode.P)) && !shooting) StartCoroutine(ShotSet());
+            if (Input.GetKeyDown(KeyCode.F9) || Input.GetKeyDown(KeyCode.P))
+            {
+                Log($"debug shots key (shooting={shooting})");
+                if (!shooting) StartCoroutine(ShotSet());
+            }
             if (Input.GetKeyDown(KeyCode.F1) && acts != null)
             {
                 var names = acts.Clips.Keys.Where(n => !n.StartsWith("Peek")).OrderBy(n => n).ToList();
@@ -518,6 +522,7 @@ namespace Kiko
             shooting = true;
             var dir = Path.Combine(Application.persistentDataPath, "shots");
             Directory.CreateDirectory(dir);
+            Log("shots start → " + dir);
             var camPos = cam.transform.position;
             var camRot = cam.transform.rotation;
             void Calm() { action = null; StopMotion(); }
@@ -576,6 +581,7 @@ namespace Kiko
             RenderTexture.active = prev;
             RenderTexture.ReleaseTemporary(rt);
             File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
+            Log("shot " + name);
             Destroy(tex);
         }
 #else
