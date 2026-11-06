@@ -23,13 +23,14 @@ namespace Kiko
         public float gravity = 2600f;
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
         [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 12f;
-        [Tooltip("每节往上翘的角度（负 = 往下垂）")] public float tailLift = -4f;
-        [Tooltip("尾巴整体放大（主人：没辨别度 → 尾巴超级大）")] public float tailScale = 1.8f;
+        [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 42f;
+        [Tooltip("后面每节往上翘的角度（垂下去再勾回来，J 字形，尾尖不拖地）")] public float tailLift = 13f;
+        [Tooltip("尾巴整体放大（主人：没辨别度 → 尾巴超级大）")] public float tailScale = 1.6f;
         [Header("尾巴物理（主人：要朝下、随重力晃来晃去）")]
-        [Tooltip("弹簧硬度：越小越软、越容易被重力拉下去")] public float tailStiff = 0.45f;
-        [Tooltip("重力")] public float tailGravity = 0.9f;
-        [Tooltip("阻尼：越小晃得越久")] public float tailDrag = 0.22f;
-        [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.35f;
+        [Tooltip("弹簧硬度：越小越软、越容易被重力拉下去")] public float tailStiff = 0.8f;
+        [Tooltip("重力")] public float tailGravity = 0.4f;
+        [Tooltip("阻尼：越小晃得越久")] public float tailDrag = 0.25f;
+        [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.6f;
         [Tooltip("窗口被拖动时尾巴甩的强度")] public float tailInertia = 1f;
 
         Vrm10Instance vrm;
@@ -182,12 +183,15 @@ namespace Kiko
                 if (d.sqrMagnitude < 1e-8f) continue;
                 float k = i == 0 ? 1.3f : 1f;
                 var nd = Vector3.RotateTowards(d, new Vector3(1, 0, 0) * d.magnitude, tailSide * k * Mathf.Deg2Rad, 0);
-                nd = Vector3.RotateTowards(nd, Vector3.up * d.magnitude, tailLift * Mathf.Deg2Rad, 0);
+                // 根部往下压，后面每节往上勾 → 垂下去再翘起来的 J 字形
+                nd = i == 0
+                    ? Vector3.RotateTowards(nd, Vector3.down * d.magnitude, tailRootDroop * Mathf.Deg2Rad, 0)
+                    : Vector3.RotateTowards(nd, Vector3.up * d.magnitude, tailLift * Mathf.Deg2Rad, 0);
                 b.rotation = Quaternion.FromToRotation(d, nd) * b.rotation;
             }
             // 整条尾巴放大：只缩放第一节，后面的骨骼和蒙皮跟着变大（弹簧骨在这之后才初始化，长度按放大后的算）
             if (chain.Count > 0 && Mathf.Abs(tailScale - 1f) > 0.01f) chain[0].localScale *= tailScale;
-            Log($"tail posed: {chain.Count} bones side {tailSide} lift {tailLift} scale {tailScale}");
+            Log($"tail posed: {chain.Count} bones side {tailSide} droop {tailRootDroop} lift {tailLift} scale {tailScale}");
         }
 
         // ---------- 尾巴物理：软一点、重一点，靠重力垂下来；待机慢慢摆，窗口被拖动时往反方向甩 ----------
