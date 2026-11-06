@@ -100,11 +100,12 @@ namespace Kiko
                 }
                 Log($"kuzu exps {k.exps.Length}");
             }
-            else Log("没找到 Resources/kiko_acts.json");
+            else if (acts == null) Log("没找到 Resources/kiko_acts.json");
             var mj = Resources.Load<TextAsset>("kiko_motions");
             if (mj) { motions = KikoMotionData.Load(mj.text); Log($"motions {string.Join(",", motions.Keys)}"); }
             PoseTail();
             SetupTailPhysics();
+            KikoAccessories.Build(vrm, Log);
             vrm.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.SpecifiedTransform;
             lookTarget = new GameObject("LookTarget").transform;
             vrm.LookAtTarget = lookTarget;
@@ -194,6 +195,20 @@ namespace Kiko
             Log($"tail posed: {chain.Count} bones side {tailSide} droop {tailRootDroop} lift {tailLift} scale {tailScale}");
         }
 
+        // ---------- 领口金铃：始终往下垂，跟身体晃的时候慢半拍 ----------
+        Quaternion bellRot = Quaternion.identity;
+        bool bellInit;
+        void UpdateBell(float dt)
+        {
+            var p = KikoAccessories.BellPivot;
+            if (!p || !p.parent) return;
+            var pr = p.parent.rotation;
+            var target = Quaternion.FromToRotation(pr * Vector3.down, Vector3.down) * pr;
+            if (!bellInit) { bellRot = target; bellInit = true; }
+            bellRot = Quaternion.Slerp(bellRot, target, 1 - Mathf.Exp(-dt * 9f));
+            p.rotation = bellRot;
+        }
+
         // ---------- 尾巴物理：软一点、重一点，靠重力垂下来；待机慢慢摆，窗口被拖动时往反方向甩 ----------
         readonly List<VRM10SpringBoneJoint> tailJoints = new();
         Vector2Int lastWin;
@@ -274,6 +289,7 @@ namespace Kiko
             UpdatePose(dt);
             UpdateFace(dt);
             UpdateTail(dt);
+            UpdateBell(dt);
             // 省电：没人碰她、也没在掉落时 30 帧，鼠标在身上/拖着/掉落时 60 帧
             Application.targetFrameRate = state == State.Idle && !over && Time.time > flinchUntil ? 30 : 60;
             if (Time.time > nextStat) { nextStat = Time.time + 30f; LogStats(); }
