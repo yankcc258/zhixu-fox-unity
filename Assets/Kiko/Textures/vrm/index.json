@@ -223,13 +223,6 @@
    "w": 64,
    "h": 64,
    "normal": false
-  },
-  {
-   "file": "33_kiko_body_acc.png",
-   "name": "kiko_body_acc",
-   "w": 64,
-   "h": 64,
-   "normal": false
   }
  ]
 }
