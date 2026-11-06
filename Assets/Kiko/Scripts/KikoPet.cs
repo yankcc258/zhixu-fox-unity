@@ -15,15 +15,15 @@ namespace Kiko
     public class KikoPet : MonoBehaviour
     {
         [Header("窗口（1080p 时的大小，2K 屏自动放大）")]
-        public int baseWidth = 340;
+        public int baseWidth = 400; // 尾巴放大后加宽（原 340）
         public int baseHeight = 440;
         [Header("相机")]
         public float fov = 20f;
         [Tooltip("掉落加速度（像素/秒²，和 Tauri 版一样）")]
         public float gravity = 2600f;
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
-        [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 14f;
-        [Tooltip("每节往上翘的角度")] public float tailLift = 9f;
+        [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 9f;
+        [Tooltip("每节往上翘的角度")] public float tailLift = 20f; // 大尾巴往上卷，别横着伸出窗口
         [Tooltip("尾巴整体放大（主人：没辨别度 → 尾巴超级大）")] public float tailScale = 1.8f;
 
         Vrm10Instance vrm;
@@ -590,7 +590,7 @@ namespace Kiko
         System.Collections.IEnumerator Shot(string dir, string name)
         {
             yield return new WaitForEndOfFrame();
-            var rt = RenderTexture.GetTemporary(1020, 1320, 24, RenderTextureFormat.ARGB32);
+            var rt = RenderTexture.GetTemporary(baseWidth * 3, baseHeight * 3, 24, RenderTextureFormat.ARGB32);
             var old = cam.targetTexture;
             cam.targetTexture = rt;
             cam.Render();
