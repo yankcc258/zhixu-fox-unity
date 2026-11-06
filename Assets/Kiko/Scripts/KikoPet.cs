@@ -2,6 +2,7 @@
 // 行为照搬 Tauri 版 pet.js / vrm.js 的数值，方便两边对比。
 // 退出：按住 Shift 右键点她。
 using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using Kirurobo;
@@ -20,6 +21,9 @@ namespace Kiko
         public float fov = 20f;
         [Tooltip("掉落加速度（像素/秒²，和 Tauri 版一样）")]
         public float gravity = 2600f;
+        [Header("尾巴静止姿势（弹簧骨以此为准）")]
+        [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 14f;
+        [Tooltip("每节往上翘的角度")] public float tailLift = 9f;
 
         Vrm10Instance vrm;
         Camera cam;
@@ -62,6 +66,7 @@ namespace Kiko
             cam = Camera.main;
             vrm = FindAnyObjectByType<Vrm10Instance>();
             if (!vrm) { Log("没找到 Vrm10Instance"); return; }
+            PoseTail();
             vrm.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.SpecifiedTransform;
             lookTarget = new GameObject("LookTarget").transform;
             vrm.LookAtTarget = lookTarget;
@@ -109,6 +114,27 @@ namespace Kiko
         }
 
         bool ready;
+
+        // 尾巴：模型里的静止姿势基本是朝正后方垂着，从正面只露一点尾尖（主人：看不见尾巴）。
+        // 在弹簧骨初始化之前（Awake）把每节往侧面、往上再弯一点，弹簧骨就把这个当静止姿势，还是会跟着晃
+        void PoseTail()
+        {
+            var chain = vrm.GetComponentsInChildren<Transform>(true)
+                .Where(t => t.name.StartsWith("J_Opt_C_FoxTail") && !t.name.Contains("_end"))
+                .OrderBy(t => t.name).ToList();
+            for (int i = 0; i < chain.Count; i++)
+            {
+                var b = chain[i];
+                if (b.childCount == 0) continue;
+                var d = b.GetChild(0).position - b.position;
+                if (d.sqrMagnitude < 1e-8f) continue;
+                float k = i == 0 ? 1.3f : 1f;
+                var nd = Vector3.RotateTowards(d, new Vector3(1, 0, 0) * d.magnitude, tailSide * k * Mathf.Deg2Rad, 0);
+                nd = Vector3.RotateTowards(nd, Vector3.up * d.magnitude, tailLift * Mathf.Deg2Rad, 0);
+                b.rotation = Quaternion.FromToRotation(d, nd) * b.rotation;
+            }
+            Log($"tail posed: {chain.Count} bones side {tailSide} lift {tailLift}");
+        }
 
         // 排查「看不见尾巴」：尾巴网格在不在、用的什么着色器、尾尖在哪
         void LogTail()
