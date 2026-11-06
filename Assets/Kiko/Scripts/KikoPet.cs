@@ -31,19 +31,20 @@ namespace Kiko
         Transform lookTarget;
         readonly Dictionary<HumanBodyBones, Transform> rig = new();
         readonly Dictionary<HumanBodyBones, Quaternion> restWorld = new(), normWorld = new();
-        // 规范化骨骼的父子关系（中间没控制的骨骼，比如 upperChest、肩膀，规范化旋转都是单位，跟着父骨骼走）
-        static readonly Dictionary<HumanBodyBones, HumanBodyBones> Parent = new()
-        {
-            { HumanBodyBones.Spine, HumanBodyBones.Hips }, { HumanBodyBones.Chest, HumanBodyBones.Spine },
-            { HumanBodyBones.Neck, HumanBodyBones.Chest }, { HumanBodyBones.Head, HumanBodyBones.Neck },
-            { HumanBodyBones.LeftUpperArm, HumanBodyBones.Chest }, { HumanBodyBones.RightUpperArm, HumanBodyBones.Chest },
-            { HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftUpperArm }, { HumanBodyBones.RightLowerArm, HumanBodyBones.RightUpperArm },
-            { HumanBodyBones.LeftHand, HumanBodyBones.LeftLowerArm }, { HumanBodyBones.RightHand, HumanBodyBones.RightLowerArm },
-            { HumanBodyBones.LeftUpperLeg, HumanBodyBones.Hips }, { HumanBodyBones.RightUpperLeg, HumanBodyBones.Hips },
-            { HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftUpperLeg }, { HumanBodyBones.RightLowerLeg, HumanBodyBones.RightUpperLeg },
-        };
-        readonly Dictionary<HumanBodyBones, Vector3> cur = new(), vel = new();
-        readonly Dictionary<HumanBodyBones, Vector3> clipPose = new();
+        // 规范化骨骼：模型里所有人形骨骼，按层级从上到下排好；每根记下它上面最近的人形骨骼（中间没控制的骨骼，
+        // 比如 upperChest、肩膀，规范化旋转是单位，跟着父骨骼走）
+        readonly List<HumanBodyBones> rigOrder = new();
+        readonly Dictionary<HumanBodyBones, HumanBodyBones> humanParent = new();
+        // 要写旋转的骨骼：关键帧/弹簧的 15 根 + 动捕里出现的（手指、肩膀、脚、upperChest…）
+        readonly List<HumanBodyBones> driven = new();
+        readonly HashSet<HumanBodyBones> springSet = new(KikoPose.Bones);
+        readonly Dictionary<HumanBodyBones, Vector3> cur = new(), vel = new(), outPose = new();
+        readonly Dictionary<HumanBodyBones, Vector3> clipPose = new(), motionPose = new();
+
+        // ---------- 真人动捕（Resources/kiko_motions.json，Tools/bake_vrma.py 从 .vrma 烘出来）----------
+        Dictionary<string, KikoMotion> motions = new();
+        KikoMotion motion;
+        float motionT, motionW, motionHips;
 
         // ---------- 心情 / 动作（数据：Resources/kiko_acts.json，从 Tauri 版 vrm.js 导出）----------
         KikoActs acts;
@@ -79,6 +80,8 @@ namespace Kiko
             var json = Resources.Load<TextAsset>("kiko_acts");
             if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
             else Log("没找到 Resources/kiko_acts.json");
+            var mj = Resources.Load<TextAsset>("kiko_motions");
+            if (mj) { motions = KikoMotionData.Load(mj.text); Log($"motions {string.Join(",", motions.Keys)}"); }
             PoseTail();
             vrm.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.SpecifiedTransform;
             lookTarget = new GameObject("LookTarget").transform;
@@ -111,16 +114,30 @@ namespace Kiko
             if (!vrm) yield break;
             // 场景里摆好的预制体没有 ControlRig，自己做「规范化骨骼」：记下 T-pose 时每根骨头的世界旋转，
             // 之后 实际世界旋转 = 规范化世界旋转 × 静止世界旋转
-            foreach (var b in KikoPose.Bones)
-            {
+            for (var b = HumanBodyBones.Hips; b < HumanBodyBones.LastBone; b++)
                 if (vrm.TryGetBoneTransform(b, out var t) && t)
                 {
                     rig[b] = t;
                     restWorld[b] = t.rotation;
                 }
-                cur[b] = Base(b);
-                vel[b] = Vector3.zero;
-            }
+            var byT = rig.ToDictionary(kv => kv.Value, kv => kv.Key);
+            int Depth(Transform t) { int d = 0; for (; t; t = t.parent) d++; return d; }
+            foreach (var kv in rig)
+                for (var p = kv.Value.parent; p; p = p.parent)
+                    if (byT.TryGetValue(p, out var pb)) { humanParent[kv.Key] = pb; break; }
+            rigOrder.AddRange(rig.Keys.OrderBy(b => Depth(rig[b])));
+            var want = new HashSet<HumanBodyBones>(KikoPose.Bones);
+            foreach (var m in motions.Values) foreach (var id in m.ids) if ((int)id >= 0) want.Add(id);
+            want.ExceptWith(new[] { HumanBodyBones.LeftEye, HumanBodyBones.RightEye, HumanBodyBones.Jaw });
+            foreach (var b in rigOrder)
+                if (want.Contains(b))
+                {
+                    driven.Add(b);
+                    cur[b] = Base(b);
+                    vel[b] = Vector3.zero;
+                    outPose[b] = cur[b];
+                }
+            Log($"rig {rig.Count} bones, driven {driven.Count}");
             if (rig.TryGetValue(HumanBodyBones.Hips, out var hipsT)) hipsBase = hipsT.localPosition.y;
             FrameCamera();
             ready = true;
@@ -251,7 +268,8 @@ namespace Kiko
             SetMood("surprised", 1.6f); // → Flinch
         }
 
-        Vector3 Base(HumanBodyBones b) => acts != null && acts.Stand.TryGetValue(b, out var v) ? v : KikoPose.Stand[b];
+        Vector3 Base(HumanBodyBones b) =>
+            acts != null && acts.Stand.TryGetValue(b, out var v) ? v : KikoPose.Stand.TryGetValue(b, out var s) ? s : Vector3.zero;
 
         /// 换心情：表情跟着换；表里有对应动作就做一次（和 Tauri 版 setMood 一样）。sec > 0 时过几秒回 idle
         public void SetMood(string m, float sec)
@@ -260,13 +278,29 @@ namespace Kiko
             bool changed = m != mood;
             mood = m;
             moodUntil = sec > 0 ? Time.time + sec : 0;
+            if (changed)
+            {
+                // 换心情：停掉持续/循环中的动作（拎着、走路、耷拉），再做新心情的动作（vrm.js show()）
+                if (action != null && (action.hold || action.loop >= 0)) action = null;
+                if (motion != null && motion.loop) StopMotion();
+            }
             if (changed && acts != null && acts.MoodAct.TryGetValue(m, out var a)) Act(a);
         }
 
         /// 播一段动作（vrm.js act()）
         public void Act(string name)
         {
-            if (acts == null || name == null || !acts.Clips.TryGetValue(name, out var c)) return;
+            if (name == null) return;
+            // 有动捕的动作优先播动捕（和 Tauri 版一样），没有再用关键帧
+            if (motions.TryGetValue(name, out var mo))
+            {
+                PlayMotion(mo);
+                action = null;
+                idleNext = Time.time + 4f + Random.Range(0f, 6f);
+                return;
+            }
+            if (acts == null || !acts.Clips.TryGetValue(name, out var c)) return;
+            if (motion != null) StopMotion();
             action = c;
             actStart = Time.time;
             idleNext = Time.time + 4f + Random.Range(0f, 6f);
@@ -275,7 +309,7 @@ namespace Kiko
         // 待机小动作：心情是 idle、没在做动作、鼠标没停在她身上时，每 6–15 秒随机一个
         void IdleFidget()
         {
-            if (acts == null || action != null || state != State.Idle || mood != "idle" || over || Time.time < idleNext) return;
+            if (acts == null || action != null || motion != null || state != State.Idle || mood != "idle" || over || Time.time < idleNext) return;
             if (acts.IdleClips.Length == 0) return;
             Act(acts.IdleClips[Random.Range(0, acts.IdleClips.Length)]);
             idleNext = Time.time + 6f + Random.Range(0f, 9f);
@@ -297,7 +331,33 @@ namespace Kiko
             lookTarget.position = head + new Vector3(-look.x * 0.6f, -look.y * 0.45f, 1.2f);
         }
 
+        // ---------- 动捕：开始 / 停止（0.25 秒交叉淡入，停的时候从当前姿势接回弹簧，不跳）----------
+        void PlayMotion(KikoMotion m)
+        {
+            TakeOver();
+            motion = m;
+            motionT = 0;
+            motionW = 0;
+        }
+
+        void StopMotion()
+        {
+            if (motion == null) return;
+            TakeOver();
+            motion = null;
+            motionW = 0;
+        }
+
+        // 把正在显示的姿势读回弹簧（vrm.js takeOverPose）
+        void TakeOver()
+        {
+            foreach (var b in driven) { cur[b] = outPose[b]; vel[b] = Vector3.zero; }
+            hipsNow = hipsOut;
+            hipsV = 0;
+        }
+
         // ---------- 姿势（弹簧跟随，和 vrm.js 一样 ST 200 / 阻尼 0.92）----------
+        float hipsOut;
         void UpdatePose(float dt)
         {
             float now = Time.time;
@@ -307,28 +367,55 @@ namespace Kiko
             // 动作片段求值；放完了回站姿
             float sink = 0;
             if (action != null && !acts.Eval(action, (now - actStart) * 1000f, clipPose, out sink)) { action = null; sink = 0; }
-            bool idle = action == null && state == State.Idle;
-            hipsV += ((sink - hipsNow) * ST - hipsV * DM) * dt;
+            // 动捕：放完了（不循环的）就交回弹簧
+            if (motion != null)
+            {
+                motionT += dt * motion.speed;
+                if (!motion.loop && motionT >= motion.Duration) StopMotion();
+                else
+                {
+                    float t = motion.loop ? motionT % motion.Duration : motionT;
+                    motionHips = motion.Sample(t, motionPose) * hipsBase;
+                    motionW = Mathf.Min(1, motionW + dt / 0.25f);
+                }
+            }
+            bool mo = motion != null;
+            bool idle = action == null && !mo && state == State.Idle;
+            float hipsGoal = mo ? motionHips : sink;
+            hipsV += ((hipsGoal - hipsNow) * ST - hipsV * DM) * dt;
             hipsNow += hipsV * dt;
+            hipsOut = mo ? Mathf.Lerp(hipsNow, motionHips, motionW) : hipsNow;
             if (rig.TryGetValue(HumanBodyBones.Hips, out var hipsT))
             {
                 var lp = hipsT.localPosition;
-                lp.y = hipsBase + hipsNow;
+                lp.y = hipsBase + hipsOut;
                 hipsT.localPosition = lp;
             }
-            foreach (var b in KikoPose.Bones)
+            foreach (var b in driven)
             {
-                if (!rig.TryGetValue(b, out var t)) continue;
-                var goal = action != null && clipPose.TryGetValue(b, out var cp) ? cp : Base(b);
-                if (idle) goal += Idle(b, br, ws, now);
-                goal += Look(b);
+                bool spring = springSet.Contains(b);
+                Vector3 goal;
+                if (mo && motionPose.TryGetValue(b, out var mp)) goal = mp;
+                else if (!spring) goal = Vector3.zero;
+                else goal = action != null && clipPose.TryGetValue(b, out var cp) ? cp : Base(b);
+                if (spring && idle) goal += Idle(b, br, ws, now);
                 var v = vel[b];
                 v += ((goal - cur[b]) * ST - v * DM) * dt;
                 vel[b] = v;
                 cur[b] += v * dt;
-                var wn = (Parent.TryGetValue(b, out var p) && normWorld.TryGetValue(p, out var pw) ? pw : Quaternion.identity) * KikoPose.ToUnity(cur[b]);
+                // 动捕在播：直接用动捕（淡入期间和弹簧混合），细节不被弹簧抹掉
+                var o = mo && motionPose.TryGetValue(b, out var mv) ? Vector3.Lerp(cur[b], mv, motionW) : cur[b];
+                outPose[b] = o;
+            }
+            // 规范化世界旋转：从上往下乘；没驱动的骨骼规范化局部旋转是单位
+            foreach (var b in rigOrder)
+            {
+                var pw = humanParent.TryGetValue(b, out var p) && normWorld.TryGetValue(p, out var q) ? q : Quaternion.identity;
+                if (!outPose.TryGetValue(b, out var e)) { normWorld[b] = pw; continue; }
+                if (springSet.Contains(b)) e += Look(b) * (mo ? 0.4f : 1f);
+                var wn = pw * KikoPose.ToUnity(e);
                 normWorld[b] = wn;
-                t.rotation = wn * restWorld[b];
+                rig[b].rotation = wn * restWorld[b];
             }
         }
 
@@ -402,7 +489,9 @@ namespace Kiko
         }
 
         // ---------- 编辑器试玩用：数字键换心情，F1 依次播所有动作 ----------
+#if UNITY_EDITOR
         int previewIdx = -1;
+#endif
         void DebugKeys()
         {
 #if UNITY_EDITOR

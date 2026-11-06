@@ -14,6 +14,18 @@ Tauri 版桌宠（[zhixu-whale-maid-pet](https://github.com/yankcc258/zhixu-whal
 阶段 1 的她能：站着呼吸、眨眼、看鼠标；拖着走（拎起来手脚垂下）、松手掉到任务栏上落地；戳一下缩一下。
 **退出：按住 Shift 右键点她。** 日志：`%USERPROFILE%\AppData\LocalLow\yank\ZhixuFox\pet.log`（每 30 秒记一次内存/帧率）。
 
+## 阶段 2（进行中）：把 Tauri 版的本事搬过来
+- ✅ 心情 / 关键帧动作 / 表情：`Tools/export_acts.js` 从 vrm.js 导出到 `Resources/kiko_acts.json`（40 个动作、25 种表情），求值规则和 evalClip 一样
+- ✅ 待机小动作：没人理她时每 6–15 秒随机来一个
+- ✅ 真人动捕：`Tools/bake_vrma.py` 把 Tauri 版的 .vrma 烘成 `Resources/kiko_motions.json`（走路、掉落、落地、跳、挥手、加油、玩手机、喝水…），
+  换算和 three-vrm 完全一样，幅度/「收着点」照 blendMotion 做好；手指、肩膀、脚也跟着动
+  ```
+  node Tools/export_acts.js <zpm>/src/vrm.js Assets/Kiko/Resources/kiko_acts.json
+  python3 Tools/bake_vrma.py <zpm>/src/vrm/motion Assets/Kiko/Resources/kiko_acts.json Assets/Kiko/Resources/kiko_motions.json
+  ```
+- 编辑器里试玩：Game 视图里按 **0–9** 换心情（idle/happy/angry/surprised/smug/sleepy/pat/wave/pout/excited），**F1** 依次播每个动作
+- 还没搬：对话气泡/台词、睡觉、贴边趴着（Peek，打算用 IK 重做）、换装、和知序聊天、自动更新
+
 ## 第一次打开（Unity 6000.3.28f1）
 包（UniVRM v0.131.4、lilToon 2.4.1、UniWindowController v0.9.8）直接放在 `Packages/` 里（嵌入式包），不需要装 Git。
 
@@ -42,3 +54,5 @@ $U = "C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe"
 ## 第三方
 - `Packages/` 里原样嵌入：UniVRM（MIT）、lilToon（MIT）、UniWindowController（MIT），各自的 LICENSE 在包目录里
 - 模型：知序原创角色希狐（VRoid Studio 制作）
+- 动捕：fumi2kick「使いどころに困るモーションセット」（CC0，BOOTH 5527394）、Josie 动画重定向包的走路（CC0，BOOTH 7861818）；
+  掉落/落地/跳/待机两段来自 Mixamo（用 Tauri 版 tools/vrm3d/fbx2vrma.py 重定向），只随本程序一起分发
