@@ -43,7 +43,17 @@ namespace Kiko
             { HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftUpperLeg }, { HumanBodyBones.RightLowerLeg, HumanBodyBones.RightUpperLeg },
         };
         readonly Dictionary<HumanBodyBones, Vector3> cur = new(), vel = new();
-        Dictionary<HumanBodyBones, Vector3> target = KikoPose.Stand;
+        readonly Dictionary<HumanBodyBones, Vector3> clipPose = new();
+
+        // ---------- 心情 / 动作（数据：Resources/kiko_acts.json，从 Tauri 版 vrm.js 导出）----------
+        KikoActs acts;
+        string mood = "idle";
+        float moodUntil;
+        KikoClip action;
+        float actStart, idleNext = 6f;
+        float hipsBase, hipsNow, hipsV;
+        readonly Dictionary<string, float> expNow = new(), expGoal = new();
+        readonly Dictionary<string, ExpressionKey> expKey = new();
 
         enum State { Idle, Pressed, Drag, Fall, Land }
         State state = State.Idle;
@@ -66,6 +76,9 @@ namespace Kiko
             cam = Camera.main;
             vrm = FindAnyObjectByType<Vrm10Instance>();
             if (!vrm) { Log("没找到 Vrm10Instance"); return; }
+            var json = Resources.Load<TextAsset>("kiko_acts");
+            if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
+            else Log("没找到 Resources/kiko_acts.json");
             PoseTail();
             vrm.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.SpecifiedTransform;
             lookTarget = new GameObject("LookTarget").transform;
@@ -105,9 +118,10 @@ namespace Kiko
                     rig[b] = t;
                     restWorld[b] = t.rotation;
                 }
-                cur[b] = KikoPose.Stand[b];
+                cur[b] = Base(b);
                 vel[b] = Vector3.zero;
             }
+            if (rig.TryGetValue(HumanBodyBones.Hips, out var hipsT)) hipsBase = hipsT.localPosition.y;
             FrameCamera();
             ready = true;
             Invoke(nameof(LogTail), 3f);
@@ -168,7 +182,10 @@ namespace Kiko
             if (!vrm || !ready) return;
             float dt = Mathf.Min(Time.deltaTime, 0.05f);
             stateT += dt;
+            if (moodUntil > 0 && Time.time > moodUntil) { moodUntil = 0; SetMood("idle", 0); }
+            DebugKeys();
             UpdateInput(dt);
+            IdleFidget();
             UpdateLook();
             UpdatePose(dt);
             UpdateFace(dt);
@@ -222,16 +239,47 @@ namespace Kiko
         {
             state = s;
             stateT = 0;
-            target = s == State.Drag || s == State.Fall ? KikoPose.Dangle : s == State.Land ? KikoPose.Land : KikoPose.Stand;
+            if (s == State.Drag) SetMood("dangle", 0);          // → Hang（循环）
+            else if (s == State.Fall) { SetMood("surprised", 0); Act("Fall"); }
+            else if (s == State.Land) { Act("Land"); SetMood("idle", 0); }
+            else if (s == State.Idle && mood == "dangle") SetMood("idle", 0);
         }
 
         void Poke()
         {
             flinchUntil = Time.time + 0.6f;
-            target = KikoPose.Flinch;
-            Invoke(nameof(BackToStand), 0.35f);
+            SetMood("surprised", 1.6f); // → Flinch
         }
-        void BackToStand() { if (state == State.Idle) target = KikoPose.Stand; }
+
+        Vector3 Base(HumanBodyBones b) => acts != null && acts.Stand.TryGetValue(b, out var v) ? v : KikoPose.Stand[b];
+
+        /// 换心情：表情跟着换；表里有对应动作就做一次（和 Tauri 版 setMood 一样）。sec > 0 时过几秒回 idle
+        public void SetMood(string m, float sec)
+        {
+            if (m == mood && sec <= 0) return;
+            bool changed = m != mood;
+            mood = m;
+            moodUntil = sec > 0 ? Time.time + sec : 0;
+            if (changed && acts != null && acts.MoodAct.TryGetValue(m, out var a)) Act(a);
+        }
+
+        /// 播一段动作（vrm.js act()）
+        public void Act(string name)
+        {
+            if (acts == null || name == null || !acts.Clips.TryGetValue(name, out var c)) return;
+            action = c;
+            actStart = Time.time;
+            idleNext = Time.time + 4f + Random.Range(0f, 6f);
+        }
+
+        // 待机小动作：心情是 idle、没在做动作、鼠标没停在她身上时，每 6–15 秒随机一个
+        void IdleFidget()
+        {
+            if (acts == null || action != null || state != State.Idle || mood != "idle" || over || Time.time < idleNext) return;
+            if (acts.IdleClips.Length == 0) return;
+            Act(acts.IdleClips[Random.Range(0, acts.IdleClips.Length)]);
+            idleNext = Time.time + 6f + Random.Range(0f, 9f);
+        }
 
         // ---------- 看鼠标 ----------
         Vector2 look; // -1..1，相对窗口中心
@@ -256,11 +304,22 @@ namespace Kiko
             float br = Mathf.Sin(now * 1.6f), ws = Mathf.Sin(now * 0.45f);
             const float ST = 200f;
             float DM = 2f * Mathf.Sqrt(ST) * 0.92f;
-            bool idle = state == State.Idle && now > flinchUntil;
+            // 动作片段求值；放完了回站姿
+            float sink = 0;
+            if (action != null && !acts.Eval(action, (now - actStart) * 1000f, clipPose, out sink)) { action = null; sink = 0; }
+            bool idle = action == null && state == State.Idle;
+            hipsV += ((sink - hipsNow) * ST - hipsV * DM) * dt;
+            hipsNow += hipsV * dt;
+            if (rig.TryGetValue(HumanBodyBones.Hips, out var hipsT))
+            {
+                var lp = hipsT.localPosition;
+                lp.y = hipsBase + hipsNow;
+                hipsT.localPosition = lp;
+            }
             foreach (var b in KikoPose.Bones)
             {
                 if (!rig.TryGetValue(b, out var t)) continue;
-                var goal = target[b];
+                var goal = action != null && clipPose.TryGetValue(b, out var cp) ? cp : Base(b);
                 if (idle) goal += Idle(b, br, ws, now);
                 goal += Look(b);
                 var v = vel[b];
@@ -293,12 +352,39 @@ namespace Kiko
             _ => Vector3.zero,
         };
 
-        // ---------- 表情：眨眼、被戳吓一跳、被拎着委屈 ----------
+        // ---------- 表情：心情表（EXP）+ 动作自带表情，0.25 秒渐变；自动眨眼（闭眼类心情不眨）----------
+        static readonly Dictionary<string, ExpressionPreset> Presets = new()
+        {
+            { "happy", ExpressionPreset.happy }, { "angry", ExpressionPreset.angry }, { "sad", ExpressionPreset.sad },
+            { "relaxed", ExpressionPreset.relaxed }, { "surprised", ExpressionPreset.surprised },
+            { "aa", ExpressionPreset.aa }, { "ih", ExpressionPreset.ih }, { "ou", ExpressionPreset.ou }, { "ee", ExpressionPreset.ee }, { "oh", ExpressionPreset.oh },
+            { "blink", ExpressionPreset.blink }, { "blinkLeft", ExpressionPreset.blinkLeft }, { "blinkRight", ExpressionPreset.blinkRight },
+            { "neutral", ExpressionPreset.neutral },
+        };
+        ExpressionKey Key(string n)
+        {
+            if (!expKey.TryGetValue(n, out var k))
+                expKey[n] = k = Presets.TryGetValue(n, out var p) ? ExpressionKey.CreateFromPreset(p) : ExpressionKey.CreateCustom(n);
+            return k;
+        }
+
         void UpdateFace(float dt)
         {
             var ex = vrm.Runtime.Expression;
             float now = Time.time;
-            if (now > blinkNext && blinkT < 0) blinkT = 0;
+            // 目标：心情表 + 动作表情（动作的值覆盖心情的同名项）
+            foreach (var k in expNow.Keys.ToList()) expGoal[k] = 0;
+            if (acts != null && acts.Exp.TryGetValue(mood, out var e)) foreach (var kv in e) expGoal[kv.Key] = kv.Value;
+            if (action?.expNames != null) for (int i = 0; i < action.expNames.Length; i++) expGoal[action.expNames[i]] = action.expValues[i];
+            float k25 = 1 - Mathf.Exp(-dt / 0.08f); // ≈ 0.25 秒到位
+            foreach (var kv in expGoal)
+            {
+                expNow.TryGetValue(kv.Key, out var w);
+                expNow[kv.Key] = w + (kv.Value - w) * k25;
+            }
+            // 自动眨眼
+            bool eyesShut = acts != null && acts.EyesShut.Contains(mood);
+            if (!eyesShut && now > blinkNext && blinkT < 0) blinkT = 0;
             float blink = 0;
             if (blinkT >= 0)
             {
@@ -306,11 +392,31 @@ namespace Kiko
                 blink = Mathf.Sin(Mathf.Clamp01(blinkT / 0.16f) * Mathf.PI);
                 if (blinkT > 0.16f) { blinkT = -1; blinkNext = now + Random.Range(2f, 6f); }
             }
-            bool dangling = state == State.Drag || state == State.Fall;
-            ex.SetWeight(ExpressionKey.Blink, blink);
-            ex.SetWeight(ExpressionKey.Surprised, Mathf.MoveTowards(ex.GetWeight(ExpressionKey.Surprised), now < flinchUntil ? 0.8f : 0, dt * 6));
-            ex.SetWeight(ExpressionKey.Sad, Mathf.MoveTowards(ex.GetWeight(ExpressionKey.Sad), dangling ? 0.6f : 0, dt * 4));
-            ex.SetWeight(ExpressionKey.Relaxed, Mathf.MoveTowards(ex.GetWeight(ExpressionKey.Relaxed), dangling || now < flinchUntil ? 0 : 0.25f, dt * 3));
+            foreach (var kv in expNow)
+            {
+                float w = kv.Value;
+                if (kv.Key == "blink") w = Mathf.Max(w, blink);
+                ex.SetWeight(Key(kv.Key), Mathf.Clamp01(w));
+            }
+            if (!expNow.ContainsKey("blink")) ex.SetWeight(ExpressionKey.Blink, blink);
+        }
+
+        // ---------- 编辑器试玩用：数字键换心情，F1 依次播所有动作 ----------
+        int previewIdx = -1;
+        void DebugKeys()
+        {
+#if UNITY_EDITOR
+            string[] moods = { "idle", "happy", "angry", "surprised", "smug", "sleepy", "pat", "wave", "pout", "excited" };
+            for (int i = 0; i < moods.Length; i++)
+                if (Input.GetKeyDown(KeyCode.Alpha0 + i)) { SetMood(moods[i], 4f); Log("debug mood " + moods[i]); }
+            if (Input.GetKeyDown(KeyCode.F1) && acts != null)
+            {
+                var names = acts.Clips.Keys.Where(n => !n.StartsWith("Peek")).OrderBy(n => n).ToList();
+                previewIdx = (previewIdx + 1) % names.Count;
+                Act(names[previewIdx]);
+                Log("debug act " + names[previewIdx]);
+            }
+#endif
         }
 
         // ---------- 日志：判 Go/No-go 用的内存、帧率 ----------

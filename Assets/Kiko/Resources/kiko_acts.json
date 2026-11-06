@@ -1,0 +1,6707 @@
+{
+ "acts": [
+  {
+   "name": "IdleA",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [],
+     "rot": []
+    }
+   ]
+  },
+  {
+   "name": "IdleB",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [],
+     "rot": []
+    }
+   ]
+  },
+  {
+   "name": "IdleC",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [],
+     "rot": []
+    }
+   ]
+  },
+  {
+   "name": "IdleD",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [],
+     "rot": []
+    }
+   ]
+  },
+  {
+   "name": "IdleE",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [],
+     "rot": []
+    }
+   ]
+  },
+  {
+   "name": "Wave",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "happy",
+    "aa"
+   ],
+   "expValues": [
+    0.5,
+    0.1
+   ],
+   "keys": [
+    {
+     "t": 140,
+     "ease": "in",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -3,
+       "y": 40,
+       "z": 76
+      },
+      {
+       "x": 2,
+       "y": -4,
+       "z": 3
+      }
+     ]
+    },
+    {
+     "t": 420,
+     "ease": "back",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head",
+      "chest"
+     ],
+     "rot": [
+      {
+       "x": -10,
+       "y": 0,
+       "z": -22
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -60
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -10
+      },
+      {
+       "x": 0,
+       "y": -6,
+       "z": 8
+      },
+      {
+       "x": 0,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 580,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -100
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -25
+      }
+     ]
+    },
+    {
+     "t": 740,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -40
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 5
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -100
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -25
+      }
+     ]
+    },
+    {
+     "t": 1060,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -40
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 5
+      }
+     ]
+    },
+    {
+     "t": 1220,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -95
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -20
+      }
+     ]
+    },
+    {
+     "t": 1450,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -70
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -10
+      }
+     ]
+    },
+    {
+     "t": 1700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -30,
+       "y": 25,
+       "z": 30
+      },
+      {
+       "x": 0,
+       "y": 70,
+       "z": -20
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -3,
+       "z": 4
+      }
+     ]
+    },
+    {
+     "t": 2000,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head",
+      "chest"
+     ],
+     "rot": [
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Hop",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "happy"
+   ],
+   "expValues": [
+    0.5
+   ],
+   "keys": [
+    {
+     "t": 140,
+     "ease": "in",
+     "hasHips": true,
+     "hips": -0.025,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -9,
+       "y": 0,
+       "z": 1
+      },
+      {
+       "x": -9,
+       "y": 0,
+       "z": -1
+      },
+      {
+       "x": 15,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 15,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 300,
+     "ease": "out",
+     "hasHips": true,
+     "hips": 0.01,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": 2,
+       "y": 0,
+       "z": 1
+      },
+      {
+       "x": 2,
+       "y": 0,
+       "z": -1
+      },
+      {
+       "x": 1,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 1,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -3,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -62
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 62
+      }
+     ]
+    },
+    {
+     "t": 520,
+     "ease": "in",
+     "hasHips": true,
+     "hips": -0.02,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm"
+     ],
+     "rot": [
+      {
+       "x": -7,
+       "y": 0,
+       "z": 1
+      },
+      {
+       "x": -7,
+       "y": 0,
+       "z": -1
+      },
+      {
+       "x": 12,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 12,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 2,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 800,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Cheer",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "happy",
+    "aa"
+   ],
+   "expValues": [
+    0.7,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 160,
+     "ease": "in",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": 6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 5,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 6,
+       "y": -40,
+       "z": -62
+      },
+      {
+       "x": -6,
+       "y": 40,
+       "z": 62
+      }
+     ]
+    },
+    {
+     "t": 420,
+     "ease": "back",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -10,
+       "y": 0,
+       "z": 70
+      },
+      {
+       "x": -10,
+       "y": 0,
+       "z": -70
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 20
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -20
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 620,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "rightLowerArm",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 38
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -38
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 3
+      }
+     ]
+    },
+    {
+     "t": 820,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "rightLowerArm",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 12
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -12
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": -3
+      }
+     ]
+    },
+    {
+     "t": 1020,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "rightLowerArm",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 38
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -38
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 3
+      }
+     ]
+    },
+    {
+     "t": 1220,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "rightLowerArm",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 12
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -12
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1550,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -40,
+       "y": -30,
+       "z": -48
+      },
+      {
+       "x": -40,
+       "y": 30,
+       "z": 48
+      },
+      {
+       "x": 0,
+       "y": -85,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 85,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -2,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Flinch",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "surprised",
+    "oh"
+   ],
+   "expValues": [
+    0.8,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 90,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "spine",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": -14,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -30,
+       "y": -25,
+       "z": -58
+      },
+      {
+       "x": -30,
+       "y": 25,
+       "z": 58
+      },
+      {
+       "x": 0,
+       "y": -115,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 115,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -20,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 20,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 330,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -10,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 620,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "spine",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Slump",
+   "loop": -1,
+   "until": 0,
+   "hold": true,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 10,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 3,
+       "y": -36,
+       "z": -70
+      },
+      {
+       "x": -3,
+       "y": 36,
+       "z": 70
+      }
+     ]
+    },
+    {
+     "t": 1600,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 12,
+       "y": 0,
+       "z": 6
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Shake",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "angry",
+    "m_Fcl_BRW_Angry"
+   ],
+   "expValues": [
+    0.6,
+    0.5
+   ],
+   "keys": [
+    {
+     "t": 150,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -15,
+       "y": -48,
+       "z": -62
+      },
+      {
+       "x": -15,
+       "y": 48,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -118,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 118,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 18,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 300,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -18,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 450,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 16,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 600,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -14,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 750,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 9,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1050,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1400,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Stretch",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "blink",
+    "aa",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "expValues": [
+    1,
+    0.3,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 220,
+     "ease": "in",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": 6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 6,
+       "y": -40,
+       "z": -60
+      },
+      {
+       "x": -6,
+       "y": 40,
+       "z": 60
+      }
+     ]
+    },
+    {
+     "t": 800,
+     "ease": "back",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": -9,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -15,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -20,
+       "y": 0,
+       "z": 62
+      },
+      {
+       "x": -20,
+       "y": 0,
+       "z": -62
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 8
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -8
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1000,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "leftUpperArm"
+     ],
+     "rot": [
+      {
+       "x": -15,
+       "y": 0,
+       "z": 3
+      },
+      {
+       "x": -20,
+       "y": 0,
+       "z": 66
+      }
+     ]
+    },
+    {
+     "t": 1200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": -15,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": -20,
+       "y": 0,
+       "z": -66
+      }
+     ]
+    },
+    {
+     "t": 1400,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -15,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1800,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm"
+     ],
+     "rot": [
+      {
+       "x": 2,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 2,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -40,
+       "y": -30,
+       "z": -48
+      },
+      {
+       "x": -40,
+       "y": 30,
+       "z": 48
+      },
+      {
+       "x": 0,
+       "y": -85,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 85,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 2200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Shy",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "happy",
+    "relaxed",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "expValues": [
+    0.35,
+    0.4,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 350,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 10
+      },
+      {
+       "x": -52,
+       "y": -8,
+       "z": -56
+      },
+      {
+       "x": -52,
+       "y": 8,
+       "z": 56
+      },
+      {
+       "x": 0,
+       "y": -128,
+       "z": -10
+      },
+      {
+       "x": 0,
+       "y": 128,
+       "z": 10
+      },
+      {
+       "x": 0,
+       "y": 20,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -20,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": -8
+      }
+     ]
+    },
+    {
+     "t": 1450,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 8
+      }
+     ]
+    },
+    {
+     "t": 1900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 2300,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Tilt",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 420,
+     "ease": "back",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 6,
+       "z": 16
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 5
+      }
+     ]
+    },
+    {
+     "t": 1150,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 6,
+       "z": 16
+      }
+     ]
+    },
+    {
+     "t": 1500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Kick",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "angry",
+    "ou"
+   ],
+   "expValues": [
+    0.3,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 180,
+     "ease": "in",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperLeg",
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -3,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 3
+      }
+     ]
+    },
+    {
+     "t": 400,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperLeg",
+      "rightLowerLeg",
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -35,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 25,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 5,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -6
+      }
+     ]
+    },
+    {
+     "t": 700,
+     "ease": "in",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperLeg",
+      "rightLowerLeg"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 950,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Nod",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": 14,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 420,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -3,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 600,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 9,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 850,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Pant",
+   "loop": 300,
+   "until": 2000,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 300,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 2,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -62
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -30,
+       "z": 40
+      },
+      {
+       "x": 0,
+       "y": 30,
+       "z": -40
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 650,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 13,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 5,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 2,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1000,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 9,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -1,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 5,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Hang",
+   "loop": 300,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 300,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -85
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 85
+      },
+      {
+       "x": 0,
+       "y": -8,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 8,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 3
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": 18,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 18,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 2
+      },
+      {
+       "x": 12,
+       "y": 0,
+       "z": -5
+      }
+     ]
+    },
+    {
+     "t": 1100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "spine",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": -2,
+       "y": 0,
+       "z": 3
+      },
+      {
+       "x": -11,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 5
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -82
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 88
+      }
+     ]
+    },
+    {
+     "t": 1900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "spine",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": -11,
+       "y": 0,
+       "z": 3
+      },
+      {
+       "x": -2,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": -1
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -88
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 82
+      }
+     ]
+    },
+    {
+     "t": 2700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "spine",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": -6,
+       "y": 0,
+       "z": 3
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 2
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -85
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 85
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Walk",
+   "loop": 0,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 0,
+     "ease": "snap",
+     "hasHips": true,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -20,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 22,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 14,
+       "y": -6,
+       "z": -62
+      },
+      {
+       "x": -16,
+       "y": 10,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -18,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 42,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -5,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": 12,
+       "z": -4
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 1
+      },
+      {
+       "x": 0,
+       "y": -4,
+       "z": 0
+      },
+      {
+       "x": -3,
+       "y": 1,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 270,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": -0.015,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -2,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 36,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -8,
+       "z": -63
+      },
+      {
+       "x": 0,
+       "y": 8,
+       "z": 63
+      },
+      {
+       "x": 0,
+       "y": -28,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 28,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 2
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -2
+      },
+      {
+       "x": 5,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -4,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 540,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -20,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 22,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -16,
+       "y": -10,
+       "z": -62
+      },
+      {
+       "x": 14,
+       "y": 6,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -42,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 18,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -12,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": 5,
+       "z": -4
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": -1
+      },
+      {
+       "x": 0,
+       "y": 4,
+       "z": 0
+      },
+      {
+       "x": -3,
+       "y": -1,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 810,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": -0.015,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -2,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 36,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -8,
+       "z": -63
+      },
+      {
+       "x": 0,
+       "y": 8,
+       "z": 63
+      },
+      {
+       "x": 0,
+       "y": -28,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 28,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 2
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -2
+      },
+      {
+       "x": 5,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -4,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1080,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -20,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 22,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 14,
+       "y": -6,
+       "z": -62
+      },
+      {
+       "x": -16,
+       "y": 10,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -18,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 42,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -5,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": 12,
+       "z": -4
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 1
+      },
+      {
+       "x": 0,
+       "y": -4,
+       "z": 0
+      },
+      {
+       "x": -3,
+       "y": 1,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Fall",
+   "loop": -1,
+   "until": 0,
+   "hold": true,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 220,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -10,
+       "y": -5,
+       "z": -62
+      },
+      {
+       "x": -10,
+       "y": 5,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -30,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 30,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 10
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -10
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 2
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": -2
+      },
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 6,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Land",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "blink",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "expValues": [
+    0.7,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 110,
+     "ease": "out",
+     "hasHips": true,
+     "hips": -0.08,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm"
+     ],
+     "rot": [
+      {
+       "x": -24,
+       "y": 0,
+       "z": 3
+      },
+      {
+       "x": -24,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": 38,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 38,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 12,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -20,
+       "y": -10,
+       "z": -58
+      },
+      {
+       "x": -20,
+       "y": 10,
+       "z": 58
+      },
+      {
+       "x": 0,
+       "y": -30,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 30,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 260,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": -0.065,
+     "bones": [
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 750,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": 0,
+     "bones": [
+      "leftUpperLeg",
+      "rightUpperLeg",
+      "leftLowerLeg",
+      "rightLowerLeg",
+      "spine",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "LookAround",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 24,
+       "z": -3
+      },
+      {
+       "x": 0,
+       "y": 8,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 24,
+       "z": -3
+      }
+     ]
+    },
+    {
+     "t": 2100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -2,
+       "y": -22,
+       "z": 3
+      },
+      {
+       "x": 0,
+       "y": -8,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 3100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -2,
+       "y": -22,
+       "z": 3
+      }
+     ]
+    },
+    {
+     "t": 3700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ShiftWeight",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 700,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": -0.012,
+     "bones": [
+      "hips",
+      "spine",
+      "chest",
+      "rightUpperLeg",
+      "rightLowerLeg",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": -1
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 2
+      }
+     ]
+    },
+    {
+     "t": 3200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "hips"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 4
+      }
+     ]
+    },
+    {
+     "t": 3900,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": 0,
+     "bones": [
+      "hips",
+      "spine",
+      "chest",
+      "rightUpperLeg",
+      "rightLowerLeg",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Tiptoe",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "relaxed",
+    "m_Fcl_BRW_Fun"
+   ],
+   "expValues": [
+    0.25,
+    0.2
+   ],
+   "keys": [
+    {
+     "t": 350,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": 0.025,
+     "bones": [
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -2,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -3,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": true,
+     "hips": 0.025,
+     "bones": [],
+     "rot": []
+    },
+    {
+     "t": 1300,
+     "ease": "back",
+     "hasHips": true,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SmoothSkirt",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "relaxed"
+   ],
+   "expValues": [
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -78
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 78
+      },
+      {
+       "x": 0,
+       "y": -8,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 8,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -82
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 82
+      },
+      {
+       "x": 0,
+       "y": -14,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 14,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1300,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -72
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 72
+      }
+     ]
+    },
+    {
+     "t": 1700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 0,
+       "z": -82
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 82
+      }
+     ]
+    },
+    {
+     "t": 2400,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "FidgetHands",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 400,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -88,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 102,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -25,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 5,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -102,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 88,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -5,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 25,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1400,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 3,
+       "y": -40,
+       "z": -68
+      },
+      {
+       "x": -3,
+       "y": 40,
+       "z": 68
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -15,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 15,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekFlinch",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "surprised",
+    "oh"
+   ],
+   "expValues": [
+    0.7,
+    0.25
+   ],
+   "keys": [
+    {
+     "t": 100,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -39
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 39
+      }
+     ]
+    },
+    {
+     "t": 380,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -3,
+       "y": 0,
+       "z": 4
+      }
+     ]
+    },
+    {
+     "t": 700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekTilt",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 420,
+     "ease": "back",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -8,
+       "y": 6,
+       "z": 18
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 5
+      }
+     ]
+    },
+    {
+     "t": 1300,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -8,
+       "y": 6,
+       "z": 18
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 5
+      }
+     ]
+    },
+    {
+     "t": 1700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekSway",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "happy"
+   ],
+   "expValues": [
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 5
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 3
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": -3
+      }
+     ]
+    },
+    {
+     "t": 1100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": -5
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": -3
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 11
+      }
+     ]
+    },
+    {
+     "t": 1700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 2
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": -1
+      }
+     ]
+    },
+    {
+     "t": 2300,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekLook",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "chest"
+     ],
+     "rot": [
+      {
+       "x": -8,
+       "y": 26,
+       "z": 1
+      },
+      {
+       "x": -6,
+       "y": 8,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "chest"
+     ],
+     "rot": [
+      {
+       "x": -8,
+       "y": 26,
+       "z": 1
+      },
+      {
+       "x": -6,
+       "y": 8,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 2100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "chest"
+     ],
+     "rot": [
+      {
+       "x": -10,
+       "y": -24,
+       "z": 7
+      },
+      {
+       "x": -6,
+       "y": -8,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 3100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "chest"
+     ],
+     "rot": [
+      {
+       "x": -10,
+       "y": -24,
+       "z": 7
+      },
+      {
+       "x": -6,
+       "y": -8,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 3700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekNod",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": 6,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": -2,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 420,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -11,
+       "y": 0,
+       "z": 4
+      }
+     ]
+    },
+    {
+     "t": 600,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 1,
+       "y": 0,
+       "z": 4
+      }
+     ]
+    },
+    {
+     "t": 850,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekSleep",
+   "loop": -1,
+   "until": 0,
+   "hold": true,
+   "earFlat": 0,
+   "expNames": [],
+   "expValues": [],
+   "keys": [
+    {
+     "t": 1200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 24,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 10
+      }
+     ]
+    },
+    {
+     "t": 2000,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 25,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 10,
+       "y": 0,
+       "z": 12
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekShy",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "happy",
+    "relaxed",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "expValues": [
+    0.35,
+    0.4,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 350,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": 14
+      }
+     ]
+    },
+    {
+     "t": 1000,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 4,
+       "y": 0,
+       "z": -2
+      }
+     ]
+    },
+    {
+     "t": 1600,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 16,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 2,
+       "y": 0,
+       "z": 12
+      }
+     ]
+    },
+    {
+     "t": 2200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekWave",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "happy"
+   ],
+   "expValues": [
+    0.6
+   ],
+   "keys": [
+    {
+     "t": 320,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 30,
+       "z": 15
+      },
+      {
+       "x": 0,
+       "y": 20,
+       "z": -100
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": -1
+      }
+     ]
+    },
+    {
+     "t": 560,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 30,
+       "z": 15
+      },
+      {
+       "x": 0,
+       "y": 20,
+       "z": -85
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 12
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": -1
+      }
+     ]
+    },
+    {
+     "t": 800,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 30,
+       "z": 15
+      },
+      {
+       "x": 0,
+       "y": 20,
+       "z": -112
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": -12
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": -1
+      }
+     ]
+    },
+    {
+     "t": 1040,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 30,
+       "z": 15
+      },
+      {
+       "x": 0,
+       "y": 20,
+       "z": -85
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 12
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": -1
+      }
+     ]
+    },
+    {
+     "t": 1280,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 30,
+       "z": 15
+      },
+      {
+       "x": 0,
+       "y": 20,
+       "z": -112
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": -12
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": -1
+      }
+     ]
+    },
+    {
+     "t": 1750,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekPat",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 1,
+   "expNames": [
+    "happy",
+    "relaxed"
+   ],
+   "expValues": [
+    0.75,
+    0.4
+   ],
+   "keys": [
+    {
+     "t": 300,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -14,
+       "y": 0,
+       "z": 12
+      },
+      {
+       "x": -9,
+       "y": 0,
+       "z": 3
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -15,
+       "y": 4,
+       "z": -2
+      },
+      {
+       "x": -9,
+       "y": 0,
+       "z": -2
+      }
+     ]
+    },
+    {
+     "t": 1500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -15,
+       "y": -4,
+       "z": 12
+      },
+      {
+       "x": -9,
+       "y": 0,
+       "z": 3
+      }
+     ]
+    },
+    {
+     "t": 2100,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head"
+     ],
+     "rot": [
+      {
+       "x": -14,
+       "y": 0,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 2600,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekEarL",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "surprised",
+    "happy",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "expValues": [
+    0.5,
+    0.25,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 120,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": -4,
+       "y": -8,
+       "z": -10
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": -5
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -40
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 40
+      }
+     ]
+    },
+    {
+     "t": 700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -4,
+       "y": -6,
+       "z": -8
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": -4
+      }
+     ]
+    },
+    {
+     "t": 1200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekEarR",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "surprised",
+    "happy",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "expValues": [
+    0.5,
+    0.25,
+    0.3
+   ],
+   "keys": [
+    {
+     "t": 120,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck",
+      "leftUpperArm",
+      "rightUpperArm"
+     ],
+     "rot": [
+      {
+       "x": -4,
+       "y": 8,
+       "z": 18
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 5
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -40
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 40
+      }
+     ]
+    },
+    {
+     "t": 700,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -4,
+       "y": 6,
+       "z": 16
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 4
+      }
+     ]
+    },
+    {
+     "t": 1200,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekCheek",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0.4,
+   "expNames": [
+    "angry",
+    "ou",
+    "m_Fcl_BRW_Angry"
+   ],
+   "expValues": [
+    0.25,
+    0.55,
+    0.35
+   ],
+   "keys": [
+    {
+     "t": 150,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -8,
+       "y": -14,
+       "z": -2
+      },
+      {
+       "x": -6,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 900,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "head",
+      "neck"
+     ],
+     "rot": [
+      {
+       "x": -8,
+       "y": -12,
+       "z": -1
+      },
+      {
+       "x": -6,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1500,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekSwatR",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "surprised",
+    "m_Fcl_BRW_Fun",
+    "aa"
+   ],
+   "expValues": [
+    0.25,
+    0.3,
+    0.15
+   ],
+   "keys": [
+    {
+     "t": 220,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 41,
+       "z": 17
+      },
+      {
+       "x": 0,
+       "y": 67,
+       "z": -62
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": -35
+      },
+      {
+       "x": -4,
+       "y": 6,
+       "z": 8
+      },
+      {
+       "x": 10,
+       "y": 4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 340,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightUpperArm",
+      "rightLowerArm",
+      "rightHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 41,
+       "z": 17
+      },
+      {
+       "x": 0,
+       "y": 67,
+       "z": -62
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": -35
+      },
+      {
+       "x": -3,
+       "y": 6,
+       "z": 8
+      },
+      {
+       "x": 10,
+       "y": 4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 450,
+     "ease": "in",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 101,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 8
+      },
+      {
+       "x": 0,
+       "y": 8,
+       "z": 6
+      },
+      {
+       "x": 12,
+       "y": 4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 820,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "rightLowerArm",
+      "rightHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": 101,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 8
+      },
+      {
+       "x": 0,
+       "y": 8,
+       "z": 6
+      },
+      {
+       "x": 12,
+       "y": 4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1250,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "PeekSwatL",
+   "loop": -1,
+   "until": 0,
+   "hold": false,
+   "earFlat": 0,
+   "expNames": [
+    "surprised",
+    "m_Fcl_BRW_Fun",
+    "aa"
+   ],
+   "expValues": [
+    0.25,
+    0.3,
+    0.15
+   ],
+   "keys": [
+    {
+     "t": 220,
+     "ease": "out",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "leftLowerArm",
+      "leftHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -41,
+       "z": -17
+      },
+      {
+       "x": 0,
+       "y": -67,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 35
+      },
+      {
+       "x": -4,
+       "y": -6,
+       "z": 0
+      },
+      {
+       "x": 10,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 340,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftUpperArm",
+      "leftLowerArm",
+      "leftHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -41,
+       "z": -17
+      },
+      {
+       "x": 0,
+       "y": -67,
+       "z": 62
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 35
+      },
+      {
+       "x": -3,
+       "y": -6,
+       "z": 0
+      },
+      {
+       "x": 10,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 450,
+     "ease": "in",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "leftHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -101,
+       "z": -4
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": -8
+      },
+      {
+       "x": 0,
+       "y": -8,
+       "z": 2
+      },
+      {
+       "x": 12,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 820,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "leftLowerArm",
+      "leftHand",
+      "head",
+      "spine"
+     ],
+     "rot": [
+      {
+       "x": 0,
+       "y": -101,
+       "z": -4
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": -8
+      },
+      {
+       "x": 0,
+       "y": -8,
+       "z": 2
+      },
+      {
+       "x": 12,
+       "y": -4,
+       "z": 0
+      }
+     ]
+    },
+    {
+     "t": 1250,
+     "ease": "inout",
+     "hasHips": false,
+     "hips": 0,
+     "bones": [
+      "spine",
+      "chest",
+      "neck",
+      "head",
+      "leftUpperArm",
+      "rightUpperArm",
+      "leftLowerArm",
+      "rightLowerArm",
+      "leftHand",
+      "rightHand"
+     ],
+     "rot": [
+      {
+       "x": 10,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": 8,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -6,
+       "y": 0,
+       "z": 0
+      },
+      {
+       "x": -8,
+       "y": 0,
+       "z": 4
+      },
+      {
+       "x": 0,
+       "y": -55,
+       "z": -45
+      },
+      {
+       "x": 0,
+       "y": 55,
+       "z": 45
+      },
+      {
+       "x": 0,
+       "y": -95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 95,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": -10,
+       "z": 0
+      },
+      {
+       "x": 0,
+       "y": 10,
+       "z": 0
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "exps": [
+  {
+   "mood": "idle",
+   "names": [
+    "relaxed"
+   ],
+   "values": [
+    0.12
+   ]
+  },
+  {
+   "mood": "run",
+   "names": [
+    "relaxed",
+    "aa"
+   ],
+   "values": [
+    0.1,
+    0.08
+   ]
+  },
+  {
+   "mood": "happy",
+   "names": [
+    "happy",
+    "aa"
+   ],
+   "values": [
+    0.85,
+    0.12
+   ]
+  },
+  {
+   "mood": "excited",
+   "names": [
+    "happy",
+    "aa",
+    "m_Fcl_BRW_Fun"
+   ],
+   "values": [
+    0.7,
+    0.4,
+    0.5
+   ]
+  },
+  {
+   "mood": "wave",
+   "names": [
+    "happy",
+    "relaxed"
+   ],
+   "values": [
+    0.6,
+    0.3
+   ]
+  },
+  {
+   "mood": "newyear",
+   "names": [
+    "happy",
+    "aa",
+    "m_Fcl_BRW_Fun"
+   ],
+   "values": [
+    0.7,
+    0.3,
+    0.5
+   ]
+  },
+  {
+   "mood": "smug",
+   "names": [
+    "m_Fcl_MTH_SkinFung_R",
+    "m_Fcl_MTH_Fun",
+    "m_Fcl_HA_Fung1",
+    "m_Fcl_BRW_Fun",
+    "m_Fcl_EYE_Fun",
+    "blinkRight",
+    "blinkLeft"
+   ],
+   "values": [
+    1,
+    0.35,
+    0.8,
+    0.5,
+    0.3,
+    0.5,
+    0.1
+   ]
+  },
+  {
+   "mood": "smirk",
+   "names": [
+    "m_Fcl_MTH_SkinFung_R",
+    "m_Fcl_MTH_Fun",
+    "m_Fcl_HA_Fung1",
+    "m_Fcl_BRW_Fun",
+    "m_Fcl_EYE_Fun",
+    "blinkRight",
+    "blinkLeft"
+   ],
+   "values": [
+    1,
+    0.35,
+    0.8,
+    0.5,
+    0.3,
+    0.5,
+    0.1
+   ]
+  },
+  {
+   "mood": "bleh",
+   "names": [
+    "blinkLeft",
+    "ih",
+    "m_Fcl_BRW_Fun",
+    "m_Fcl_MTH_Fun"
+   ],
+   "values": [
+    1,
+    0.5,
+    0.4,
+    0.3
+   ]
+  },
+  {
+   "mood": "angry",
+   "names": [
+    "angry",
+    "m_Fcl_BRW_Angry",
+    "ou"
+   ],
+   "values": [
+    0.8,
+    0.5,
+    0.15
+   ]
+  },
+  {
+   "mood": "wake",
+   "names": [
+    "sad",
+    "blink",
+    "m_Fcl_MTH_Neutral"
+   ],
+   "values": [
+    0.3,
+    0.4,
+    0.4
+   ]
+  },
+  {
+   "mood": "pat",
+   "names": [
+    "happy",
+    "relaxed",
+    "m_Fcl_BRW_Fun"
+   ],
+   "values": [
+    0.45,
+    0.55,
+    0.3
+   ]
+  },
+  {
+   "mood": "sleepy",
+   "names": [
+    "blink",
+    "relaxed",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "values": [
+    0.7,
+    0.3,
+    0.3
+   ]
+  },
+  {
+   "mood": "sleep",
+   "names": [
+    "blink",
+    "relaxed"
+   ],
+   "values": [
+    1,
+    0.25
+   ]
+  },
+  {
+   "mood": "sleepBottom",
+   "names": [
+    "blink",
+    "relaxed"
+   ],
+   "values": [
+    1,
+    0.25
+   ]
+  },
+  {
+   "mood": "peekBottom",
+   "names": [
+    "relaxed",
+    "m_Fcl_BRW_Fun"
+   ],
+   "values": [
+    0.2,
+    0.15
+   ]
+  },
+  {
+   "mood": "peekCheek",
+   "names": [
+    "angry",
+    "ou",
+    "m_Fcl_BRW_Angry"
+   ],
+   "values": [
+    0.25,
+    0.55,
+    0.35
+   ]
+  },
+  {
+   "mood": "peekHead",
+   "names": [
+    "blink",
+    "ou",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "values": [
+    0.3,
+    0.3,
+    0.3
+   ]
+  },
+  {
+   "mood": "peekEar",
+   "names": [
+    "surprised",
+    "happy",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "values": [
+    0.45,
+    0.25,
+    0.3
+   ]
+  },
+  {
+   "mood": "surprised",
+   "names": [
+    "surprised",
+    "oh",
+    "m_Fcl_BRW_Surprised"
+   ],
+   "values": [
+    0.9,
+    0.35,
+    0.5
+   ]
+  },
+  {
+   "mood": "dangle",
+   "names": [
+    "sad",
+    "oh",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "values": [
+    0.65,
+    0.25,
+    0.6
+   ]
+  },
+  {
+   "mood": "pout",
+   "names": [
+    "angry",
+    "ou",
+    "m_Fcl_BRW_Angry"
+   ],
+   "values": [
+    0.3,
+    0.6,
+    0.3
+   ]
+  },
+  {
+   "mood": "meh",
+   "names": [
+    "blink",
+    "m_Fcl_MTH_Neutral",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "values": [
+    0.35,
+    0.5,
+    0.2
+   ]
+  },
+  {
+   "mood": "hot",
+   "names": [
+    "sad",
+    "aa",
+    "blink"
+   ],
+   "values": [
+    0.3,
+    0.25,
+    0.25
+   ]
+  },
+  {
+   "mood": "cold",
+   "names": [
+    "ou",
+    "blink",
+    "m_Fcl_BRW_Sorrow"
+   ],
+   "values": [
+    0.5,
+    0.25,
+    0.4
+   ]
+  }
+ ],
+ "moodAct": [
+  {
+   "mood": "wave",
+   "act": "Wave"
+  },
+  {
+   "mood": "happy",
+   "act": "Hop"
+  },
+  {
+   "mood": "excited",
+   "act": "Cheer"
+  },
+  {
+   "mood": "newyear",
+   "act": "Cheer"
+  },
+  {
+   "mood": "surprised",
+   "act": "Flinch"
+  },
+  {
+   "mood": "sleepy",
+   "act": "Slump"
+  },
+  {
+   "mood": "sleep",
+   "act": "Slump"
+  },
+  {
+   "mood": "sleepBottom",
+   "act": "Slump"
+  },
+  {
+   "mood": "peekCheek",
+   "act": "PeekCheek"
+  },
+  {
+   "mood": "peekHead",
+   "act": "PeekFlinch"
+  },
+  {
+   "mood": "angry",
+   "act": "Shake"
+  },
+  {
+   "mood": "wake",
+   "act": "Stretch"
+  },
+  {
+   "mood": "pat",
+   "act": "Shy"
+  },
+  {
+   "mood": "smug",
+   "act": "Tilt"
+  },
+  {
+   "mood": "smirk",
+   "act": "Tilt"
+  },
+  {
+   "mood": "pout",
+   "act": "Kick"
+  },
+  {
+   "mood": "meh",
+   "act": "Kick"
+  },
+  {
+   "mood": "bleh",
+   "act": "Tilt"
+  },
+  {
+   "mood": "dangle",
+   "act": "Hang"
+  },
+  {
+   "mood": "run",
+   "act": "Walk"
+  }
+ ],
+ "eyesShut": [
+  "happy",
+  "wave",
+  "newyear",
+  "sleepy",
+  "sleep",
+  "sleepBottom",
+  "pat"
+ ],
+ "idleClips": [
+  "LookAround",
+  "ShiftWeight",
+  "Tiptoe",
+  "SmoothSkirt",
+  "FidgetHands",
+  "LookAround",
+  "ShiftWeight"
+ ],
+ "bustMap": [
+  {
+   "mood": "Shy",
+   "act": "PeekPat"
+  },
+  {
+   "mood": "Flinch",
+   "act": "PeekFlinch"
+  },
+  {
+   "mood": "Tilt",
+   "act": "PeekTilt"
+  },
+  {
+   "mood": "Nod",
+   "act": "PeekNod"
+  },
+  {
+   "mood": "Slump",
+   "act": "PeekSleep"
+  },
+  {
+   "mood": "Wave",
+   "act": "PeekWave"
+  },
+  {
+   "mood": "Cheer",
+   "act": "PeekWave"
+  },
+  {
+   "mood": "Hop",
+   "act": "PeekSway"
+  },
+  {
+   "mood": "Stretch",
+   "act": "PeekSway"
+  }
+ ],
+ "bustIdle": [
+  "PeekLook",
+  "PeekSway",
+  "PeekTilt",
+  "PeekLook"
+ ],
+ "stand": [
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 3,
+   "y": -40,
+   "z": -68
+  },
+  {
+   "x": -3,
+   "y": 40,
+   "z": 68
+  },
+  {
+   "x": 0,
+   "y": -95,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 95,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": -15,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 15,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  },
+  {
+   "x": 0,
+   "y": 0,
+   "z": 0
+  }
+ ],
+ "standBones": [
+  "hips",
+  "spine",
+  "chest",
+  "neck",
+  "head",
+  "leftUpperArm",
+  "rightUpperArm",
+  "leftLowerArm",
+  "rightLowerArm",
+  "leftHand",
+  "rightHand",
+  "leftUpperLeg",
+  "rightUpperLeg",
+  "leftLowerLeg",
+  "rightLowerLeg"
+ ]
+}
