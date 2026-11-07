@@ -411,6 +411,7 @@ namespace Kiko
             UpdateFace(dt);
             UpdateTail(dt);
             UpdateBell(dt);
+            UpdateRest();
             // 省电：没人碰她、也没在掉落时 30 帧，鼠标在身上/拖着/掉落时 60 帧
             Application.targetFrameRate = state == State.Idle && !over && Time.time > flinchUntil ? 30 : 60;
             if (Time.time > nextStat) { nextStat = Time.time + 30f; LogStats(); }
@@ -470,7 +471,8 @@ namespace Kiko
         {
             state = s;
             stateT = 0;
-            if (s == State.Drag) SetMood("dangle", 0);          // → Hang（循环）
+            if (s == State.Pressed || s == State.Drag) Touch();
+            if (s == State.Drag) { rest = Rest.None; SetMood("dangle", 0); } // → Hang（循环）
             else if (s == State.Fall) { SetMood("surprised", 0); Act("Fall"); }
             else if (s == State.Land) { Act("Land"); SetMood("idle", 0); talk.OnDropped(); }
             else if (s == State.Idle && mood == "dangle") SetMood("idle", 0);
@@ -478,6 +480,10 @@ namespace Kiko
 
         void Poke()
         {
+            Touch();
+            if (rest == Rest.Sleep) { WakeUp(false); talk.OnPokeAsleep(); return; }
+            if (rest == Rest.Sit) { rest = Rest.None; StopMotion(); }
+            if (talk.OnPokeGroggy()) return; // 刚被戳醒又戳 → 起床气
             flinchUntil = Time.time + 0.6f;
             SetMood("surprised", 1.6f); // → Flinch
             talk.OnPoke(); // 台词会把心情换成合适的（双击 = 打开知序）
@@ -521,12 +527,112 @@ namespace Kiko
             idleNext = Time.time + 4f + Random.Range(0f, 6f);
         }
 
+        // ---------- 歇着 / 睡觉（本机动作包，Kiko/6 烘的 L_*；没有就不做）----------
+        // 一阵子没人理 → 随机坐下歇一会儿 → 有时候坐着坐着就睡着；夜里（23–6 点）没人理很快就睡，睡到天亮或被戳醒。
+        enum Rest { None, Sit, Sleep }
+        Rest rest;
+        float restUntil, lastTouch, restAfter = 300;
+        static readonly string[] SitSet =
+        {
+            "L_EJ_01_wait_sitliedown_F", "L_EJ_02_wait_sitliedown_F", "L_EJ_03_wait_sitliedown_F", "L_EJ_04_wait_sitliedown_F",
+            "L_EJ_05_wait_sitliedown_F", "L_EJ_06_wait_sitliedown_F", "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI",
+        };
+        static readonly string[] SleepSet = { "L_AFK_manmaruCat", "L_Lunalit_AFK_suimin_ver2", "L_afk_hard_guard" };
+        static readonly string[] IdleExtra = { "L_AFK_MaidStanding" };
+        const string WakeMotion = "L_Situp_To_Idle";
+        public bool Sleeping => rest == Rest.Sleep;
+        public bool Resting => rest != Rest.None;
+        static bool Night { get { int h = System.DateTime.Now.Hour; return h >= 23 || h < 6; } }
+
+        public void Touch()
+        {
+            lastTouch = Time.time;
+            restAfter = Random.Range(240f, 480f); // 下次多久没人理就去歇着（秒）
+        }
+
+        string PickMotion(string[] set)
+        {
+            var have = set.Where(motions.ContainsKey).ToArray();
+            return have.Length == 0 ? null : have[Random.Range(0, have.Length)];
+        }
+
+        public bool SitDown(float sec)
+        {
+            var m = PickMotion(SitSet);
+            if (m == null) return false;
+            action = null;
+            if (mood != "idle") SetMood("idle", 0);
+            Act(m);
+            rest = Rest.Sit;
+            restUntil = Time.time + sec;
+            Log($"rest: sit {m} {sec:F0}s");
+            return true;
+        }
+
+        public bool GoSleep()
+        {
+            var m = PickMotion(SleepSet);
+            if (m == null) return false;
+            SetMood("sleep", 0); // 闭眼脸（会顺手做一下 Slump，马上被睡姿盖掉）
+            Act(m);
+            rest = Rest.Sleep;
+            restUntil = Night ? float.MaxValue : Time.time + Random.Range(600f, 1200f);
+            talk.OnSleep();
+            Log($"rest: sleep {m}");
+            return true;
+        }
+
+        /// gently = 自己睡醒（伸懒腰打招呼）；否则是被戳醒（迷迷糊糊）
+        public void WakeUp(bool gently)
+        {
+            rest = Rest.None;
+            Touch();
+            if (motions.TryGetValue(WakeMotion, out var w)) { SetMood(gently ? "wake" : "sleepy", 6f); PlayMotion(w); action = null; }
+            else { StopMotion(); SetMood(gently ? "wake" : "sleepy", 6f); }
+            if (gently) talk.SayKey("wakeUp", null, 5f);
+            Log("rest: wake " + (gently ? "(自然醒)" : "(被戳醒)"));
+        }
+
+        void UpdateRest()
+        {
+            if (!ready || shooting || state != State.Idle) return;
+            if (over) Touch(); // 鼠标在她身上 = 有人在看她
+            switch (rest)
+            {
+                case Rest.None:
+                    if (motion != null || action != null || mood != "idle" || talk.Showing) return;
+                    float idleFor = Time.time - lastTouch;
+                    if (Night && idleFor > 120f) { if (!GoSleep()) Touch(); }
+                    else if (idleFor > restAfter)
+                    {
+                        if (!(Random.value < 0.75f ? SitDown(Random.Range(90f, 240f)) : GoSleep())) Touch();
+                    }
+                    break;
+                case Rest.Sit:
+                    if (motion == null) { rest = Rest.None; Touch(); break; } // 被别的动作打断了
+                    if (Time.time > restUntil)
+                    {
+                        if (Night || Random.value < 0.35f) GoSleep();
+                        else { rest = Rest.None; StopMotion(); Act("Stretch"); Touch(); Log("rest: stand up"); }
+                    }
+                    break;
+                case Rest.Sleep:
+                    if (motion == null) { rest = Rest.None; Touch(); break; }
+                    if (!Night && restUntil == float.MaxValue) restUntil = Time.time + Random.Range(30f, 600f); // 天亮了，过一会儿自己醒
+                    if (Time.time > restUntil) WakeUp(true);
+                    break;
+            }
+        }
+
         // 待机小动作：心情是 idle、没在做动作、鼠标没停在她身上时，每 6–15 秒随机一个
         void IdleFidget()
         {
             if (shooting || acts == null || action != null || motion != null || state != State.Idle || mood != "idle" || over || Time.time < idleNext) return;
             if (acts.IdleClips.Length == 0) return;
-            Act(acts.IdleClips[Random.Range(0, acts.IdleClips.Length)]);
+            // 偶尔插一段本机动作包里的待机（女仆站等），循环的放 6–10 秒就停
+            var extra = Random.value < 0.18f ? PickMotion(IdleExtra) : null;
+            if (extra != null) { Act(extra); motionUntil = Time.time + Random.Range(6f, 10f); }
+            else Act(acts.IdleClips[Random.Range(0, acts.IdleClips.Length)]);
             idleNext = Time.time + 6f + Random.Range(0f, 9f);
         }
 
@@ -547,9 +653,11 @@ namespace Kiko
         }
 
         // ---------- 动捕：开始 / 停止（0.25 秒交叉淡入，停的时候从当前姿势接回弹簧，不跳）----------
+        float motionUntil; // >0：循环动作放到这个时间就停（待机里插一段女仆站之类）
         void PlayMotion(KikoMotion m)
         {
             TakeOver();
+            motionUntil = 0;
             motion = m;
             motionT = 0;
             motionW = 0;
@@ -586,10 +694,10 @@ namespace Kiko
             if (motion != null)
             {
                 motionT += dt * motion.speed;
-                if (!motion.loop && motionT >= motion.Duration) StopMotion();
+                if ((!motion.loop && !motion.pingpong && motionT >= motion.Duration) || (motionUntil > 0 && Time.time > motionUntil)) StopMotion();
                 else
                 {
-                    float t = motion.loop ? motionT % motion.Duration : motionT;
+                    float t = motion.pingpong ? Mathf.PingPong(motionT, motion.Duration) : motion.loop ? motionT % motion.Duration : motionT;
                     motionHips = motion.Sample(t, motionPose) * hipsBase;
                     motionW = Mathf.Min(1, motionW + dt / 0.25f);
                 }

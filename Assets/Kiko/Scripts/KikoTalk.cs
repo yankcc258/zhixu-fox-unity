@@ -84,6 +84,7 @@ namespace Kiko
             if (line == null) return;
             text = Fill(line);
             until = Time.time + sec;
+            if (pet.Resting) mood = null; // 坐着/睡着时说话不换表情动作，不然会把坐姿/睡姿打断
             if (mood != null)
             {
                 if (delay > 0) StartCoroutine(MoodLater(mood, sec, delay));
@@ -209,7 +210,38 @@ namespace Kiko
 
         void Update()
         {
-            if (!hidden && Time.time > nextChat && pet.CanChat && !Showing) Chat();
+            if (hidden) return;
+            if (pet.Sleeping)
+            {
+                // 睡着了偶尔说梦话
+                if (Time.time > nextSleepTalk && !Showing) { SayKey("sleepTalk", null, 5f); nextSleepTalk = Time.time + Random.Range(150f, 360f); }
+                return;
+            }
+            if (Time.time > nextChat && pet.CanChat && !Showing) Chat();
+        }
+
+        // ---------- 睡觉 ----------
+        float nextSleepTalk, groggyAt = -999;
+        public void OnSleep()
+        {
+            Hide();
+            nextSleepTalk = Time.time + Random.Range(40f, 90f);
+        }
+
+        /// 睡着时被戳醒：迷迷糊糊
+        public void OnPokeAsleep()
+        {
+            groggyAt = Time.time;
+            SayKey("groggy", "sleepy", 6f);
+        }
+
+        /// 刚被戳醒 12 秒内又戳 → 起床气。返回 true 表示已经处理了
+        public bool OnPokeGroggy()
+        {
+            if (Time.time - groggyAt > 12f) return false;
+            groggyAt = -999;
+            SayKey("mad", "angry", 6f, 0.3f);
+            return true;
         }
 
         // ---------- 右键菜单（Windows 原生弹出菜单）----------
@@ -218,13 +250,24 @@ namespace Kiko
             int c = Chatty;
             int id = Win32.PopupMenu(
                 (1, "说句话", false), (2, "摸摸头", false), (3, "打开知序（双击也行）", false), (0, "-", false),
+                (4, "坐下歇会儿", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (0, "-", false),
                 (13, "话多一点", c == 3), (12, "正常", c == 2), (11, "话少一点", c == 1), (10, "安静", c == 0), (0, "-", false),
                 (20, "退出", false));
             KikoPet.Log("menu → " + id);
             switch (id)
             {
-                case 1: Chat(); break;
-                case 2: SayKey("pat", "pat", 4f); break;
+                case 1: if (pet.Sleeping) SayKey("sleepTalk", null, 5f); else Chat(); break;
+                case 2: if (pet.Sleeping) SayKey("patSleep", null, 4f); else SayKey("pat", "pat", 4f); break;
+                case 4:
+                    if (pet.Sleeping) pet.WakeUp(true);
+                    if (pet.SitDown(Random.Range(60f, 180f))) Say("那我坐一会儿～（拍拍地板）", null, 3f);
+                    else Say("……没地方坐。（动作包没装）", "meh", 3f);
+                    break;
+                case 5:
+                    if (pet.Sleeping) pet.WakeUp(true);
+                    else if (pet.GoSleep()) Say("那我睡了……有事戳我。zzz", null, 3f);
+                    else Say("……睡不着。（动作包没装）", "meh", 3f);
+                    break;
                 case 3: OpenSite(); break;
                 case 10: case 11: case 12: case 13:
                     Chatty = id - 10;

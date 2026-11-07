@@ -14,6 +14,7 @@ namespace Kiko
         public float fps = 30;
         public float speed = 1;
         public bool loop;
+        public bool pingpong; // 截出来的一段（坐着/躺着的中间部分）首尾接不上 → 来回放
         public string[] bones;
         public float[] frames; // [帧][骨骼][xyz]
         public float[] hips;   // 每帧髋高相对静止髋高的比例（-0.1 = 低 10%）
