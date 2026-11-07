@@ -117,6 +117,7 @@ namespace Kiko
             if (lj) { var lm = KikoMotionData.Load(lj.text); foreach (var kv in lm) motions[kv.Key] = kv.Value; Log($"local motions {lm.Count}"); }
             PoseTail();
             SetupTailPhysics();
+            SetupSkirtPhysics();
             KikoAccessories.Build(vrm, Log);
             vrm.LookAtTargetType = VRM10ObjectLookAt.LookAtTargetTypes.SpecifiedTransform;
             lookTarget = new GameObject("LookTarget").transform;
@@ -253,6 +254,24 @@ namespace Kiko
         readonly List<VRM10SpringBoneJoint> tailJoints = new();
         Vector2Int lastWin;
         Vector2 winVel;
+        // 裙子：VRoid 导出的裙子弹簧骨重力是 0，坐下时裙摆保持站着的形状翘在空中（主人：像钢铁做的、反重力）→ 加重力、放软
+        [Tooltip("裙子弹簧硬度")] public float skirtStiff = 0.3f;
+        [Tooltip("裙子重力")] public float skirtGravity = 0.5f;
+        void SetupSkirtPhysics()
+        {
+            int n = 0;
+            foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
+            {
+                if (!j.name.Contains("Skirt")) continue;
+                j.m_stiffnessForce = skirtStiff;
+                j.m_gravityPower = skirtGravity;
+                j.m_gravityDir = Vector3.down;
+                j.m_dragForce = Mathf.Max(j.m_dragForce, 0.5f);
+                n++;
+            }
+            Log($"skirt joints {n} stiff {skirtStiff} gravity {skirtGravity}");
+        }
+
         void SetupTailPhysics()
         {
             foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
@@ -362,7 +381,7 @@ namespace Kiko
             float sway = tailWag * (Mathf.Sin(t * 1.15f) * 0.7f + Mathf.Sin(t * 0.41f + 1.3f) * 0.3f);
             float ix = Mathf.Clamp(winVel.x / 1500f, -1.5f, 1.5f) * tailInertia;
             float iy = Mathf.Clamp(winVel.y / 1800f, -0.9f, 0.9f) * tailInertia;
-            var dir = new Vector3(sway + ix, -1f + iy, -tailBack).normalized; // z 往后：垂在腿后面，不挡吊带袜
+            var dir = (new Vector3(sway + ix, -1f + iy, 0) + vrm.transform.rotation * new Vector3(0, 0, -tailBack)).normalized; // 往身后偏：垂在腿后面（转身走路时跟着转）
             var sb = vrm.Runtime.SpringBone;
             foreach (var j in tailJoints)
             {
@@ -384,6 +403,8 @@ namespace Kiko
             if (hips) Log($"hips pos={hips.position:F3} cam={cam.transform.position:F3}");
         }
 
+        float camTotal = 1.6f, camBottom; // 窗口竖着看得到的世界高度、窗口底边的世界 y（坐边上/走路换算像素用）
+        float PxPerM => Screen.height / camTotal;
         void FrameCamera()
         {
             // 头顶到脚底整个人放进画面（上下留 3%），和 three.js 版 frameCamera 一样
@@ -395,6 +416,8 @@ namespace Kiko
             float dist = total / 2f / Mathf.Tan(fov / 2f * Mathf.Deg2Rad);
             cam.fieldOfView = fov;
             cam.transform.SetPositionAndRotation(new Vector3(0, figBottom + total / 2f, dist), Quaternion.Euler(0, 180, 0));
+            camTotal = total;
+            camBottom = figBottom;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0, 0, 0, 0);
             cam.allowHDR = false;
@@ -415,6 +438,7 @@ namespace Kiko
             UpdateTail(dt);
             UpdateBell(dt);
             UpdateRest();
+            vrm.transform.rotation = Quaternion.Slerp(vrm.transform.rotation, Quaternion.Euler(0, yawGoal, 0), 1 - Mathf.Exp(-dt * 7f));
             // 省电：没人碰她、也没在掉落时 30 帧，鼠标在身上/拖着/掉落时 60 帧
             Application.targetFrameRate = state == State.Idle && !over && Time.time > flinchUntil ? 30 : 60;
             if (Time.time > nextStat) { nextStat = Time.time + 30f; LogStats(); }
@@ -475,7 +499,7 @@ namespace Kiko
             state = s;
             stateT = 0;
             if (s == State.Pressed || s == State.Drag) Touch();
-            if (s == State.Drag) { rest = Rest.None; SetMood("dangle", 0); } // → Hang（循环）
+            if (s == State.Drag) { rest = Rest.None; yawGoal = 0; SetMood("dangle", 0); } // → Hang（循环）
             else if (s == State.Fall) { SetMood("surprised", 0); Act("Fall"); }
             else if (s == State.Land) { Act("Land"); SetMood("idle", 0); talk.OnDropped(); }
             else if (s == State.Idle && mood == "dangle") SetMood("idle", 0);
@@ -485,7 +509,8 @@ namespace Kiko
         {
             Touch();
             if (rest == Rest.Sleep) { WakeUp(false); talk.OnPokeAsleep(); return; }
-            if (rest == Rest.Sit) { rest = Rest.None; StopMotion(0.6f); }
+            if (rest == Rest.Sit || rest == Rest.Edge) { rest = Rest.None; StopMotion(0.6f); }
+            if (rest == Rest.Walk) { rest = Rest.None; StopMotion(0.4f); yawGoal = 0; }
             if (talk.OnPokeGroggy()) return; // 刚被戳醒又戳 → 起床气
             flinchUntil = Time.time + 0.6f;
             SetMood("surprised", 1.6f); // → Flinch
@@ -538,7 +563,8 @@ namespace Kiko
 
         // ---------- 歇着 / 睡觉（本机动作包，Kiko/6 烘的 L_*；没有就不做）----------
         // 一阵子没人理 → 随机坐下歇一会儿 → 有时候坐着坐着就睡着；夜里（23–6 点）没人理很快就睡，睡到天亮或被戳醒。
-        enum Rest { None, Sit, Sleep }
+        enum Rest { None, Sit, Sleep, Edge, Walk }
+        float yawGoal; // 整个人朝哪（0 = 面向屏幕；走路时 ±90）
         Rest rest;
         float restUntil, lastTouch, restAfter = 300;
         static readonly string[] SitSet =
@@ -546,6 +572,13 @@ namespace Kiko
             "L_EJ_01_wait_sitliedown_F", "L_EJ_02_wait_sitliedown_F", "L_EJ_03_wait_sitliedown_F", "L_EJ_04_wait_sitliedown_F",
             "L_EJ_05_wait_sitliedown_F", "L_EJ_06_wait_sitliedown_F", "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI", // Saneko 是坐椅子的（悬空），不放进来
         };
+        // 坐在任务栏边上（坐椅子的姿势，屁股放在任务栏上沿，腿垂下去）
+        static readonly string[] EdgeSet =
+        {
+            "L_EJ_09_wait_sitliedown_F", "L_EJ_10_wait_sitliedown_F", "L_EJ_11_wait_sitliedown_F", "L_EJ_12_wait_sitliedown_F",
+            "L_EJ_13_wait_sitliedown_F", "L_Saneko_sitAFK",
+        };
+        static readonly string[] WalkSet = { "Walk", "L_AGIA_Other_walking_01" };
         static readonly string[] SleepSet = { "L_AFK_manmaruCat", "L_Lunalit_AFK_suimin_ver2", "L_afk_hard_guard" };
         // 待机里偶尔插的（女仆站、玩头发、背着手、AGIA 普通待机）
         static readonly string[] IdleExtra =
@@ -619,10 +652,72 @@ namespace Kiko
             Log("rest: wake " + (gently ? "(自然醒)" : "(被戳醒)"));
         }
 
+        // ---------- 坐到任务栏边上 ----------
+        float edgeDrop; // 坐稳时窗口要往下挪多少像素（屁股落在任务栏上沿）
+        public bool EdgeSit(float sec)
+        {
+            var win = Win32.WindowRect;
+            var wa = Win32.WorkAreaAt(new Vector2Int(win.x + win.width / 2, win.y + win.height / 2));
+            if (Mathf.Abs(win.y - (wa.yMax - win.height)) > 3) return false; // 不在地上（被挂在半空）就不坐
+            var m = PickMotion(EdgeSet);
+            if (m == null) return false;
+            var mo = motions[m];
+            float frac = mo.hips[mo.HasSegments ? mo.loopStart : 0];
+            float butt = hipsBase * (1 + frac) - 0.08f;
+            edgeDrop = Mathf.Max(0, (butt - camBottom) * PxPerM);
+            action = null;
+            if (mood != "idle") SetMood("idle", 0);
+            Act(m);
+            rest = Rest.Edge;
+            restUntil = Time.time + sec;
+            Log($"rest: edge sit {m} drop {edgeDrop:F0}px {sec:F0}s");
+            return true;
+        }
+
+        // ---------- 沿着任务栏走一段 ----------
+        float walkTarget, walkSpeed;
+        public bool StartWalk()
+        {
+            var win = Win32.WindowRect;
+            var wa = Win32.WorkAreaAt(new Vector2Int(win.x + win.width / 2, win.y + win.height / 2));
+            if (Mathf.Abs(win.y - (wa.yMax - win.height)) > 3) return false;
+            var m = PickMotion(WalkSet);
+            if (m == null) return false;
+            float lo = wa.xMin - win.width * 0.2f, hi = wa.xMax - win.width * 0.8f, min = 150 * scale;
+            float t = Random.Range(lo, hi);
+            if (Mathf.Abs(t - win.x) < min) t = win.x + (t >= win.x ? min : -min) * Random.Range(1f, 2.5f);
+            walkTarget = Mathf.Clamp(t, lo, hi);
+            if (Mathf.Abs(walkTarget - win.x) < 40) return false;
+            walkSpeed = 0.45f * PxPerM; // 每秒 0.45 米
+            yawGoal = walkTarget > win.x ? -90f : 90f; // 屏幕右边 = 世界 -x（相机转了 180°）
+            action = null;
+            if (mood != "idle") SetMood("idle", 0);
+            Act(m);
+            rest = Rest.Walk;
+            Log($"rest: walk {m} → x {walkTarget:F0}");
+            return true;
+        }
+
+        void StopWalk()
+        {
+            rest = Rest.None;
+            StopMotion(0.4f);
+            yawGoal = 0;
+            Touch();
+        }
+
         void UpdateRest()
         {
             if (!ready || shooting || state != State.Idle) return;
             if (over) Touch(); // 鼠标在她身上 = 有人在看她
+            if (rest != Rest.Edge)
+            {
+                // 从任务栏边上起来（或被戳起来）后，窗口慢慢回到地面
+                var w0 = Win32.WindowRect;
+                var wa0 = Win32.WorkAreaAt(new Vector2Int(w0.x + w0.width / 2, w0.y + w0.height / 2));
+                int floorY = wa0.yMax - w0.height;
+                if (w0.y > floorY) Win32.MoveWindow(new Vector2Int(w0.x, Mathf.Max(floorY, w0.y - Mathf.CeilToInt(600 * Time.deltaTime))));
+            }
             switch (rest)
             {
                 case Rest.None:
@@ -631,9 +726,42 @@ namespace Kiko
                     if (Night && idleFor > 120f) { if (!GoSleep()) Touch(); }
                     else if (idleFor > restAfter)
                     {
-                        if (!(Random.value < 0.75f ? SitDown(Random.Range(90f, 240f)) : GoSleep())) Touch();
+                        float r = Random.value;
+                        bool ok = r < 0.35f ? StartWalk() : r < 0.6f ? SitDown(Random.Range(90f, 240f)) : r < 0.88f ? EdgeSit(Random.Range(90f, 240f)) : GoSleep();
+                        if (!ok) Touch();
                     }
                     break;
+                case Rest.Edge:
+                {
+                    if (motion == null) { rest = Rest.None; Touch(); break; }
+                    // 窗口跟着「坐下 / 站起来」那段慢慢往下 / 往上挪，坐稳时屁股正好在任务栏上沿
+                    float k;
+                    if (motion.HasSegments)
+                    {
+                        float tm = MotionTime(), a = motion.loopStart / motion.fps, b2 = motion.loopEnd / motion.fps;
+                        k = exiting ? 1 - Mathf.Clamp01((tm - b2) / Mathf.Max(0.1f, motion.Duration - b2)) : Mathf.Clamp01(tm / Mathf.Max(0.1f, a));
+                    }
+                    else k = Mathf.Clamp01(motionT / 0.8f);
+                    k = k * k * (3 - 2 * k);
+                    var w = Win32.WindowRect;
+                    var wa2 = Win32.WorkAreaAt(new Vector2Int(w.x + w.width / 2, w.y + w.height / 2));
+                    Win32.MoveWindow(new Vector2Int(w.x, Mathf.RoundToInt(wa2.yMax - w.height + edgeDrop * k)));
+                    if (Time.time > restUntil && !exiting)
+                    {
+                        if (!BeginExit()) { StopMotion(0.8f); }
+                        Log("rest: edge stand up");
+                    }
+                    break;
+                }
+                case Rest.Walk:
+                {
+                    if (motion == null) { StopWalk(); break; }
+                    var w = Win32.WindowRect;
+                    float step = walkSpeed * Time.deltaTime, dx = walkTarget - w.x;
+                    if (Mathf.Abs(dx) <= step) { Win32.MoveWindow(new Vector2Int(Mathf.RoundToInt(walkTarget), w.y)); StopWalk(); Log("rest: walk done"); }
+                    else Win32.MoveWindow(new Vector2Int(w.x + Mathf.RoundToInt(Mathf.Sign(dx) * Mathf.Max(1, step)), w.y));
+                    break;
+                }
                 case Rest.Sit:
                     if (motion == null) { rest = Rest.None; Touch(); break; } // 被别的动作打断了
                     if (Time.time > restUntil)
@@ -686,6 +814,7 @@ namespace Kiko
 
         // ---------- 动捕：开始 / 停止（0.25 秒交叉淡入，停的时候从当前姿势接回弹簧，不跳）----------
         float motionUntil; // >0：循环动作放到这个时间就停（待机里插一段女仆站之类）
+        static readonly Dictionary<string, float> MotionWeight = new() { ["Fall"] = 0.35f, ["Land"] = 0.6f };
         void PlayMotion(KikoMotion m, float blend = 0.35f)
         {
             Freeze(blend);
@@ -763,7 +892,9 @@ namespace Kiko
             bool idle = action == null && !mo && state == State.Idle;
             hipsV += ((sink - hipsNow) * ST - hipsV * DM) * dt;
             hipsNow += hipsV * dt;
-            hipsOut = Mathf.Lerp(mo ? motionHips : hipsNow, hipsFrom, bw);
+            // 有的动捕太用力（掉落是 Mixamo 的，上身猛往前扑，主人：太有力量感、出戏）→ 只用一部分
+            float mw = mo && MotionWeight.TryGetValue(motion.name, out var mwv) ? mwv : 1f;
+            hipsOut = Mathf.Lerp(mo ? Mathf.Lerp(hipsNow, motionHips, mw) : hipsNow, hipsFrom, bw);
             if (rig.TryGetValue(HumanBodyBones.Hips, out var hipsT))
             {
                 var lp = hipsT.localPosition;
@@ -782,7 +913,7 @@ namespace Kiko
                 vel[b] = v;
                 cur[b] += v * dt;
                 // 动捕在播：直接用动捕；切换时从冻结的姿势 Slerp 过来
-                var q = mo && motionPose.TryGetValue(b, out var mq) ? mq : KikoPose.ToUnity(cur[b]);
+                var q = mo && motionPose.TryGetValue(b, out var mq) ? (mw < 1 ? Quaternion.Slerp(KikoPose.ToUnity(cur[b]), mq, mw) : mq) : KikoPose.ToUnity(cur[b]);
                 if (bw > 0 && fromQ.TryGetValue(b, out var fq)) q = Quaternion.Slerp(q, fq, bw);
                 outQ[b] = q;
             }
@@ -795,7 +926,7 @@ namespace Kiko
                 if (springSet.Contains(b) && lk > 0) lq *= KikoPose.ToUnity(Look(b) * lk);
                 var wn = pw * lq;
                 normWorld[b] = wn;
-                rig[b].rotation = wn * restWorld[b];
+                rig[b].rotation = vrm.transform.rotation * wn * restWorld[b]; // 整个人转身（走路）时跟着根节点转
             }
         }
 

@@ -212,6 +212,12 @@ namespace Kiko.EditorTools
             pet.StartLocalShots();
         }
 
+        [MenuItem("Kiko/8a 试：坐到任务栏边上（Play 里）")]
+        static void TryEdge() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.EdgeSit(60); }
+
+        [MenuItem("Kiko/8b 试：走走（Play 里）")]
+        static void TryWalk() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.StartWalk(); }
+
         [MenuItem("Kiko/8 试：坐下（Play 里）")]
         static void TrySit() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.SitDown(60); }
 

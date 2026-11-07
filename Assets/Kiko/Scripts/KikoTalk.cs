@@ -250,7 +250,7 @@ namespace Kiko
             int c = Chatty;
             int id = Win32.PopupMenu(
                 (1, "说句话", false), (2, "摸摸头", false), (3, "打开知序（双击也行）", false), (0, "-", false),
-                (4, "坐下歇会儿", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (0, "-", false),
+                (4, "坐下歇会儿", false), (7, "坐到任务栏边上", false), (6, "走走", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (0, "-", false),
                 (13, "话多一点", c == 3), (12, "正常", c == 2), (11, "话少一点", c == 1), (10, "安静", c == 0), (0, "-", false),
                 (20, "退出", false));
             KikoPet.Log("menu → " + id);
@@ -269,6 +269,15 @@ namespace Kiko
                     else Say("……睡不着。（动作包没装）", "meh", 3f);
                     break;
                 case 3: OpenSite(); break;
+                case 6:
+                    if (pet.Sleeping) pet.WakeUp(true);
+                    if (!pet.StartWalk()) Say("……走不了。（得先站在任务栏上）", "meh", 3f);
+                    break;
+                case 7:
+                    if (pet.Sleeping) pet.WakeUp(true);
+                    if (pet.EdgeSit(Random.Range(60f, 180f))) Say("我去边上坐会儿～", null, 3f);
+                    else Say("……这里坐不了。（得先站在任务栏上）", "meh", 3f);
+                    break;
                 case 10: case 11: case 12: case 13:
                     Chatty = id - 10;
                     Say(Chatty == 0 ? "好吧，我安静待着……有事戳我。" : Chatty == 3 ? "那我可要多嘴了哦，{n}～" : "知道啦。", Chatty == 0 ? "meh" : "smug", 3f);
