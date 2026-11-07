@@ -13,7 +13,8 @@ namespace Kiko
     public static class KikoAccessories
     {
         public static bool Bell = true;
-        public static bool BackBow = true; // A2 衣服已接入（原女仆装的腰后大蝴蝶结在流水线里用 BOW=0 关掉了）
+        // 关：A2 衣服（VRoid 第三层）背后正中已经有围裙系带的大白蝴蝶结了，再加这个就重复了（11-07 看背面确认）
+        public static bool BackBow = false;
 
         static readonly Color Gold = new(0.96f, 0.76f, 0.30f), GoldShade = new(0.72f, 0.48f, 0.20f);
         static readonly Color Red = new(0.82f, 0.13f, 0.12f), RedShade = new(0.55f, 0.07f, 0.10f);

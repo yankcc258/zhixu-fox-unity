@@ -32,6 +32,7 @@ namespace Kiko
         [Tooltip("阻尼：越小晃得越久")] public float tailDrag = 0.25f;
         [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.6f;
         [Tooltip("窗口被拖动时尾巴甩的强度")] public float tailInertia = 1f;
+        [Tooltip("后裙让开尾巴：尾巴前几节挂胶囊碰撞体，半径 = 尾巴实际粗细 × 这个（0 = 关）")] public float tailSkirtPush = 0.7f;
 
         Vrm10Instance vrm;
         Camera cam;
@@ -225,6 +226,59 @@ namespace Kiko
                 tailJoints.Add(j);
             }
             Log($"tail joints {tailJoints.Count} stiff {tailStiff} gravity {tailGravity} drag {tailDrag}");
+            SetupTailSkirt();
+        }
+
+        // 后裙让开尾巴：尾巴根部几节挂胶囊碰撞体，加进裙子弹簧骨的碰撞组 → 裙子被尾巴顶起来搭在尾巴上，而不是尾巴从布里面穿出来。
+        // 在 Awake 里做（Vrm10Instance.Start 才建弹簧骨运行时），所以不用 Reconstruct。
+        void SetupTailSkirt()
+        {
+            if (tailSkirtPush <= 0) return;
+            var chain = vrm.GetComponentsInChildren<Transform>(true)
+                .Where(t => t.name.StartsWith("J_Opt_C_FoxTail") && !t.name.Contains("_end"))
+                .OrderBy(t => t.name).ToList();
+            var smr = vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                .FirstOrDefault(r => r.sharedMaterials.Any(m => m && m.name.Contains("FoxTail")));
+            if (!smr || chain.Count < 2) { Log("tail skirt: 没找到尾巴网格/骨骼"); return; }
+            var mesh = new Mesh();
+            smr.BakeMesh(mesh, true);
+            var tr = smr.transform;
+            var pts = mesh.vertices.Select(v => tr.position + tr.rotation * v).ToArray();
+            Destroy(mesh);
+            var group = chain[0].gameObject.AddComponent<VRM10SpringBoneColliderGroup>();
+            group.Name = "KikoTail";
+            var radii = new List<string>();
+            for (int i = 0; i < Mathf.Min(4, chain.Count - 1); i++)
+            {
+                Vector3 a = chain[i].position, b = chain[i + 1].position, ab = b - a;
+                float l2 = ab.sqrMagnitude;
+                if (l2 < 1e-8f) continue;
+                var ds = new List<float>();
+                foreach (var p in pts)
+                {
+                    float t = Vector3.Dot(p - a, ab) / l2;
+                    if (t < 0 || t > 1) continue;
+                    ds.Add(Vector3.Distance(p, a + ab * t));
+                }
+                if (ds.Count < 8) continue;
+                ds.Sort();
+                float r = ds[(int)(ds.Count * 0.6f)] * tailSkirtPush;
+                var go = new GameObject("KikoTailCollider" + i);
+                go.transform.SetParent(chain[i], false);
+                var c = go.AddComponent<VRM10SpringBoneCollider>();
+                c.ColliderType = VRM10SpringBoneColliderTypes.Capsule;
+                c.Offset = Vector3.zero;
+                c.Tail = go.transform.InverseTransformPoint(b);
+                var ls = go.transform.lossyScale;
+                c.Radius = r / Mathf.Max(ls.x, Mathf.Max(ls.y, ls.z));
+                group.Colliders.Add(c);
+                radii.Add($"{r * 100:F1}cm");
+            }
+            vrm.SpringBone.ColliderGroups.Add(group);
+            int ns = 0;
+            foreach (var sp in vrm.SpringBone.Springs)
+                if (sp.Joints.Count > 0 && sp.Joints[0] && sp.Joints[0].name.Contains("Skirt")) { sp.ColliderGroups.Add(group); ns++; }
+            Log($"tail skirt: {group.Colliders.Count} capsules r [{string.Join(", ", radii)}] → {ns} skirt springs");
         }
 
         void UpdateTail(float dt)
@@ -652,6 +706,18 @@ namespace Kiko
             yield return Shot(dir, "detail_collar");
             cam.transform.SetPositionAndRotation(Quaternion.Euler(0, 35, 0) * new Vector3(nk.x, nk.y - 0.06f, nk.z + 1.0f), Quaternion.Euler(0, 215, 0));
             yield return Shot(dir, "detail_collar35");
+            // 背面腰部特写：看后裙和尾巴根、背后蝴蝶结（第二张把头发藏掉）
+            var wp = rig[HumanBodyBones.Hips].position + Vector3.up * 0.04f;
+            var hairs = vrm.GetComponentsInChildren<SkinnedMeshRenderer>().Where(r => r.name.IndexOf("hair", System.StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+            for (int k = 0; k < 2; k++)
+            {
+                foreach (var r in hairs) r.enabled = k == 0;
+                cam.transform.SetPositionAndRotation(new Vector3(wp.x, wp.y, wp.z - 1.1f), Quaternion.identity);
+                yield return Shot(dir, k == 0 ? "detail_back" : "detail_back_nohair");
+                cam.transform.SetPositionAndRotation(Quaternion.Euler(0, 130, 0) * (new Vector3(0, 0, 1.1f)) + wp, Quaternion.Euler(0, 310, 0));
+                yield return Shot(dir, k == 0 ? "detail_back130" : "detail_back130_nohair");
+            }
+            foreach (var r in hairs) r.enabled = true;
             // 动作（取中间好看的一帧）
             cam.transform.SetPositionAndRotation(camPos, camRot);
             SetMood("idle", 0); Calm();
