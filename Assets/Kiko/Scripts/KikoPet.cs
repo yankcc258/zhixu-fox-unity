@@ -33,7 +33,8 @@ namespace Kiko
         [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.35f;
         [Tooltip("重力往后偏多少（0 = 直直往下，会贴到腿上）")] public float tailBack = 0.3f;
         [Tooltip("窗口被拖动时尾巴甩的强度")] public float tailInertia = 1f;
-        [Tooltip("后裙让开尾巴：尾巴前几节挂胶囊碰撞体，半径 = 尾巴实际粗细 × 这个（0 = 关）")] public float tailSkirtPush = 0.7f;
+        [Tooltip("后裙让开尾巴：尾巴前几节挂胶囊碰撞体，半径 = 尾巴实际粗细 × 这个（0 = 关）")] public float tailSkirtPush = 1f;
+        [Tooltip("尾巴碰撞体再加上毛的长度（米），免得毛从裙子里扎出来")] public float tailFurMargin = 0.025f;
 
         Vrm10Instance vrm;
         Camera cam;
@@ -266,7 +267,7 @@ namespace Kiko
                 }
                 if (ds.Count < 8) continue;
                 ds.Sort();
-                float r = ds[(int)(ds.Count * 0.6f)] * tailSkirtPush;
+                float r = ds[(int)(ds.Count * 0.6f)] * tailSkirtPush + tailFurMargin;
                 var go = new GameObject("KikoTailCollider" + i);
                 go.transform.SetParent(chain[i], false);
                 var c = go.AddComponent<VRM10SpringBoneCollider>();
