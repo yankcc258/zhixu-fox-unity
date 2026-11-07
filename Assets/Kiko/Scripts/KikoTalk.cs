@@ -114,7 +114,10 @@ namespace Kiko
         public bool OnPoke()
         {
             float now = Time.time;
-            if (now - lastPokeUp < 0.32f) { lastPokeUp = -999; OpenSite(); return true; }
+            // 双击 = 打开知序；但乱戳也是一串快速点击 → 双击后 0.35 秒内又点了就当成乱戳，不打开
+            if (openPending != null) { StopCoroutine(openPending); openPending = null; noOpenUntil = now + 0.8f; }
+            else if (now < noOpenUntil) noOpenUntil = now + 0.8f;
+            else if (now - lastPokeUp < 0.3f) openPending = StartCoroutine(OpenSoon());
             lastPokeUp = now;
             // 乱戳：3 秒内 6 下生气并警告；警告后 30 秒内再戳 4 下就躲起来（Tauri 版躲进托盘，这里躲 45 秒）
             pokes.RemoveAll(t => now - t > 3f);
@@ -141,6 +144,16 @@ namespace Kiko
             var l = Pick("poke");
             Say(l, MoodFor(l), 3.5f, 0.55f);
             return false;
+        }
+
+        Coroutine openPending;
+        float noOpenUntil;
+        IEnumerator OpenSoon()
+        {
+            yield return new WaitForSeconds(0.35f);
+            openPending = null;
+            pokes.Clear();
+            OpenSite();
         }
 
         IEnumerator RunAway()
