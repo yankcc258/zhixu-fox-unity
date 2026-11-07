@@ -93,6 +93,7 @@ namespace Kiko
             cam = Camera.main;
             vrm = FindAnyObjectByType<Vrm10Instance>();
             if (!vrm) { Log("没找到 Vrm10Instance"); return; }
+            gameObject.AddComponent<KikoLate>().pet = this;
             talk = gameObject.AddComponent<KikoTalk>();
             talk.pet = this;
             var json = Resources.Load<TextAsset>("kiko_acts");
@@ -278,7 +279,7 @@ namespace Kiko
         // 主人 11-07：坐下（膝盖抬起来）时裙子往下掉、露出来很怪。真的裙子坐下时前片是搭在大腿上的。
         // 做法：每条裙摆链按它在腰上的位置（前 / 侧 / 后）分到左腿或右腿，重力方向 = Lerp(往下, 大腿方向, 前片权重 × 大腿抬起程度)。
         // 站着时大腿朝下，等于没变；坐着/抬腿时前片顺着大腿铺过去，后片照样往下垂到座位上。
-        class SkirtChain { public List<VRM10SpringBoneJoint> joints = new(); public bool left; public float front; }
+        class SkirtChain { public List<VRM10SpringBoneJoint> joints = new(); public List<Transform> bones; public bool left; public float front, side; }
         readonly List<SkirtChain> skirtChains = new();
         Transform legUL, legLL, legUR, legLR;
         void SetupSkirtDrape()
@@ -302,9 +303,14 @@ namespace Kiko
             foreach (var c in skirtChains)
             {
                 // 链根（名字里的 0）相对髋部的水平方位
-                var root = c.joints.OrderBy(j => j.name).First().transform;
+                c.joints = c.joints.OrderBy(j => j.name).ToList(); // 0、1、2、2_end：从腰往下
+                c.bones = c.joints.Select(j => j.transform).ToList();
+                var tip = c.bones[^1];
+                if (tip.childCount > 0) c.bones.Add(tip.GetChild(0)); // 最后一节的尾端
+                var root = c.bones[0];
                 var flat = Vector3.ProjectOnPlane(root.position - hips.position, Vector3.up).normalized;
                 c.front = Mathf.Clamp01(Vector3.Dot(flat, fwd) * 0.8f + 0.6f); // 正前 1、正侧 0.6、斜后 ~0.2、正后 0（侧身翘腿时侧片也要盖住大腿）
+                c.side = vrm.transform.InverseTransformDirection(flat).x; // 往左（+x）/ 往右偏多少
             }
             Log($"skirt drape chains {skirtChains.Count}: front≥0.5 {skirtChains.Count(c => c.front >= 0.5f)}");
         }

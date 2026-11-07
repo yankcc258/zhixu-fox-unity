@@ -637,7 +637,8 @@ namespace Kiko
             void Turn(HumanBodyBones b, Quaternion q) { var t = T(b); if (t) t.rotation = Quaternion.Slerp(Quaternion.identity, q, w) * t.rotation; }
             // 1) 上身微微前倾，头歪着、稍微低一点，慢慢晃
             float sway = Mathf.Sin(Time.time * 0.45f) * 2.5f;
-            Turn(HumanBodyBones.Spine, Quaternion.AngleAxis(6f, R));
+            Turn(HumanBodyBones.Spine, Quaternion.AngleAxis(10f, R));
+            Turn(HumanBodyBones.Chest, Quaternion.AngleAxis(6f, R)); // 壁纸那样往前探，手才够得着膝盖
             Turn(HumanBodyBones.Head, Quaternion.AngleAxis(ledgeTilt + sway, F) * Quaternion.AngleAxis(5f, R));
             // 2) 膝盖并拢，小腿垂在膝盖下面（模型面朝 +z，左腿在 +x）
             for (int s = 0; s < 2; s++)
@@ -667,7 +668,7 @@ namespace Kiko
                 var hd = T(s == 0 ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
                 var knee = T(s == 0 ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg);
                 if (!up || !lo || !hd || !knee) continue;
-                var target = knee.position + Vector3.up * 0.065f - R * side * 0.012f;
+                var target = knee.position + Vector3.up * 0.075f - F * 0.05f - R * side * 0.01f; // 膝盖上面稍靠后（盖在裙子上）
                 var pole = root.TransformDirection(new Vector3(side, -0.4f, -0.6f));
                 TwoBoneIK(up, lo, hd, target, pole, w);
             }
@@ -706,6 +707,35 @@ namespace Kiko
             Quaternion u1 = up.localRotation, l1 = lo.localRotation;
             up.localRotation = Quaternion.Slerp(u0, u1, w);
             lo.localRotation = Quaternion.Slerp(l0, l1, w);
+        }
+
+        // ---------- 裙子盖在腿上（在弹簧骨算完之后改，LateUpdate 顺序在 VRM 后面）----------
+        // 光靠改重力方向不够：大腿的碰撞体会把前片往大腿下面推，坐下时前片垂在腿下面、大腿露出来。
+        // 所以坐着（大腿抬起来）时直接把前片 / 侧片一节一节转向「膝盖上面」，过了膝盖再往下垂；权重 = 前片程度 × 大腿抬起程度。
+        public void DrapeSkirt()
+        {
+            if (!ready || skirtChains.Count == 0 || shooting) return;
+            var root = vrm.transform;
+            foreach (var c in skirtChains)
+            {
+                var ul = c.left ? legUL : legUR;
+                var ll = c.left ? legLL : legLR;
+                var thigh = ll.position - ul.position;
+                var td = thigh.normalized;
+                float raise = Mathf.Clamp01((Vector3.Angle(td, Vector3.down) - 15f) / 45f);
+                float w = c.front * raise;
+                if (w < 0.01f || c.bones.Count < 2) continue;
+                var target = ll.position + Vector3.up * 0.07f + root.right * (c.side * 0.08f);
+                for (int k = 0; k < c.bones.Count - 1; k++)
+                {
+                    var t = c.bones[k];
+                    var p = t.position;
+                    var toKnee = target - p;
+                    var d = Vector3.Dot(toKnee, td) > 0.04f ? toKnee.normalized : (td * 0.3f + Vector3.down).normalized; // 过了膝盖就往下垂
+                    var q = Quaternion.FromToRotation(c.bones[k + 1].position - p, d);
+                    t.rotation = Quaternion.Slerp(Quaternion.identity, q, w) * t.rotation;
+                }
+            }
         }
 
         /// 动捕里（坐着、躺着）也带一点呼吸和晃动，不那么僵
