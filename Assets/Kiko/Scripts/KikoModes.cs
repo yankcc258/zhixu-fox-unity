@@ -410,7 +410,7 @@ namespace Kiko
                 }
                 case Mini.Sit:
                 {
-                    if (motion == null) { ms = Mini.Idle; msUntil = Time.time + 1f; break; }
+                    if (motion == null) { ms = Mini.Idle; msUntil = Time.time + 1f; yawGoal = 0; break; }
                     // 窗口跟着「坐下 / 站起来」那段往下 / 往上挪，坐稳时屁股正好在窗口上沿，腿垂在那个窗口前面
                     float k = SegProgress();
                     var w = Win32.WindowRect;
@@ -518,7 +518,7 @@ namespace Kiko
                     else
                     {
                         m = Random.value < 0.75f ? PickMotion(MiniLedgeSet) : null;
-                        if (m != null) { ledgeIK = true; ledgeTilt = Random.Range(6f, 12f) * (Random.value < 0.5f ? 1 : -1); }
+                        if (m != null) { ledgeIK = true; ledgeTilt = Random.Range(6f, 12f) * (Random.value < 0.5f ? 1 : -1); yawGoal = -Mathf.Sign(ledgeTilt) * 18f; } // 像壁纸那样稍微侧着身子
                         else m = PickMotion(MiniEdgeSet);
                     }
                     if (m == null) goto default;
@@ -676,7 +676,7 @@ namespace Kiko
 
         bool debugLedge;
         /// 编辑器试：原大小坐一下壁纸坐姿（看得清楚）
-        public void DebugLedgeSit(float yaw = 0)
+        public void DebugLedgeSit(float yaw = 18)
         {
             yawGoal = yaw;
             var m = PickMotion(MiniLedgeSet);
@@ -684,7 +684,7 @@ namespace Kiko
             action = null;
             Act(m);
             ledgeIK = true; debugLedge = true;
-            ledgeTilt = Random.Range(6f, 12f) * (Random.value < 0.5f ? 1 : -1);
+            ledgeTilt = -Mathf.Sign(yaw) * Random.Range(6f, 12f);
             rest = Rest.Sit; restUntil = Time.time + 120f;
             Log("debug ledge sit " + m);
         }
