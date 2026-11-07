@@ -36,3 +36,5 @@ crashlytics-build.properties
 # 本机才有的动作素材（BOOTH / Mixamo，禁止二次配布）——菜单 Kiko/6 烘焙
 /Assets/LocalMotions/
 /Assets/LocalMotions.meta
+/Assets/AnimeGirlIdleAnimations_free/
+/Assets/AnimeGirlIdleAnimations_free.meta

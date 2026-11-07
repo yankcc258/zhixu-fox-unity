@@ -18,6 +18,8 @@ namespace Kiko.EditorTools
     public static class KikoLocalMotions
     {
         const string Dir = "Assets/LocalMotions";
+        // Asset Store 的动作包（Package Manager 导入到 Assets 下，也不进 git）
+        static readonly string[] Dirs = { Dir, "Assets/AnimeGirlIdleAnimations_free/Animations" };
         const string Out = Dir + "/Resources/kiko_motions_local.json";
         const string VrmPath = "Assets/Kiko/Models/kiko.vrm";
         const float Fps = 15f, MaxSec = 30f; // DM 的「坐下/躺下」是从站着开始的 20 多秒长片段，截短了就只剩站着
@@ -72,9 +74,10 @@ namespace Kiko.EditorTools
                 // 3. 每个动作
                 var list = new List<KikoMotion>();
                 var clips = new List<(string name, AnimationClip clip)>();
-                foreach (var guid in AssetDatabase.FindAssets("t:AnimationClip", new[] { Dir }))
+                foreach (var guid in AssetDatabase.FindAssets("t:AnimationClip", Dirs.Where(AssetDatabase.IsValidFolder).ToArray()))
                 {
                     var path = AssetDatabase.GUIDToAssetPath(guid);
+                    if (path.Contains("02_Layers")) continue; // AGIA 的叠加层动作（只有上半身的差值），单独放没意义
                     var inFile = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview__")).ToList();
                     foreach (var c in inFile)
                     {
@@ -200,6 +203,15 @@ namespace Kiko.EditorTools
             return new Vector3(x, y, z) * Mathf.Rad2Deg;
         }
 
+        [MenuItem("Kiko/7b 只拍新加的动作预览（Play 里）")]
+        static void ShotsNew()
+        {
+            var pet = UnityEngine.Object.FindAnyObjectByType<KikoPet>();
+            if (!EditorApplication.isPlaying || !pet) return;
+            KikoPet.LocalShotOnly = new[] { "AGIA", "kaminoke", "Saneko", "Walk_" };
+            pet.StartLocalShots();
+        }
+
         [MenuItem("Kiko/8 试：坐下（Play 里）")]
         static void TrySit() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.SitDown(60); }
 
@@ -216,6 +228,7 @@ namespace Kiko.EditorTools
         {
             var pet = UnityEngine.Object.FindAnyObjectByType<KikoPet>();
             if (!EditorApplication.isPlaying || !pet) { Debug.LogWarning("[Kiko] 先进 Play 模式"); return; }
+            KikoPet.LocalShotOnly = null;
             pet.StartLocalShots();
         }
     }

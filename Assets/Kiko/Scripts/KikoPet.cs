@@ -508,6 +508,12 @@ namespace Kiko
                 if (action != null && (action.hold || action.loop >= 0)) action = null;
                 if (motion != null && motion.loop) StopMotion();
             }
+            // 本机动作包里有对应情绪的待机（AGIA 叉腰生气、比耶、握拳……）就 60% 用它，放到心情结束（没写时长就 4 秒）
+            if (changed && MoodMotions.TryGetValue(m, out var set) && Random.value < 0.6f)
+            {
+                var mm = PickMotion(set);
+                if (mm != null) { Act(mm); motionUntil = Time.time + (sec > 0 ? sec : 4f); return; }
+            }
             if (changed && acts != null && acts.MoodAct.TryGetValue(m, out var a)) Act(a);
         }
 
@@ -539,9 +545,26 @@ namespace Kiko
         {
             "L_EJ_01_wait_sitliedown_F", "L_EJ_02_wait_sitliedown_F", "L_EJ_03_wait_sitliedown_F", "L_EJ_04_wait_sitliedown_F",
             "L_EJ_05_wait_sitliedown_F", "L_EJ_06_wait_sitliedown_F", "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI",
+            "L_Saneko_sitAFK",
         };
         static readonly string[] SleepSet = { "L_AFK_manmaruCat", "L_Lunalit_AFK_suimin_ver2", "L_afk_hard_guard" };
-        static readonly string[] IdleExtra = { "L_AFK_MaidStanding" };
+        // 待机里偶尔插的（女仆站、玩头发、背着手、AGIA 普通待机）
+        static readonly string[] IdleExtra =
+        {
+            "L_AFK_MaidStanding", "L_kaminokeKurukuru_moti", "L_AGIA_Idle_generic_01", "L_AGIA_Idle_calm_01_hands_on_back",
+        };
+        // 心情 → 本机动作包里的情绪待机（Anime Girl Idle Animations Free）
+        static readonly Dictionary<string, string[]> MoodMotions = new()
+        {
+            ["angry"] = new[] { "L_AGIA_Idle_angry_01_hands_on_waist" },
+            ["happy"] = new[] { "L_AGIA_Idle_energetic_01_right_fist_up", "L_AGIA_Idle_energetic_02_right_hand_piece" },
+            ["excited"] = new[] { "L_AGIA_Idle_energetic_01_right_fist_up", "L_AGIA_Idle_energetic_02_right_hand_piece" },
+            ["smug"] = new[] { "L_AGIA_Idle_brave_01_hand_on_chest" },
+            ["smirk"] = new[] { "L_AGIA_Idle_brave_01_hand_on_chest", "L_AGIA_Idle_energetic_02_right_hand_piece" },
+            ["pat"] = new[] { "L_AGIA_Idle_pitiable_01_right_hand_on_back_head" },
+            ["pout"] = new[] { "L_AGIA_Idle_concern_01_right_hand_front" },
+            ["wave"] = new[] { "L_AGIA_Other_waving_arm_01" },
+        };
         public bool Sleeping => rest == Rest.Sleep;
         public bool Resting => rest != Rest.None;
         static bool Night { get { int h = System.DateTime.Now.Hour; return h >= 23 || h < 6; } }
@@ -881,6 +904,7 @@ namespace Kiko
             if (ready && !shooting) StartCoroutine(ShotSet());
         }
         /// 菜单 Kiko/7：本地动作每个拍正面 + 侧面各一张（宽画面，躺着的也放得下）
+        public static string[] LocalShotOnly; // 只拍名字里含这些字的（null = 全拍）
         public void StartLocalShots()
         {
             if (ready && !shooting) StartCoroutine(LocalShotSet());
@@ -894,7 +918,7 @@ namespace Kiko
             var camPos = cam.transform.position;
             var camRot = cam.transform.rotation;
             var far = new Vector3(camPos.x, camPos.y * 0.8f, camPos.z * 1.25f);
-            foreach (var name in motions.Keys.Where(k => k.StartsWith("L_")).OrderBy(k => k).ToList())
+            foreach (var name in motions.Keys.Where(k => k.StartsWith("L_") && (LocalShotOnly == null || LocalShotOnly.Any(k.Contains))).OrderBy(k => k).ToList())
             {
                 action = null; StopMotion(); SetMood("idle", 0);
                 cam.transform.SetPositionAndRotation(far, camRot);
