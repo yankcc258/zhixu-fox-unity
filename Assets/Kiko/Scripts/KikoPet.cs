@@ -22,8 +22,8 @@ namespace Kiko
         [Tooltip("掉落加速度（像素/秒²，和 Tauri 版一样）")]
         public float gravity = 2600f;
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
-        [Tooltip("每节往侧面（画面左边）多弯的角度（每节累加）")] public float tailSide = 2f; // 11-07 照 A2 三视图：基本垂直，正面只从腿边露一点
-        [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 6f; // 根部先往后伸再垂：尾巴很粗，离腿太近会把大腿裹进去
+        [Tooltip("每节往侧面弯的角度（每节累加；负 = 角色左边，正面看在画面右边）")] public float tailSide = -2f; // 11-07 照 A2 三视图：基本垂直，正面只从腿边露一点
+        [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 10f; // 根部先往后伸再垂：尾巴很粗，离腿太近会把大腿裹进去
         [Tooltip("后面每节往上翘的角度（每节累加；尾尖微微勾一下）")] public float tailLift = 2.5f;
         [Tooltip("尾巴整体放大；粗细在 Tools/shape_tail.py 里按这个倍数换算，改了要一起改")] public float tailScale = 1.25f;
         [Header("尾巴物理（主人：要朝下、随重力晃来晃去）")]
@@ -31,7 +31,7 @@ namespace Kiko
         [Tooltip("重力")] public float tailGravity = 0.4f;
         [Tooltip("阻尼：越小晃得越久")] public float tailDrag = 0.25f;
         [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.35f;
-        [Tooltip("重力往后偏多少（0 = 直直往下，会贴到腿上）")] public float tailBack = 0.5f;
+        [Tooltip("重力往后偏多少（0 = 直直往下，会贴到腿上）")] public float tailBack = 0.3f;
         [Tooltip("窗口被拖动时尾巴甩的强度")] public float tailInertia = 1f;
         [Tooltip("后裙让开尾巴：尾巴前几节挂胶囊碰撞体，半径 = 尾巴实际粗细 × 这个（0 = 关）")] public float tailSkirtPush = 0.7f;
 
@@ -244,7 +244,10 @@ namespace Kiko
             var mesh = new Mesh();
             smr.BakeMesh(mesh, true);
             var tr = smr.transform;
-            var pts = mesh.vertices.Select(v => tr.position + tr.rotation * v).ToArray();
+            // 尾巴是 Body 网格里的一个子网格：只取尾巴材质那个子网格用到的顶点（之前把整个身体都算进去了，半径量成 20~40cm，把裙子整圈撑开）
+            int sub = System.Array.FindIndex(smr.sharedMaterials, m => m && m.name.Contains("FoxTail"));
+            var verts = mesh.vertices;
+            var pts = smr.sharedMesh.GetTriangles(sub).Distinct().Select(i => tr.position + tr.rotation * verts[i]).ToArray();
             Destroy(mesh);
             var group = chain[0].gameObject.AddComponent<VRM10SpringBoneColliderGroup>();
             group.Name = "KikoTail";
