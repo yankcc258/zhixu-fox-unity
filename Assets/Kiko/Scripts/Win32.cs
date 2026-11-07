@@ -91,6 +91,22 @@ namespace Kiko
             return new RectInt(w.Left, w.Top, w.Right - w.Left, w.Bottom - w.Top);
         }
 
+        /// 某一点所在屏幕的整块（含任务栏）
+        public static RectInt MonitorAt(Vector2Int pt)
+        {
+            var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            var mon = MonitorFromPoint(new POINT { X = pt.x, Y = pt.y }, MONITOR_DEFAULTTONEAREST);
+            if (mon == IntPtr.Zero || !GetMonitorInfo(mon, ref mi)) return WorkArea;
+            var w = mi.rcMonitor;
+            return new RectInt(w.Left, w.Top, w.Right - w.Left, w.Bottom - w.Top);
+        }
+
+        /// 再顶一次到最上层（任务栏也是置顶窗口，谁后置顶谁在上面；坐在任务栏边上时腿要盖在任务栏上）
+        public static void BringToTop()
+        {
+            if (Hwnd != IntPtr.Zero) SetWindowPos(Hwnd, new IntPtr(-1), 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010); // HWND_TOPMOST, NOSIZE|NOMOVE|NOACTIVATE
+        }
+
         [DllImport("user32.dll")] static extern IntPtr CreatePopupMenu();
         [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool AppendMenuW(IntPtr hMenu, uint flags, UIntPtr id, string text);
         [DllImport("user32.dll")] static extern int TrackPopupMenu(IntPtr hMenu, uint flags, int x, int y, int reserved, IntPtr hwnd, IntPtr rect);
@@ -159,6 +175,8 @@ namespace Kiko
         }
         public static RectInt WorkArea => new RectInt(0, 0, Screen.width * 4, Screen.height * 2);
         public static RectInt WorkAreaAt(Vector2Int pt) => WorkArea;
+        public static RectInt MonitorAt(Vector2Int pt) => new RectInt(0, 0, WorkArea.width, WorkArea.height + 72); // 假装任务栏 72px
+        public static void BringToTop() { }
         public static bool LeftDown => UnityEngine.Input.GetMouseButton(0);
         public static bool RightDown => UnityEngine.Input.GetMouseButton(1);
         public static bool ShiftDown => UnityEngine.Input.GetKey(KeyCode.LeftShift);

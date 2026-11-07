@@ -654,11 +654,15 @@ namespace Kiko
 
         // ---------- 坐到任务栏边上 ----------
         float edgeDrop; // 坐稳时窗口要往下挪多少像素（屁股落在任务栏上沿）
+        float topAgain;
         public bool EdgeSit(float sec)
         {
             var win = Win32.WindowRect;
             var wa = Win32.WorkAreaAt(new Vector2Int(win.x + win.width / 2, win.y + win.height / 2));
             if (Mathf.Abs(win.y - (wa.yMax - win.height)) > 3) { Log("rest: edge skipped (not on floor)"); return false; } // 不在地上（被挂在半空）就不坐
+            // 任务栏太矮（自动隐藏 / 在侧边）就没有「边」可坐，改坐地上
+            var mon = Win32.MonitorAt(new Vector2Int(win.x + win.width / 2, win.y + win.height / 2));
+            if (mon.yMax - wa.yMax < 20) return SitDown(sec);
             var m = PickMotion(EdgeSet);
             if (m == null) return false;
             var mo = motions[m];
@@ -670,12 +674,26 @@ namespace Kiko
             Act(m);
             rest = Rest.Edge;
             restUntil = Time.time + sec;
-            Log($"rest: edge sit {m} drop {edgeDrop:F0}px {sec:F0}s");
+            Win32.BringToTop();
+            Log($"rest: edge sit {m} drop {edgeDrop:F0}px taskbar {mon.yMax - wa.yMax}px {sec:F0}s");
             return true;
         }
 
         // ---------- 沿着任务栏走一段 ----------
         float walkTarget, walkSpeed;
+        // 主人 11-07：走路姿势不符合气质 → 女仆式小碎步：步子小一点、慢一点，上半身保持站姿（手在身前），只留一点点晃
+        const float WalkCadence = 0.85f, WalkStride = 0.75f, WalkPace = 0.45f * WalkCadence * WalkStride; // 米/秒，跟着步频和步幅一起缩
+        static readonly Dictionary<HumanBodyBones, float> WalkMask = new()
+        {
+            [HumanBodyBones.Hips] = 0.55f, [HumanBodyBones.Spine] = 0.2f, [HumanBodyBones.Chest] = 0.15f, [HumanBodyBones.UpperChest] = 0.15f,
+            [HumanBodyBones.Neck] = 0.1f, [HumanBodyBones.Head] = 0.1f,
+            [HumanBodyBones.LeftShoulder] = 0f, [HumanBodyBones.RightShoulder] = 0f,
+            [HumanBodyBones.LeftUpperArm] = 0.12f, [HumanBodyBones.RightUpperArm] = 0.12f,
+            [HumanBodyBones.LeftLowerArm] = 0f, [HumanBodyBones.RightLowerArm] = 0f, [HumanBodyBones.LeftHand] = 0f, [HumanBodyBones.RightHand] = 0f,
+            [HumanBodyBones.LeftUpperLeg] = WalkStride, [HumanBodyBones.RightUpperLeg] = WalkStride,
+            [HumanBodyBones.LeftLowerLeg] = WalkStride, [HumanBodyBones.RightLowerLeg] = WalkStride,
+            [HumanBodyBones.LeftFoot] = WalkStride, [HumanBodyBones.RightFoot] = WalkStride,
+        };
         public bool StartWalk()
         {
             var win = Win32.WindowRect;
@@ -688,7 +706,8 @@ namespace Kiko
             if (Mathf.Abs(t - win.x) < min) t = win.x + (t >= win.x ? min : -min) * Random.Range(1f, 2.5f);
             walkTarget = Mathf.Clamp(t, lo, hi);
             if (Mathf.Abs(walkTarget - win.x) < 40) return false;
-            walkSpeed = 0.45f * PxPerM; // 每秒 0.45 米
+            walkSpeed = WalkPace * PxPerM;
+            motions[m].speed = WalkCadence;
             yawGoal = walkTarget > win.x ? -90f : 90f; // 屏幕右边 = 世界 -x（相机转了 180°）
             action = null;
             if (mood != "idle") SetMood("idle", 0);
@@ -746,6 +765,8 @@ namespace Kiko
                     var w = Win32.WindowRect;
                     var wa2 = Win32.WorkAreaAt(new Vector2Int(w.x + w.width / 2, w.y + w.height / 2));
                     Win32.MoveWindow(new Vector2Int(w.x, Mathf.RoundToInt(wa2.yMax - w.height + edgeDrop * k)));
+                    // 主人 11-07：坐下来腿被任务栏挡住了 → 坐着的时候每半秒顶一次到最上层，腿垂在任务栏前面
+                    if (Time.time > topAgain) { Win32.BringToTop(); topAgain = Time.time + 0.5f; }
                     if (Time.time > restUntil && !exiting)
                     {
                         if (!BeginExit()) { StopMotion(0.8f); }
@@ -913,7 +934,9 @@ namespace Kiko
                 vel[b] = v;
                 cur[b] += v * dt;
                 // 动捕在播：直接用动捕；切换时从冻结的姿势 Slerp 过来
-                var q = mo && motionPose.TryGetValue(b, out var mq) ? (mw < 1 ? Quaternion.Slerp(KikoPose.ToUnity(cur[b]), mq, mw) : mq) : KikoPose.ToUnity(cur[b]);
+                float bm = mw;
+                if (mo && rest == Rest.Walk && WalkMask.TryGetValue(b, out var wm)) bm = wm; // 走路：上半身用站姿，腿步子缩小
+                var q = mo && motionPose.TryGetValue(b, out var mq) ? (bm < 1 ? Quaternion.Slerp(KikoPose.ToUnity(cur[b]), mq, bm) : mq) : KikoPose.ToUnity(cur[b]);
                 if (bw > 0 && fromQ.TryGetValue(b, out var fq)) q = Quaternion.Slerp(q, fq, bw);
                 outQ[b] = q;
             }
