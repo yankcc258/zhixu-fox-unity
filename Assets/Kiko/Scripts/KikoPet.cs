@@ -109,6 +109,9 @@ namespace Kiko
             else if (acts == null) Log("没找到 Resources/kiko_acts.json");
             var mj = Resources.Load<TextAsset>("kiko_motions");
             if (mj) { motions = KikoMotionData.Load(mj.text); Log($"motions {string.Join(",", motions.Keys)}"); }
+            // 本机才有的动作（BOOTH/Mixamo，禁止二次配布 → 不进 git），菜单 Kiko/6 烘出来
+            var lj = Resources.Load<TextAsset>("kiko_motions_local");
+            if (lj) { var lm = KikoMotionData.Load(lj.text); foreach (var kv in lm) motions[kv.Key] = kv.Value; Log($"local motions {lm.Count}"); }
             PoseTail();
             SetupTailPhysics();
             KikoAccessories.Build(vrm, Log);
@@ -734,7 +737,38 @@ namespace Kiko
             Log($"shots requested (ready={ready}, shooting={shooting})");
             if (ready && !shooting) StartCoroutine(ShotSet());
         }
+        /// 菜单 Kiko/7：本地动作每个拍正面 + 侧面各一张（宽画面，躺着的也放得下）
+        public void StartLocalShots()
+        {
+            if (ready && !shooting) StartCoroutine(LocalShotSet());
+        }
 #if UNITY_EDITOR
+        System.Collections.IEnumerator LocalShotSet()
+        {
+            shooting = true;
+            var dir = Path.Combine(Application.persistentDataPath, "shots", "local");
+            Directory.CreateDirectory(dir);
+            var camPos = cam.transform.position;
+            var camRot = cam.transform.rotation;
+            var far = new Vector3(camPos.x, camPos.y * 0.8f, camPos.z * 1.25f);
+            foreach (var name in motions.Keys.Where(k => k.StartsWith("L_")).OrderBy(k => k).ToList())
+            {
+                action = null; StopMotion(); SetMood("idle", 0);
+                cam.transform.SetPositionAndRotation(far, camRot);
+                yield return new WaitForSeconds(0.5f);
+                Act(name);
+                var m = motions[name];
+                yield return new WaitForSeconds(Mathf.Clamp(m.Duration * 0.4f, 0.8f, 2.5f));
+                yield return Shot(dir, name + "_f", 1.2f, 1.8f);
+                cam.transform.SetPositionAndRotation(Quaternion.Euler(0, 90, 0) * far, Quaternion.Euler(0, 270, 0));
+                yield return Shot(dir, name + "_s", 1.2f, 1.8f);
+            }
+            action = null; StopMotion(); SetMood("idle", 0);
+            cam.transform.SetPositionAndRotation(camPos, camRot);
+            shooting = false;
+            Log("local shots → " + dir);
+        }
+
         System.Collections.IEnumerator ShotSet()
         {
             shooting = true;
@@ -811,10 +845,10 @@ namespace Kiko
             Log("shots → " + dir);
         }
 
-        System.Collections.IEnumerator Shot(string dir, string name, float res = 3f)
+        System.Collections.IEnumerator Shot(string dir, string name, float res = 3f, float wide = 1f)
         {
             yield return new WaitForEndOfFrame();
-            var rt = RenderTexture.GetTemporary(Mathf.RoundToInt(baseWidth * res), Mathf.RoundToInt(WinH * res), 24, RenderTextureFormat.ARGB32);
+            var rt = RenderTexture.GetTemporary(Mathf.RoundToInt(baseWidth * res * wide), Mathf.RoundToInt(WinH * res), 24, RenderTextureFormat.ARGB32);
             var old = cam.targetTexture;
             cam.targetTexture = rt;
             cam.Render();
@@ -832,6 +866,7 @@ namespace Kiko
         }
 #else
         System.Collections.IEnumerator ShotSet() { yield break; }
+        System.Collections.IEnumerator LocalShotSet() { yield break; }
 #endif
 
         // ---------- 日志：判 Go/No-go 用的内存、帧率 ----------
