@@ -17,6 +17,7 @@ namespace Kiko
         [Header("窗口（1080p 时的大小，2K 屏自动放大）")]
         public int baseWidth = 400; // 尾巴放大后加宽（原 340）
         public int baseHeight = 440;
+        [Tooltip("窗口顶上给对话气泡留的空白（像素，按 1080p）；人物还是占下面 baseHeight 那么高")] public int bubbleSpace = 110;
         [Header("相机")]
         public float fov = 20f;
         [Tooltip("掉落加速度（像素/秒²，和 Tauri 版一样）")]
@@ -72,7 +73,7 @@ namespace Kiko
         Vector2Int pressCursor, pressWin;
         float fallY, fallV, stateT, flinchUntil, blinkNext = 2f, blinkT = -1f;
         float scale = 1f;
-        string logPath;
+        static string logPath;
         float nextStat;
         double lastCpu, lastCpuT;
 
@@ -88,6 +89,8 @@ namespace Kiko
             cam = Camera.main;
             vrm = FindAnyObjectByType<Vrm10Instance>();
             if (!vrm) { Log("没找到 Vrm10Instance"); return; }
+            talk = gameObject.AddComponent<KikoTalk>();
+            talk.pet = this;
             var json = Resources.Load<TextAsset>("kiko_acts");
             if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
             // 屑狐狸表情（主人：表情太乖了）：覆盖/新增几种心情的表情，数据在 Resources/kiko_exp_kuzu.json
@@ -137,7 +140,7 @@ namespace Kiko
             // 窗口大小：按工作区高度放大（1080p ≈ 1，2K ≈ 1.35），和 Tauri 版 figScale 一样
             var wa = Win32.WorkArea;
             scale = Mathf.Clamp(Mathf.Round(wa.height / 1040f * 20f) / 20f, 1f, 1.6f);
-            int w = Mathf.RoundToInt(baseWidth * scale), h = Mathf.RoundToInt(baseHeight * scale);
+            int w = Mathf.RoundToInt(baseWidth * scale), h = Mathf.RoundToInt(WinH * scale);
 #if !UNITY_EDITOR
             // 先改大小、等两帧再开透明：SetResolution 会让 Unity 重新套窗口样式（标题栏、白底），在透明之后调就把透明冲掉了
             if (Screen.width != w || Screen.height != h) Screen.SetResolution(w, h, FullScreenMode.Windowed);
@@ -189,9 +192,16 @@ namespace Kiko
             FrameCamera();
             ready = true;
             Invoke(nameof(LogTail), 3f);
+            Invoke(nameof(SayHello), 1.5f);
         }
 
         bool ready;
+        KikoTalk talk;
+        public bool Ready => ready;
+        public float UiScale => scale;
+        public bool CanChat => ready && state == State.Idle && !shooting;
+        int WinH => baseHeight + bubbleSpace;
+        void SayHello() { if (!shooting) talk.Hello(); }
 
         // 尾巴：模型里的静止姿势基本是朝正后方垂着，从正面只露一点尾尖（主人：看不见尾巴）。
         // 在弹簧骨初始化之前（Awake）把每节往侧面、往上再弯一点，弹簧骨就把这个当静止姿势，还是会跟着晃
@@ -374,9 +384,11 @@ namespace Kiko
             vrm.TryGetBoneTransform(HumanBodyBones.Head, out var head);
             float top = head.position.y + 0.26f, bottom = 0f;
             float hh = (top - bottom) * 1.06f;
-            float dist = hh / 2f / Mathf.Tan(fov / 2f * Mathf.Deg2Rad);
+            // 人物占窗口下面 baseHeight 那一段，上面 bubbleSpace 留给气泡
+            float figBottom = (top + bottom) / 2f - hh / 2f, total = hh * WinH / baseHeight;
+            float dist = total / 2f / Mathf.Tan(fov / 2f * Mathf.Deg2Rad);
             cam.fieldOfView = fov;
-            cam.transform.SetPositionAndRotation(new Vector3(0, (top + bottom) / 2f, dist), Quaternion.Euler(0, 180, 0));
+            cam.transform.SetPositionAndRotation(new Vector3(0, figBottom + total / 2f, dist), Quaternion.Euler(0, 180, 0));
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0, 0, 0, 0);
             cam.allowHDR = false;
@@ -403,10 +415,19 @@ namespace Kiko
 
         // ---------- 拖动 / 掉落 / 戳 ----------
         bool over => !uwc.isClickThrough; // 鼠标在她身上（不透明像素）
+        bool rightWas, leftWas;
         void UpdateInput(float dt)
         {
             var c = Win32.Cursor;
             if (Win32.RightDown && Win32.ShiftDown && over) { Log("quit (shift+right click)"); Application.Quit(); }
+            // 右键（不按 Shift）= 菜单；按下那一下触发
+            bool right = Win32.RightDown;
+            if (right && !rightWas && !Win32.ShiftDown && over && state != State.Drag) talk.Menu();
+            rightWas = right;
+            // 点在气泡上 = 关气泡，不算戳
+            bool left = Win32.LeftDown;
+            if (left && !leftWas && talk.HitBubble(c)) { talk.Hide(); leftWas = left; return; }
+            leftWas = left;
             switch (state)
             {
                 case State.Idle:
@@ -448,7 +469,7 @@ namespace Kiko
             stateT = 0;
             if (s == State.Drag) SetMood("dangle", 0);          // → Hang（循环）
             else if (s == State.Fall) { SetMood("surprised", 0); Act("Fall"); }
-            else if (s == State.Land) { Act("Land"); SetMood("idle", 0); }
+            else if (s == State.Land) { Act("Land"); SetMood("idle", 0); talk.OnDropped(); }
             else if (s == State.Idle && mood == "dangle") SetMood("idle", 0);
         }
 
@@ -456,6 +477,7 @@ namespace Kiko
         {
             flinchUntil = Time.time + 0.6f;
             SetMood("surprised", 1.6f); // → Flinch
+            talk.OnPoke(); // 台词会把心情换成合适的（双击 = 打开知序）
         }
 
         Vector3 Base(HumanBodyBones b) =>
@@ -512,7 +534,7 @@ namespace Kiko
             var win = Win32.WindowRect;
             var c = Win32.Cursor;
             // 头在画面上方 ~15% 处；鼠标相对头的位置，离开窗口越远越饱和
-            var headPx = new Vector2(win.x + win.width * 0.5f, win.y + win.height * 0.15f);
+            var headPx = new Vector2(win.x + win.width * 0.5f, win.y + win.height * (bubbleSpace + baseHeight * 0.15f) / WinH);
             var d = new Vector2(c.x - headPx.x, c.y - headPx.y) / (win.height * 0.8f);
             var want = shooting ? Vector2.zero : new Vector2(Mathf.Clamp(d.x, -1, 1), Mathf.Clamp(d.y, -1, 1));
             look = Vector2.Lerp(look, want, 1 - Mathf.Exp(-Time.deltaTime * 6));
@@ -792,7 +814,7 @@ namespace Kiko
         System.Collections.IEnumerator Shot(string dir, string name, float res = 3f)
         {
             yield return new WaitForEndOfFrame();
-            var rt = RenderTexture.GetTemporary(Mathf.RoundToInt(baseWidth * res), Mathf.RoundToInt(baseHeight * res), 24, RenderTextureFormat.ARGB32);
+            var rt = RenderTexture.GetTemporary(Mathf.RoundToInt(baseWidth * res), Mathf.RoundToInt(WinH * res), 24, RenderTextureFormat.ARGB32);
             var old = cam.targetTexture;
             cam.targetTexture = rt;
             cam.Render();
@@ -824,7 +846,7 @@ namespace Kiko
             Log($"stats ws={ws}MB commit={commit}MB mono={System.GC.GetTotalMemory(false) / 1048576}MB fps={1f / Mathf.Max(Time.smoothDeltaTime, 1e-4f):F0} cpu={pct:F1}% (全机) gpu={SystemInfo.graphicsDeviceName}");
         }
 
-        void Log(string s)
+        public static void Log(string s)
         {
             Debug.Log("[Kiko] " + s);
             try { File.AppendAllText(logPath, System.DateTime.Now.ToString("MM-dd HH:mm:ss ") + s + "\n"); } catch { }

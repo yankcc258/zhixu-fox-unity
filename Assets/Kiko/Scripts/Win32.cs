@@ -91,6 +91,35 @@ namespace Kiko
             return new RectInt(w.Left, w.Top, w.Right - w.Left, w.Bottom - w.Top);
         }
 
+        [DllImport("user32.dll")] static extern IntPtr CreatePopupMenu();
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool AppendMenuW(IntPtr hMenu, uint flags, UIntPtr id, string text);
+        [DllImport("user32.dll")] static extern int TrackPopupMenu(IntPtr hMenu, uint flags, int x, int y, int reserved, IntPtr hwnd, IntPtr rect);
+        [DllImport("user32.dll")] static extern bool DestroyMenu(IntPtr hMenu);
+        [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr h);
+        [DllImport("user32.dll")] static extern bool PostMessage(IntPtr h, uint msg, IntPtr w, IntPtr l);
+        [DllImport("user32.dll", EntryPoint = "ShowWindow")] static extern bool ShowWindowNative(IntPtr h, int cmd);
+
+        /// Windows 原生右键菜单（在光标处弹出，阻塞到选完），返回选中项的 id，没选返回 0。text 为 "-" 是分隔线
+        public static int PopupMenu(params (int id, string text, bool check)[] items)
+        {
+            var m = CreatePopupMenu();
+            foreach (var (id, text, check) in items)
+                if (text == "-") AppendMenuW(m, 0x800, UIntPtr.Zero, null);                     // MF_SEPARATOR
+                else AppendMenuW(m, check ? 0x8u : 0u, (UIntPtr)(uint)id, text);                 // MF_STRING | MF_CHECKED
+            GetCursorPos(out var p);
+            SetForegroundWindow(Hwnd); // 不先激活的话点菜单外面菜单不会消失
+            int r = TrackPopupMenu(m, 0x0100 | 0x0002, p.X, p.Y, 0, Hwnd, IntPtr.Zero); // TPM_RETURNCMD | TPM_RIGHTBUTTON
+            PostMessage(Hwnd, 0, IntPtr.Zero, IntPtr.Zero); // WM_NULL
+            DestroyMenu(m);
+            return r;
+        }
+
+        /// 藏起 / 显示窗口（被戳烦了躲一会儿）
+        public static void ShowWindow(bool show)
+        {
+            if (Hwnd != IntPtr.Zero) ShowWindowNative(Hwnd, show ? 4 : 0); // SW_SHOWNOACTIVATE / SW_HIDE
+        }
+
         public static bool LeftDown => (GetAsyncKeyState(0x01) & 0x8000) != 0;
         public static bool RightDown => (GetAsyncKeyState(0x02) & 0x8000) != 0;
         public static bool ShiftDown => (GetAsyncKeyState(0x10) & 0x8000) != 0;
@@ -134,6 +163,12 @@ namespace Kiko
         public static bool RightDown => UnityEngine.Input.GetMouseButton(1);
         public static bool ShiftDown => UnityEngine.Input.GetKey(KeyCode.LeftShift);
         public static (long ws, long commit) Memory => (0, 0);
+        public static int PopupMenu(params (int id, string text, bool check)[] items)
+        {
+            Debug.Log("[Kiko] (编辑器里不弹原生菜单) " + string.Join(" / ", Array.ConvertAll(items, i => i.text)));
+            return 0;
+        }
+        public static void ShowWindow(bool show) { }
 #endif
     }
 }
