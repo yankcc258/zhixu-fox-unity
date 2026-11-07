@@ -22,7 +22,7 @@ ap.add_argument('src'); ap.add_argument('dst')
 ap.add_argument('--scale', type=float, default=1.25, help='和 Unity 里 KikoPet.tailScale 一样')
 ap.add_argument('--bins', type=int, default=24)
 ap.add_argument('--fur-mask', help='顺便画毛长遮罩（lilToon _FurLengthMask）：尾巴根部藏在裙子里的那段不长毛，免得毛从后裙扎出来')
-ap.add_argument('--fur-root', type=float, default=0.20, help='根部多长一段（按尾巴全长比例）毛长从 0 渐变到 1')
+ap.add_argument('--fur-root', type=float, default=0.34, help='根部多长一段（按尾巴全长比例）毛长从 0 渐变到 1')
 a = ap.parse_args()
 
 d = open(a.src, 'rb').read()
