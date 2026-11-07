@@ -15,6 +15,9 @@ namespace Kiko
         public float speed = 1;
         public bool loop;
         public bool pingpong; // 截出来的一段（坐着/躺着的中间部分）首尾接不上 → 来回放
+        // 「站着 → 坐下 → 坐着 → 站起来」的片段：先放 [0, loopStart) 坐下，然后在 [loopStart, loopEnd] 来回放，起身时从当前位置往后放到结尾
+        public int loopStart, loopEnd;
+        public bool HasSegments => loopEnd > loopStart && loopStart > 0;
         public string[] bones;
         public float[] frames; // [帧][骨骼][xyz]
         public float[] hips;   // 每帧髋高相对静止髋高的比例（-0.1 = 低 10%）
@@ -23,8 +26,8 @@ namespace Kiko
         [NonSerialized] public HumanBodyBones[] ids;
         public float Duration => (count - 1) / fps;
 
-        /// t 秒处的姿势（帧间线性插值），写进 pose；返回髋高比例
-        public float Sample(float t, Dictionary<HumanBodyBones, Vector3> pose)
+        /// t 秒处的姿势（帧间四元数插值，欧拉角直接插值遇到大角度会拧麻花），写进 pose；返回髋高比例
+        public float Sample(float t, Dictionary<HumanBodyBones, Quaternion> pose)
         {
             float f = Mathf.Clamp(t * fps, 0, count - 1);
             int i = Mathf.Min((int)f, count - 2);
@@ -35,10 +38,9 @@ namespace Kiko
             {
                 if ((int)ids[b] < 0) continue;
                 int a = (i * nb + b) * 3, c = count < 2 ? a : a + nb * 3;
-                pose[ids[b]] = new Vector3(
-                    Mathf.Lerp(frames[a], frames[c], u),
-                    Mathf.Lerp(frames[a + 1], frames[c + 1], u),
-                    Mathf.Lerp(frames[a + 2], frames[c + 2], u));
+                var qa = KikoPose.ToUnity(new Vector3(frames[a], frames[a + 1], frames[a + 2]));
+                var qc = KikoPose.ToUnity(new Vector3(frames[c], frames[c + 1], frames[c + 2]));
+                pose[ids[b]] = Quaternion.Slerp(qa, qc, u);
             }
             return count < 2 ? hips[0] : Mathf.Lerp(hips[i], hips[i + 1], u);
         }

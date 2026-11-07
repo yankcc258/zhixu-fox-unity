@@ -50,8 +50,11 @@ namespace Kiko
         // 要写旋转的骨骼：关键帧/弹簧的 15 根 + 动捕里出现的（手指、肩膀、脚、upperChest…）
         readonly List<HumanBodyBones> driven = new();
         readonly HashSet<HumanBodyBones> springSet = new(KikoPose.Bones);
-        readonly Dictionary<HumanBodyBones, Vector3> cur = new(), vel = new(), outPose = new();
-        readonly Dictionary<HumanBodyBones, Vector3> clipPose = new(), motionPose = new();
+        readonly Dictionary<HumanBodyBones, Vector3> cur = new(), vel = new();
+        readonly Dictionary<HumanBodyBones, Vector3> clipPose = new();
+        // 最终姿势用四元数：动捕和弹簧之间的切换用 Slerp 过渡（以前是欧拉角线性插值，坐下/起身时大腿会拧着转）
+        readonly Dictionary<HumanBodyBones, Quaternion> motionPose = new(), outQ = new(), fromQ = new();
+        float blendW, blendDur = 0.35f, hipsFrom;
 
         // ---------- 真人动捕（Resources/kiko_motions.json，Tools/bake_vrma.py 从 .vrma 烘出来）----------
         Dictionary<string, KikoMotion> motions = new();
@@ -188,7 +191,7 @@ namespace Kiko
                     driven.Add(b);
                     cur[b] = Base(b);
                     vel[b] = Vector3.zero;
-                    outPose[b] = cur[b];
+                    outQ[b] = KikoPose.ToUnity(cur[b]);
                 }
             Log($"rig {rig.Count} bones, driven {driven.Count}");
             if (rig.TryGetValue(HumanBodyBones.Hips, out var hipsT)) hipsBase = hipsT.localPosition.y;
@@ -482,7 +485,7 @@ namespace Kiko
         {
             Touch();
             if (rest == Rest.Sleep) { WakeUp(false); talk.OnPokeAsleep(); return; }
-            if (rest == Rest.Sit) { rest = Rest.None; StopMotion(); }
+            if (rest == Rest.Sit) { rest = Rest.None; StopMotion(0.6f); }
             if (talk.OnPokeGroggy()) return; // 刚被戳醒又戳 → 起床气
             flinchUntil = Time.time + 0.6f;
             SetMood("surprised", 1.6f); // → Flinch
@@ -539,7 +542,6 @@ namespace Kiko
         };
         static readonly string[] SleepSet = { "L_AFK_manmaruCat", "L_Lunalit_AFK_suimin_ver2", "L_afk_hard_guard" };
         static readonly string[] IdleExtra = { "L_AFK_MaidStanding" };
-        const string WakeMotion = "L_Situp_To_Idle";
         public bool Sleeping => rest == Rest.Sleep;
         public bool Resting => rest != Rest.None;
         static bool Night { get { int h = System.DateTime.Now.Hour; return h >= 23 || h < 6; } }
@@ -575,6 +577,7 @@ namespace Kiko
             if (m == null) return false;
             SetMood("sleep", 0); // 闭眼脸（会顺手做一下 Slump，马上被睡姿盖掉）
             Act(m);
+            blendDur = 1.2f; // 慢慢躺/蜷下去
             rest = Rest.Sleep;
             restUntil = Night ? float.MaxValue : Time.time + Random.Range(600f, 1200f);
             talk.OnSleep();
@@ -587,8 +590,9 @@ namespace Kiko
         {
             rest = Rest.None;
             Touch();
-            if (motions.TryGetValue(WakeMotion, out var w)) { SetMood(gently ? "wake" : "sleepy", 6f); PlayMotion(w); action = null; }
-            else { StopMotion(); SetMood(gently ? "wake" : "sleepy", 6f); }
+            // 慢慢（1 秒）从睡姿 Slerp 回站姿；自然醒再伸个懒腰（wake → Stretch）
+            StopMotion(1.0f);
+            SetMood(gently ? "wake" : "sleepy", 6f);
             if (gently) talk.SayKey("wakeUp", null, 5f);
             Log("rest: wake " + (gently ? "(自然醒)" : "(被戳醒)"));
         }
@@ -613,7 +617,13 @@ namespace Kiko
                     if (Time.time > restUntil)
                     {
                         if (Night || Random.value < 0.35f) GoSleep();
-                        else { rest = Rest.None; StopMotion(); Act("Stretch"); Touch(); Log("rest: stand up"); }
+                        else
+                        {
+                            rest = Rest.None;
+                            if (!BeginExit()) { StopMotion(0.8f); Act("Stretch"); } // 片段里有站起来那段就放它，没有就慢慢站起来
+                            Touch();
+                            Log("rest: stand up");
+                        }
                     }
                     break;
                 case Rest.Sleep:
@@ -654,29 +664,55 @@ namespace Kiko
 
         // ---------- 动捕：开始 / 停止（0.25 秒交叉淡入，停的时候从当前姿势接回弹簧，不跳）----------
         float motionUntil; // >0：循环动作放到这个时间就停（待机里插一段女仆站之类）
-        void PlayMotion(KikoMotion m)
+        void PlayMotion(KikoMotion m, float blend = 0.35f)
         {
-            TakeOver();
+            Freeze(blend);
             motionUntil = 0;
             motion = m;
             motionT = 0;
-            motionW = 0;
+            motionW = 1;
+            exiting = false;
         }
 
-        void StopMotion()
+        void StopMotion(float blend = 0.5f)
         {
             if (motion == null) return;
-            TakeOver();
+            Freeze(blend);
             motion = null;
-            motionW = 0;
+            exiting = false;
         }
 
-        // 把正在显示的姿势读回弹簧（vrm.js takeOverPose）
-        void TakeOver()
+        // 记下正在显示的姿势，接下来 dur 秒从它 Slerp 到新姿势（新动作或弹簧站姿）
+        void Freeze(float dur)
         {
-            foreach (var b in driven) { cur[b] = outPose[b]; vel[b] = Vector3.zero; }
-            hipsNow = hipsOut;
-            hipsV = 0;
+            foreach (var b in driven) if (outQ.TryGetValue(b, out var q)) fromQ[b] = q;
+            hipsFrom = hipsOut;
+            blendW = 1;
+            blendDur = Mathf.Max(0.05f, dur);
+        }
+
+        // 坐着的片段起身：从当前位置往后放到结尾（片段里自带站起来那段），放完交回弹簧
+        bool exiting;
+        float exitFrom, exitT0;
+        bool BeginExit()
+        {
+            if (motion == null || !motion.HasSegments) return false;
+            exitFrom = MotionTime();
+            exitT0 = motionT;
+            exiting = true;
+            return true;
+        }
+
+        float MotionTime()
+        {
+            var m = motion;
+            if (m.HasSegments)
+            {
+                float a = m.loopStart / m.fps, b = m.loopEnd / m.fps;
+                if (exiting) return exitFrom + (motionT - exitT0);
+                return motionT < a ? motionT : a + Mathf.PingPong(motionT - a, b - a);
+            }
+            return m.pingpong ? Mathf.PingPong(motionT, m.Duration) : m.loop ? motionT % m.Duration : motionT;
         }
 
         // ---------- 姿势（弹簧跟随，和 vrm.js 一样 ST 200 / 阻尼 0.92）----------
@@ -690,24 +726,22 @@ namespace Kiko
             // 动作片段求值；放完了回站姿
             float sink = 0;
             if (action != null && !acts.Eval(action, (now - actStart) * 1000f, clipPose, out sink)) { action = null; sink = 0; }
-            // 动捕：放完了（不循环的）就交回弹簧
+            blendW = Mathf.Max(0, blendW - dt / blendDur);
+            float bw = blendW * blendW * (3 - 2 * blendW); // smoothstep
+            // 动捕：放完了（不循环的 / 起身放到结尾）就交回弹簧
             if (motion != null)
             {
                 motionT += dt * motion.speed;
-                if ((!motion.loop && !motion.pingpong && motionT >= motion.Duration) || (motionUntil > 0 && Time.time > motionUntil)) StopMotion();
-                else
-                {
-                    float t = motion.pingpong ? Mathf.PingPong(motionT, motion.Duration) : motion.loop ? motionT % motion.Duration : motionT;
-                    motionHips = motion.Sample(t, motionPose) * hipsBase;
-                    motionW = Mathf.Min(1, motionW + dt / 0.25f);
-                }
+                bool done = (!motion.loop && !motion.pingpong && !motion.HasSegments && motionT >= motion.Duration) || (motionUntil > 0 && Time.time > motionUntil)
+                            || (exiting && MotionTime() >= motion.Duration);
+                if (done) StopMotion(exiting ? 0.4f : 0.5f);
+                else motionHips = motion.Sample(MotionTime(), motionPose) * hipsBase;
             }
             bool mo = motion != null;
             bool idle = action == null && !mo && state == State.Idle;
-            float hipsGoal = mo ? motionHips : sink;
-            hipsV += ((hipsGoal - hipsNow) * ST - hipsV * DM) * dt;
+            hipsV += ((sink - hipsNow) * ST - hipsV * DM) * dt;
             hipsNow += hipsV * dt;
-            hipsOut = mo ? Mathf.Lerp(hipsNow, motionHips, motionW) : hipsNow;
+            hipsOut = Mathf.Lerp(mo ? motionHips : hipsNow, hipsFrom, bw);
             if (rig.TryGetValue(HumanBodyBones.Hips, out var hipsT))
             {
                 var lp = hipsT.localPosition;
@@ -717,26 +751,27 @@ namespace Kiko
             foreach (var b in driven)
             {
                 bool spring = springSet.Contains(b);
-                Vector3 goal;
-                if (mo && motionPose.TryGetValue(b, out var mp)) goal = mp;
-                else if (!spring) goal = Vector3.zero;
+                Vector3 goal; // 弹簧只管站姿和关键帧动作；动捕在播的时候弹簧也留在站姿，停下时 Slerp 回来
+                if (!spring) goal = Vector3.zero;
                 else goal = action != null && clipPose.TryGetValue(b, out var cp) ? cp : Base(b);
                 if (spring && idle) goal += Idle(b, br, ws, now);
                 var v = vel[b];
                 v += ((goal - cur[b]) * ST - v * DM) * dt;
                 vel[b] = v;
                 cur[b] += v * dt;
-                // 动捕在播：直接用动捕（淡入期间和弹簧混合），细节不被弹簧抹掉
-                var o = mo && motionPose.TryGetValue(b, out var mv) ? Vector3.Lerp(cur[b], mv, motionW) : cur[b];
-                outPose[b] = o;
+                // 动捕在播：直接用动捕；切换时从冻结的姿势 Slerp 过来
+                var q = mo && motionPose.TryGetValue(b, out var mq) ? mq : KikoPose.ToUnity(cur[b]);
+                if (bw > 0 && fromQ.TryGetValue(b, out var fq)) q = Quaternion.Slerp(q, fq, bw);
+                outQ[b] = q;
             }
             // 规范化世界旋转：从上往下乘；没驱动的骨骼规范化局部旋转是单位
             foreach (var b in rigOrder)
             {
                 var pw = humanParent.TryGetValue(b, out var p) && normWorld.TryGetValue(p, out var q) ? q : Quaternion.identity;
-                if (!outPose.TryGetValue(b, out var e)) { normWorld[b] = pw; continue; }
-                if (springSet.Contains(b)) e += Look(b) * (mo ? 0.4f : 1f);
-                var wn = pw * KikoPose.ToUnity(e);
+                if (!outQ.TryGetValue(b, out var lq)) { normWorld[b] = pw; continue; }
+                float lk = rest == Rest.Sleep ? 0f : mo ? 0.4f : 1f; // 睡着了不看鼠标
+                if (springSet.Contains(b) && lk > 0) lq *= KikoPose.ToUnity(Look(b) * lk);
+                var wn = pw * lq;
                 normWorld[b] = wn;
                 rig[b].rotation = wn * restWorld[b];
             }

@@ -121,8 +121,10 @@ namespace Kiko.EditorTools
                         float lift = Mathf.Max(0, 0.04f - low);
                         hips[f] = R((rig[HumanBodyBones.Hips].position.y + lift - restHips) / restHips * 1000f) / 1000f;
                     }
-                    // 「站着 → 坐下/躺下 → 站起来（最后还回 T-pose）」的长片段：只留中间髋最低、稳定的那一段，来回放
+                    // 「站着 → 坐下/躺下 → 坐着 → 站起来（最后还回 T-pose）」的长片段：
+                    // 留 [0, 站好为止]，标出中间髋最低、稳定的那段 [loopStart, loopEnd]（运行时先放坐下，再在这段里来回放，起身时往后放）
                     bool pp = false;
+                    int ls = 0, le = 0;
                     float hmin = hips.Min();
                     if (hips[0] - hmin > 0.25f)
                     {
@@ -131,19 +133,20 @@ namespace Kiko.EditorTools
                         for (int f = 0; f < n; f++)
                             if (hips[f] <= thr) { if (cs < 0) cs = f; if (f - cs + 1 > bestL) { bestL = f - cs + 1; bestS = cs; } }
                             else cs = -1;
-                        if (bestL >= Fps * 2)
+                        if (bestL >= Fps * 2 && bestS > 0)
                         {
-                            int nb = bones.Count;
-                            frames = frames.Skip(bestS * nb * 3).Take(bestL * nb * 3).ToArray();
-                            hips = hips.Skip(bestS).Take(bestL).ToArray();
-                            Debug.Log($"[Kiko] {name}：截 {bestS / Fps:F1}–{(bestS + bestL) / Fps:F1} 秒（坐/躺稳定段），来回放");
-                            n = bestL;
-                            pp = true;
+                            int end = bestS + bestL - 1, stop = n - 1;
+                            for (int f = end + 1; f < n; f++) if (hips[f] >= hips[0] - 0.03f) { stop = f; break; } // 站好了（后面是回 T-pose，不要）
+                            int nb = bones.Count, keep = stop + 1;
+                            frames = frames.Take(keep * nb * 3).ToArray();
+                            hips = hips.Take(keep).ToArray();
+                            ls = bestS; le = end; n = keep;
+                            Debug.Log($"[Kiko] {name}：坐下 0–{ls / Fps:F1} 秒，来回 {ls / Fps:F1}–{le / Fps:F1} 秒，起身到 {stop / Fps:F1} 秒");
                         }
                     }
                     list.Add(new KikoMotion
                     {
-                        name = name, fps = Fps, speed = 1, loop = pp || clip.isLooping || !raw.Contains("To"), pingpong = pp,
+                        name = name, fps = Fps, speed = 1, loop = le > 0 || clip.isLooping || !raw.Contains("To"), pingpong = pp, loopStart = ls, loopEnd = le,
                         bones = bones.Select(b => b.ToString()).ToArray(), frames = frames, hips = hips, count = n,
                     });
                     Debug.Log($"[Kiko] 烘焙 {name}：{clip.length:F1} 秒 → {n} 帧，髋高 {hips.Min():F2}~{hips.Max():F2}");

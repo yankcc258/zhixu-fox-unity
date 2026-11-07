@@ -22,9 +22,13 @@ namespace Kiko
         static readonly Color Dark = new(0.22f, 0.13f, 0.07f);
 
         public static Transform BellPivot; // 铃铛的摆动支点（KikoPet 每帧给它一点惯性摆动）
+        // 后脑勺的蓝色大蝴蝶结（旧鲸鱼娘希可留下来的，add_accessories.py 加的 Seeko_BackBow）。A2 设计稿只有耳边两个小蓝结 → 默认藏起来（11-07）
+        public static bool HairBackBow = false;
 
         public static void Build(Vrm10Instance vrm, Action<string> log)
         {
+            foreach (var t in vrm.GetComponentsInChildren<Transform>(true))
+                if (t.name == "Seeko_BackBow") { t.gameObject.SetActive(HairBackBow); log($"accessories: 后脑勺蓝蝴蝶结 {(HairBackBow ? "显示" : "藏起")}"); }
             Transform Bone(HumanBodyBones b) => vrm.TryGetBoneTransform(b, out var t) ? t : null;
             var neck = Bone(HumanBodyBones.Neck);
             var chest = Bone(HumanBodyBones.UpperChest) ?? Bone(HumanBodyBones.Chest);
