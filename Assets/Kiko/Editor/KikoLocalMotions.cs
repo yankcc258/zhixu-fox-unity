@@ -234,6 +234,9 @@ namespace Kiko.EditorTools
         [MenuItem("Kiko/8e 试：变小去窗口上坐（Play 里）")]
         static void TryMiniWin() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { p.DebugPrefer = "window"; if (!p.InMini) ToFloor(); p.EnterMini("sit"); } }
 
+        [MenuItem("Kiko/8f 试：壁纸坐姿 原大小（Play 里）")]
+        static void TryLedge() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.DebugLedgeSit(); }
+
         [MenuItem("Kiko/8 试：坐下（Play 里）")]
         static void TrySit() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.SitDown(60); }
 

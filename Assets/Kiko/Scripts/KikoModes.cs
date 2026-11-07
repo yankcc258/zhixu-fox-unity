@@ -626,7 +626,8 @@ namespace Kiko
 
         void ApplyLedgeSit(float dt)
         {
-            float want = mini && ms == Mini.Sit && ledgeIK && motion != null ? SegProgress() : 0;
+            if (debugLedge && rest != Rest.Sit) debugLedge = false;
+            float want = (mini && ms == Mini.Sit || debugLedge) && ledgeIK && motion != null ? SegProgress() : 0;
             ledgeW = Mathf.MoveTowards(ledgeW, want, dt * 2.5f);
             if (ledgeW < 0.002f || shooting) return;
             float w = ledgeW;
@@ -670,6 +671,20 @@ namespace Kiko
                 var pole = root.TransformDirection(new Vector3(side, -0.4f, -0.6f));
                 TwoBoneIK(up, lo, hd, target, pole, w);
             }
+        }
+
+        bool debugLedge;
+        /// 编辑器试：原大小坐一下壁纸坐姿（看得清楚）
+        public void DebugLedgeSit()
+        {
+            var m = PickMotion(MiniLedgeSet);
+            if (m == null) return;
+            action = null;
+            Act(m);
+            ledgeIK = true; debugLedge = true;
+            ledgeTilt = Random.Range(6f, 12f) * (Random.value < 0.5f ? 1 : -1);
+            rest = Rest.Sit; restUntil = Time.time + 120f;
+            Log("debug ledge sit " + m);
         }
 
         static void TwoBoneIK(Transform up, Transform lo, Transform end, Vector3 target, Vector3 pole, float w)
