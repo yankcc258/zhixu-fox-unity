@@ -250,7 +250,8 @@ namespace Kiko
             int c = Chatty;
             int id = Win32.PopupMenu(
                 (1, "说句话", false), (2, "摸摸头", false), (3, "打开知序（双击也行）", false), (0, "-", false),
-                (4, "坐下歇会儿", false), (7, "坐到任务栏边上", false), (6, "走走", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (0, "-", false),
+                (4, pet.InMini ? "找个窗口坐会儿" : "坐下歇会儿（变小去窗口上坐）", false), (7, pet.InBust ? "从任务栏上起来" : "趴在任务栏上（大头）", false),
+                (6, "走走", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (8, "变回来", false), (0, "-", false),
                 (13, "话多一点", c == 3), (12, "正常", c == 2), (11, "话少一点", c == 1), (10, "安静", c == 0), (0, "-", false),
                 (20, "退出", false));
             KikoPet.Log("menu → " + id);
@@ -259,24 +260,34 @@ namespace Kiko
                 case 1: if (pet.Sleeping) SayKey("sleepTalk", null, 5f); else Chat(); break;
                 case 2: if (pet.Sleeping) SayKey("patSleep", null, 4f); else SayKey("pat", "pat", 4f); break;
                 case 4:
-                    if (pet.Sleeping) pet.WakeUp(true);
-                    if (pet.SitDown(Random.Range(60f, 180f))) Say("那我坐一会儿～（拍拍地板）", null, 3f);
-                    else Say("……没地方坐。（动作包没装）", "meh", 3f);
+                    // 主人 11-07：明确让她坐下 → 缩小，去桌面上找个程序窗口爬上去坐着
+                    if (pet.Sleeping && !pet.InMini) pet.WakeUp(true);
+                    if (pet.EnterMini("sit")) Say("那我找个地方坐一会儿～", null, 3f);
+                    else Say("……先把我放回任务栏上啦。", "meh", 3f);
                     break;
                 case 5:
-                    if (pet.Sleeping) pet.WakeUp(true);
+                    if (pet.Sleeping) { if (pet.InMini) pet.ComeBack(); else pet.WakeUp(true); }
+                    else if (pet.EnterMini("lie")) Say("那我找个窗口睡一会儿……有事戳我。zzz", null, 3f);
                     else if (pet.GoSleep()) Say("那我睡了……有事戳我。zzz", null, 3f);
                     else Say("……睡不着。（动作包没装）", "meh", 3f);
                     break;
+                case 8:
+                    if (pet.InMini) pet.ComeBack();
+                    else if (pet.InBust) pet.ExitBust();
+                    else Say("我本来就是这么大呀？", "smug", 3f);
+                    break;
                 case 3: OpenSite(); break;
                 case 6:
+                    if (pet.InMini) { pet.EnterMini("wander"); break; }
                     if (pet.Sleeping) pet.WakeUp(true);
+                    if (pet.InBust) pet.ExitBust(0.4f);
                     if (!pet.StartWalk()) Say("……走不了。（得先站在任务栏上）", "meh", 3f);
                     break;
                 case 7:
+                    if (pet.InBust) { pet.ExitBust(); break; }
+                    if (pet.InMini) pet.ComeBack();
                     if (pet.Sleeping) pet.WakeUp(true);
-                    if (pet.EdgeSit(Random.Range(60f, 180f))) Say("我去边上坐会儿～", null, 3f);
-                    else Say("……这里坐不了。（得先站在任务栏上）", "meh", 3f);
+                    if (!pet.EnterBust(Random.Range(120f, 300f))) Say("……先把我放回任务栏上啦。", "meh", 3f);
                     break;
                 case 10: case 11: case 12: case 13:
                     Chatty = id - 10;
@@ -375,7 +386,8 @@ namespace Kiko
             float W = Screen.width, w = Mathf.Min(W * 0.72f, 300 * s);
             var content = new GUIContent(text);
             float h = Mathf.Max(style.CalcHeight(content, w), 40 * s);
-            float x = Mathf.Round(W * 0.5f - w * 0.62f), y = Mathf.Round(6 * s);
+            // 气泡放在头顶上方（变小 / 趴着时头的位置不一样），最高顶到窗口上沿
+            float x = Mathf.Round(W * 0.5f - w * 0.62f), y = Mathf.Round(Mathf.Max(6 * s, pet.HeadTopGui - h - 6 * s));
             // 气泡底边不要压到脸：顶多压到窗口里人物区域头顶往下一点
             bubbleRect = new Rect(x, y, w, h);
             GUI.Box(bubbleRect, content, style);

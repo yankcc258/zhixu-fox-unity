@@ -212,8 +212,8 @@ namespace Kiko.EditorTools
             pet.StartLocalShots();
         }
 
-        [MenuItem("Kiko/8a 试：坐到任务栏边上（Play 里）")]
-        static void TryEdge() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { ToFloor(); if (!p.EdgeSit(60)) Debug.LogWarning("[Kiko] EdgeSit 没开始"); } }
+        [MenuItem("Kiko/8a 试：趴在任务栏上 大头（Play 里）")]
+        static void TryEdge() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { ToFloor(); if (p.InBust) p.ExitBust(); else if (!p.EnterBust(120)) Debug.LogWarning("[Kiko] EnterBust 没开始"); } }
 
         // 编辑器里窗口是模拟的（假坐标 0,0 = 悬在半空），先把它放到「地上」，坐/走才肯开始
         static void ToFloor()
@@ -224,6 +224,9 @@ namespace Kiko.EditorTools
 
         [MenuItem("Kiko/8b 试：走走（Play 里）")]
         static void TryWalk() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { ToFloor(); if (!p.StartWalk()) Debug.LogWarning("[Kiko] StartWalk 没开始"); } }
+
+        [MenuItem("Kiko/8c 试：变小去窗口上（Play 里，再点 = 变回来）")]
+        static void TryMini() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { if (p.InMini) p.ComeBack(); else { ToFloor(); if (!p.EnterMini("sit")) Debug.LogWarning("[Kiko] EnterMini 没开始"); } } }
 
         [MenuItem("Kiko/8 试：坐下（Play 里）")]
         static void TrySit() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.SitDown(60); }

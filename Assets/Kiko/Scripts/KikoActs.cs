@@ -58,6 +58,8 @@ namespace Kiko
         public readonly Dictionary<string, string> MoodAct = new();
         public readonly HashSet<string> EyesShut = new();
         public string[] IdleClips = Array.Empty<string>();
+        public readonly Dictionary<string, string> BustMap = new(); // 趴任务栏沿时：普通动作 → 扒着边的版本
+        public string[] BustIdle = Array.Empty<string>();
         public readonly Dictionary<HumanBodyBones, Vector3> Stand = new();
 
         static readonly Dictionary<string, HumanBodyBones> BoneOf = new()
@@ -100,6 +102,8 @@ namespace Kiko
             foreach (var a in d.moodAct) r.MoodAct[a.mood] = a.act;
             foreach (var s in d.eyesShut) r.EyesShut.Add(s);
             r.IdleClips = d.idleClips;
+            if (d.bustMap != null) foreach (var a in d.bustMap) r.BustMap[a.mood] = a.act;
+            if (d.bustIdle != null) r.BustIdle = d.bustIdle;
             return r;
         }
 

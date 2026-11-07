@@ -2,12 +2,16 @@
 // 坐标一律是「屏幕物理像素、左上角为原点、y 向下」，和 Tauri 版 pet.js 的逻辑一致（不过那边是逻辑像素）。
 // UniWindowController 只负责透明和鼠标穿透；移动窗口、找任务栏都走这里，免得两套坐标系混用。
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
 
 namespace Kiko
 {
+    /// 桌面上一个普通窗口（小只模式里她可以站在它的上沿）
+    public struct WinInfo { public IntPtr h; public RectInt r; public string title; }
+
     public static class Win32
     {
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
@@ -90,6 +94,54 @@ namespace Kiko
             var w = mi.rcWork;
             return new RectInt(w.Left, w.Top, w.Right - w.Left, w.Bottom - w.Top);
         }
+
+        [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc cb, IntPtr lParam);
+        [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+        [DllImport("user32.dll")] static extern bool IsIconic(IntPtr h);
+        [DllImport("user32.dll")] static extern bool IsWindow(IntPtr h);
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] static extern int GetWindowLong(IntPtr h, int idx);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder buf, int max);
+        [DllImport("dwmapi.dll")] static extern int DwmGetWindowAttribute(IntPtr h, int attr, out RECT r, int size);
+        [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int DwmGetWindowAttributeInt(IntPtr h, int attr, out int v, int size);
+
+        static bool VisibleRect(IntPtr h, out RectInt rect)
+        {
+            rect = default;
+            if (!IsWindow(h) || !IsWindowVisible(h) || IsIconic(h)) return false;
+            if (DwmGetWindowAttributeInt(h, 14, out int cloaked, 4) == 0 && cloaked != 0) return false; // DWMWA_CLOAKED（别的虚拟桌面 / 挂起的 UWP）
+            // DWMWA_EXTENDED_FRAME_BOUNDS：不含 Win10/11 窗口四周看不见的那 7px 阴影边
+            if (DwmGetWindowAttribute(h, 9, out var r, Marshal.SizeOf<RECT>()) != 0 && !GetWindowRect(h, out r)) return false;
+            rect = new RectInt(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+            return true;
+        }
+
+        /// 桌面上的普通窗口，按 Z 顺序从上往下（不含自己、任务栏、桌面、工具窗、点不中的透明浮层、最小化的）
+        public static List<WinInfo> TopWindows()
+        {
+            var list = new List<WinInfo>();
+            var me = Hwnd;
+            var cls = new StringBuilder(64);
+            var title = new StringBuilder(128);
+            EnumWindows((h, _) =>
+            {
+                if (h == me) return true;
+                int ex = GetWindowLong(h, -20); // GWL_EXSTYLE
+                if ((ex & 0x80) != 0 || (ex & 0x20) != 0) return true; // WS_EX_TOOLWINDOW / WS_EX_TRANSPARENT（显卡浮层之类）
+                if (!VisibleRect(h, out var r) || r.width < 120 || r.height < 80) return true;
+                title.Clear();
+                if (GetWindowText(h, title, 128) == 0) return true;
+                cls.Clear();
+                GetClassName(h, cls, 64);
+                var c = cls.ToString();
+                if (c == "Progman" || c == "WorkerW" || c == "Shell_TrayWnd" || c == "Shell_SecondaryTrayWnd") return true;
+                list.Add(new WinInfo { h = h, r = r, title = title.ToString() });
+                return true;
+            }, IntPtr.Zero);
+            return list;
+        }
+
+        /// 某个窗口现在的位置；关掉 / 最小化 / 藏起来了返回 false
+        public static bool RectOf(IntPtr h, out RectInt r) => VisibleRect(h, out r);
 
         /// 某一点所在屏幕的整块（含任务栏）
         public static RectInt MonitorAt(Vector2Int pt)
@@ -177,6 +229,21 @@ namespace Kiko
         public static RectInt WorkAreaAt(Vector2Int pt) => WorkArea;
         public static RectInt MonitorAt(Vector2Int pt) => new RectInt(0, 0, WorkArea.width, WorkArea.height + 72); // 假装任务栏 72px
         public static void BringToTop() { }
+        // 编辑器里假装桌面上有两个窗口（坐标和上面的假工作区一致），用来试小只模式的跳上跳下
+        public static List<WinInfo> TopWindows()
+        {
+            int W = Screen.width, H = Screen.height;
+            return new List<WinInfo>
+            {
+                new() { h = (IntPtr)1, r = new RectInt(W / 2, (int)(H * 1.25f), W, (int)(H * 0.6f)), title = "假窗口A" },
+                new() { h = (IntPtr)2, r = new RectInt(W * 2, (int)(H * 0.9f), W, H), title = "假窗口B" },
+            };
+        }
+        public static bool RectOf(IntPtr h, out RectInt r)
+        {
+            foreach (var w in TopWindows()) if (w.h == h) { r = w.r; return true; }
+            r = default; return false;
+        }
         public static bool LeftDown => UnityEngine.Input.GetMouseButton(0);
         public static bool RightDown => UnityEngine.Input.GetMouseButton(1);
         public static bool ShiftDown => UnityEngine.Input.GetKey(KeyCode.LeftShift);

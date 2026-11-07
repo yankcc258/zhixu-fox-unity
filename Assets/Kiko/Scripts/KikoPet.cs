@@ -12,7 +12,7 @@ using Debug = UnityEngine.Debug;
 
 namespace Kiko
 {
-    public class KikoPet : MonoBehaviour
+    public partial class KikoPet : MonoBehaviour
     {
         [Header("窗口（1080p 时的大小，2K 屏自动放大）")]
         public int baseWidth = 400; // 尾巴放大后加宽（原 340）
@@ -462,7 +462,6 @@ namespace Kiko
         }
 
         float camTotal = 1.6f, camBottom; // 窗口竖着看得到的世界高度、窗口底边的世界 y（坐边上/走路换算像素用）
-        float PxPerM => Screen.height / camTotal;
         void FrameCamera()
         {
             // 头顶到脚底整个人放进画面（上下留 3%），和 three.js 版 frameCamera 一样
@@ -476,6 +475,9 @@ namespace Kiko
             cam.transform.SetPositionAndRotation(new Vector3(0, figBottom + total / 2f, dist), Quaternion.Euler(0, 180, 0));
             camTotal = total;
             camBottom = figBottom;
+            viewB = camBottom; viewH = camTotal; viewT = 1;
+            if (rig.TryGetValue(HumanBodyBones.Chest, out var ch)) restChestY = ch.position.y;
+            restHeadY = head.position.y;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0, 0, 0, 0);
             cam.allowHDR = false;
@@ -497,6 +499,8 @@ namespace Kiko
             UpdateSkirt();
             UpdateBell(dt);
             UpdateRest();
+            UpdateMini(dt);
+            UpdateView(dt);
             vrm.transform.rotation = Quaternion.Slerp(vrm.transform.rotation, Quaternion.Euler(0, yawGoal, 0), 1 - Mathf.Exp(-dt * 7f));
             // 省电：没人碰她、也没在掉落时 30 帧，鼠标在身上/拖着/掉落时 60 帧
             Application.targetFrameRate = state == State.Idle && !over && Time.time > flinchUntil ? 30 : 60;
@@ -542,7 +546,7 @@ namespace Kiko
                 {
                     var win = Win32.WindowRect;
                     var wa = Win32.WorkAreaAt(new Vector2Int(win.x + win.width / 2, win.y + win.height / 2));
-                    float floor = wa.yMax - win.height;
+                    float floor = FallFloor(win, wa);
                     if (fallY >= floor - 1) { Win32.MoveWindow(new Vector2Int(win.x, (int)floor)); Go(State.Land); break; }
                     fallV = Mathf.Min(2200f, fallV + gravity * dt);
                     fallY = Mathf.Min(floor, fallY + fallV * dt);
@@ -558,15 +562,23 @@ namespace Kiko
             state = s;
             stateT = 0;
             if (s == State.Pressed || s == State.Drag) Touch();
-            if (s == State.Drag) { rest = Rest.None; yawGoal = 0; SetMood("dangle", 0); } // → Hang（循环）
+            if (s == State.Drag)
+            {
+                if (rest == Rest.Bust) ExitBust(0.35f);
+                if (rest == Rest.Mini) { if (ms == Mini.Walk) EndMiniWalk(); StopMotion(0.3f); ms = Mini.Idle; hasGoal = false; lieAsleep = false; returning = false; onH = System.IntPtr.Zero; } // 小只可以拎着放到别的窗口上
+                else rest = Rest.None;
+                yawGoal = 0; SetMood("dangle", 0); // → Hang（循环）
+            }
             else if (s == State.Fall) { SetMood("surprised", 0); Act("Fall"); }
-            else if (s == State.Land) { Act("Land"); SetMood("idle", 0); talk.OnDropped(); }
+            else if (s == State.Land) { Act("Land"); SetMood("idle", 0); talk.OnDropped(); if (mini) MiniLanded(); }
             else if (s == State.Idle && mood == "dangle") SetMood("idle", 0);
         }
 
         void Poke()
         {
             Touch();
+            if (mini) { MiniPoke(); return; }
+            if (bust) { BustPoke(); return; }
             if (rest == Rest.Sleep) { WakeUp(false); talk.OnPokeAsleep(); return; }
             if (rest == Rest.Sit || rest == Rest.Edge) { rest = Rest.None; StopMotion(0.6f); }
             if (rest == Rest.Walk) { rest = Rest.None; StopMotion(0.4f); yawGoal = 0; }
@@ -593,7 +605,7 @@ namespace Kiko
                 if (motion != null && motion.loop) StopMotion();
             }
             // 本机动作包里有对应情绪的待机（AGIA 叉腰生气、比耶、握拳……）就 60% 用它，放到心情结束（没写时长就 4 秒）
-            if (changed && MoodMotions.TryGetValue(m, out var set) && Random.value < 0.6f)
+            if (changed && !bust && MoodMotions.TryGetValue(m, out var set) && Random.value < 0.6f)
             {
                 var mm = PickMotion(set);
                 if (mm != null) { Act(mm); motionUntil = Time.time + (sec > 0 ? sec : 4f); return; }
@@ -605,6 +617,8 @@ namespace Kiko
         public void Act(string name)
         {
             if (name == null) return;
+            // 趴在任务栏沿上：只做扒着边的版本（Peek*），别的动作换成对应的，没有对应的就不做
+            if (bust && !name.StartsWith("Peek") && (acts == null || !acts.BustMap.TryGetValue(name, out name))) return;
             // 有动捕的动作优先播动捕（和 Tauri 版一样），没有再用关键帧
             if (motions.TryGetValue(name, out var mo))
             {
@@ -622,13 +636,13 @@ namespace Kiko
 
         // ---------- 歇着 / 睡觉（本机动作包，Kiko/6 烘的 L_*；没有就不做）----------
         // 一阵子没人理 → 随机坐下歇一会儿 → 有时候坐着坐着就睡着；夜里（23–6 点）没人理很快就睡，睡到天亮或被戳醒。
-        enum Rest { None, Sit, Sleep, Edge, Walk }
+        enum Rest { None, Sit, Sleep, Edge, Walk, Bust, Mini }
         float yawGoal; // 整个人朝哪（0 = 面向屏幕；走路时 ±90）
         Rest rest;
         float restUntil, lastTouch, restAfter = 300;
         static readonly string[] SitSet =
         {
-            "L_EJ_01_wait_sitliedown_F", "L_EJ_02_wait_sitliedown_F", "L_EJ_03_wait_sitliedown_F", "L_EJ_04_wait_sitliedown_F",
+            // 11-07：EJ_01–04 是张腿 / 竖膝坐，裙子盖不住，不用了
             "L_EJ_05_wait_sitliedown_F", "L_EJ_06_wait_sitliedown_F", "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI", // Saneko 是坐椅子的（悬空），不放进来
         };
         // 坐在任务栏边上（坐椅子的姿势，屁股放在任务栏上沿，腿垂下去）
@@ -638,7 +652,7 @@ namespace Kiko
             "L_EJ_13_wait_sitliedown_F", "L_Saneko_sitAFK",
         };
         static readonly string[] WalkSet = { "Walk", "L_AGIA_Other_walking_01" };
-        static readonly string[] SleepSet = { "L_AFK_manmaruCat", "L_Lunalit_AFK_suimin_ver2", "L_afk_hard_guard" };
+        static readonly string[] SleepSet = { "L_AFK_manmaruCat" }; // 11-07：抱膝守护睡、Lunalit 蜷睡从正面看会走光，不用了
         // 待机里偶尔插的（女仆站、玩头发、背着手、AGIA 普通待机）
         static readonly string[] IdleExtra =
         {
@@ -656,7 +670,7 @@ namespace Kiko
             ["pout"] = new[] { "L_AGIA_Idle_concern_01_right_hand_front" },
             ["wave"] = new[] { "L_AGIA_Other_waving_arm_01" },
         };
-        public bool Sleeping => rest == Rest.Sleep;
+        public bool Sleeping => rest == Rest.Sleep || MiniAsleep;
         public bool Resting => rest != Rest.None;
         static bool Night { get { int h = System.DateTime.Now.Hour; return h >= 23 || h < 6; } }
 
@@ -788,6 +802,12 @@ namespace Kiko
         {
             if (!ready || shooting || state != State.Idle) return;
             if (over) Touch(); // 鼠标在她身上 = 有人在看她
+            if (rest == Rest.Mini) return; // 小只：UpdateMini 管
+            if (rest == Rest.Bust)
+            {
+                if (Time.time > restUntil) { ExitBust(); Act("Stretch"); }
+                return;
+            }
             if (rest != Rest.Edge)
             {
                 // 从任务栏边上起来（或被戳起来）后，窗口慢慢回到地面
@@ -805,7 +825,9 @@ namespace Kiko
                     else if (idleFor > restAfter)
                     {
                         float r = Random.value;
-                        bool ok = r < 0.35f ? StartWalk() : r < 0.6f ? SitDown(Random.Range(90f, 240f)) : r < 0.88f ? EdgeSit(Random.Range(90f, 240f)) : GoSleep();
+                        // 11-07：坐任务栏边改成趴在任务栏沿上（大头）；新加「变小去窗口上玩」
+                        bool ok = r < 0.25f ? StartWalk() : r < 0.4f ? SitDown(Random.Range(90f, 240f)) : r < 0.62f ? EnterBust(Random.Range(120f, 300f))
+                            : r < 0.9f ? EnterMini(null) : GoSleep();
                         if (!ok) Touch();
                     }
                     break;
@@ -868,6 +890,12 @@ namespace Kiko
         void IdleFidget()
         {
             if (shooting || acts == null || action != null || motion != null || state != State.Idle || mood != "idle" || over || Time.time < idleNext) return;
+            if (bust)
+            {
+                if (acts.BustIdle.Length > 0) Act(acts.BustIdle[Random.Range(0, acts.BustIdle.Length)]);
+                idleNext = Time.time + 5f + Random.Range(0f, 8f);
+                return;
+            }
             if (acts.IdleClips.Length == 0) return;
             // 偶尔插一段本机动作包里的待机（女仆站等），循环的放 6–10 秒就停
             var extra = Random.value < 0.18f ? PickMotion(IdleExtra) : null;
@@ -882,10 +910,11 @@ namespace Kiko
         {
             var win = Win32.WindowRect;
             var c = Win32.Cursor;
-            // 头在画面上方 ~15% 处；鼠标相对头的位置，离开窗口越远越饱和
-            var headPx = new Vector2(win.x + win.width * 0.5f, win.y + win.height * (bubbleSpace + baseHeight * 0.15f) / WinH);
+            // 鼠标相对头（按相机投影算，变小 / 趴着时头的位置不一样）的位置，离开窗口越远越饱和
+            var headPx = ScreenOf(rig[HumanBodyBones.Head].position);
             var d = new Vector2(c.x - headPx.x, c.y - headPx.y) / (win.height * 0.8f);
-            var want = shooting ? Vector2.zero : new Vector2(Mathf.Clamp(d.x, -1, 1), Mathf.Clamp(d.y, -1, 1));
+            // 小只被点了：先朝镜头看一眼
+            var want = shooting || (mini && ms == Mini.Look) ? Vector2.zero : new Vector2(Mathf.Clamp(d.x, -1, 1), Mathf.Clamp(d.y, -1, 1));
             look = Vector2.Lerp(look, want, 1 - Mathf.Exp(-Time.deltaTime * 6));
             // 眼睛：看相机前方的一个点（屏幕左右 = 世界 -x/+x，因为相机转了 180°）
             var head = rig[HumanBodyBones.Head].position;
@@ -994,7 +1023,7 @@ namespace Kiko
                 cur[b] += v * dt;
                 // 动捕在播：直接用动捕；切换时从冻结的姿势 Slerp 过来
                 float bm = mw;
-                if (mo && rest == Rest.Walk && WalkMask.TryGetValue(b, out var wm)) bm = wm; // 走路：上半身用站姿，腿步子缩小
+                if (mo && Walking && WalkMask.TryGetValue(b, out var wm)) bm = wm; // 走路：上半身用站姿，腿步子缩小
                 var q = mo && motionPose.TryGetValue(b, out var mq) ? (bm < 1 ? Quaternion.Slerp(KikoPose.ToUnity(cur[b]), mq, bm) : mq) : KikoPose.ToUnity(cur[b]);
                 if (bw > 0 && fromQ.TryGetValue(b, out var fq)) q = Quaternion.Slerp(q, fq, bw);
                 outQ[b] = q;
