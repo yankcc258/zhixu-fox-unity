@@ -544,8 +544,7 @@ namespace Kiko
         static readonly string[] SitSet =
         {
             "L_EJ_01_wait_sitliedown_F", "L_EJ_02_wait_sitliedown_F", "L_EJ_03_wait_sitliedown_F", "L_EJ_04_wait_sitliedown_F",
-            "L_EJ_05_wait_sitliedown_F", "L_EJ_06_wait_sitliedown_F", "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI",
-            "L_Saneko_sitAFK",
+            "L_EJ_05_wait_sitliedown_F", "L_EJ_06_wait_sitliedown_F", "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI", // Saneko 是坐椅子的（悬空），不放进来
         };
         static readonly string[] SleepSet = { "L_AFK_manmaruCat", "L_Lunalit_AFK_suimin_ver2", "L_afk_hard_guard" };
         // 待机里偶尔插的（女仆站、玩头发、背着手、AGIA 普通待机）
