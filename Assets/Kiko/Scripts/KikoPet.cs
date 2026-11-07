@@ -22,15 +22,16 @@ namespace Kiko
         [Tooltip("掉落加速度（像素/秒²，和 Tauri 版一样）")]
         public float gravity = 2600f;
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
-        [Tooltip("每节往侧面（画面左边）多弯的角度")] public float tailSide = 12f;
-        [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 12f; // 根部先往后伸再垂：尾巴很粗，离腿太近会把大腿裹进去
-        [Tooltip("后面每节往上翘的角度（垂下去再勾回来，J 字形，尾尖不拖地）")] public float tailLift = 13f;
-        [Tooltip("尾巴整体放大（主人：没辨别度 → 尾巴超级大）")] public float tailScale = 1.6f;
+        [Tooltip("每节往侧面（画面左边）多弯的角度（每节累加）")] public float tailSide = 2f; // 11-07 照 A2 三视图：基本垂直，正面只从腿边露一点
+        [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 6f; // 根部先往后伸再垂：尾巴很粗，离腿太近会把大腿裹进去
+        [Tooltip("后面每节往上翘的角度（每节累加；尾尖微微勾一下）")] public float tailLift = 2.5f;
+        [Tooltip("尾巴整体放大；粗细在 Tools/shape_tail.py 里按这个倍数换算，改了要一起改")] public float tailScale = 1.25f;
         [Header("尾巴物理（主人：要朝下、随重力晃来晃去）")]
         [Tooltip("弹簧硬度：越小越软、越容易被重力拉下去")] public float tailStiff = 0.8f;
         [Tooltip("重力")] public float tailGravity = 0.4f;
         [Tooltip("阻尼：越小晃得越久")] public float tailDrag = 0.25f;
-        [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.6f;
+        [Tooltip("待机时左右慢慢摆的幅度")] public float tailWag = 0.35f;
+        [Tooltip("重力往后偏多少（0 = 直直往下，会贴到腿上）")] public float tailBack = 0.5f;
         [Tooltip("窗口被拖动时尾巴甩的强度")] public float tailInertia = 1f;
         [Tooltip("后裙让开尾巴：尾巴前几节挂胶囊碰撞体，半径 = 尾巴实际粗细 × 这个（0 = 关）")] public float tailSkirtPush = 0.7f;
 
@@ -278,6 +279,14 @@ namespace Kiko
             int ns = 0;
             foreach (var sp in vrm.SpringBone.Springs)
                 if (sp.Joints.Count > 0 && sp.Joints[0] && sp.Joints[0].name.Contains("Skirt")) { sp.ColliderGroups.Add(group); ns++; }
+            // 尾巴本身也躲开大腿（用模型自带的大腿碰撞组），关节半径按尾巴粗细的一半
+            foreach (var sp in vrm.SpringBone.Springs)
+                if (sp.Joints.Count > 0 && sp.Joints[0] && sp.Joints[0].name.StartsWith("J_Opt_C_FoxTail"))
+                {
+                    foreach (var g in vrm.SpringBone.ColliderGroups)
+                        if (g && ((g.Name ?? "").Contains("UpperLeg") || g.gameObject.name.Contains("UpperLeg")) && !sp.ColliderGroups.Contains(g)) sp.ColliderGroups.Add(g);
+                    foreach (var jt in sp.Joints) if (jt) jt.m_jointRadius = Mathf.Max(jt.m_jointRadius, 0.035f);
+                }
             Log($"tail skirt: {group.Colliders.Count} capsules r [{string.Join(", ", radii)}] → {ns} skirt springs");
         }
 
@@ -294,7 +303,7 @@ namespace Kiko
             float sway = tailWag * (Mathf.Sin(t * 1.15f) * 0.7f + Mathf.Sin(t * 0.41f + 1.3f) * 0.3f);
             float ix = Mathf.Clamp(winVel.x / 1500f, -1.5f, 1.5f) * tailInertia;
             float iy = Mathf.Clamp(winVel.y / 1800f, -0.9f, 0.9f) * tailInertia;
-            var dir = new Vector3(sway + ix, -1f + iy, -0.9f).normalized; // z 往后：垂在腿后面，不挡吊带袜
+            var dir = new Vector3(sway + ix, -1f + iy, -tailBack).normalized; // z 往后：垂在腿后面，不挡吊带袜
             var sb = vrm.Runtime.SpringBone;
             foreach (var j in tailJoints)
             {
