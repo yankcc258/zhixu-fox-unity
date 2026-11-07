@@ -676,8 +676,9 @@ namespace Kiko
 
         bool debugLedge;
         /// 编辑器试：原大小坐一下壁纸坐姿（看得清楚）
-        public void DebugLedgeSit()
+        public void DebugLedgeSit(float yaw = 0)
         {
+            yawGoal = yaw;
             var m = PickMotion(MiniLedgeSet);
             if (m == null) return;
             action = null;
@@ -716,6 +717,9 @@ namespace Kiko
         {
             if (!ready || skirtChains.Count == 0 || shooting) return;
             var root = vrm.transform;
+            bool dbg = Time.time > nextDrapeLog && (debugLedge || mini && ms == Mini.Sit);
+            if (dbg) nextDrapeLog = Time.time + 4f;
+            int nOn = 0; float wMax = 0; string ex = "";
             foreach (var c in skirtChains)
             {
                 var ul = c.left ? legUL : legUR;
@@ -725,6 +729,7 @@ namespace Kiko
                 float raise = Mathf.Clamp01((Vector3.Angle(td, Vector3.down) - 15f) / 45f);
                 float w = c.front * raise;
                 if (w < 0.01f || c.bones.Count < 2) continue;
+                nOn++; if (w > wMax) { wMax = w; ex = $"{c.bones[0].name} front {c.front:F2} raise {raise:F2} side {c.side:F2} bones {c.bones.Count}"; }
                 var target = ll.position + Vector3.up * 0.07f + root.right * (c.side * 0.08f);
                 for (int k = 0; k < c.bones.Count - 1; k++)
                 {
@@ -736,7 +741,9 @@ namespace Kiko
                     t.rotation = Quaternion.Slerp(Quaternion.identity, q, w) * t.rotation;
                 }
             }
+            if (dbg) Log($"drape chains {nOn}/{skirtChains.Count} max w {wMax:F2} {ex}");
         }
+        float nextDrapeLog;
 
         /// 动捕里（坐着、躺着）也带一点呼吸和晃动，不那么僵
         bool BreatheOnMotion => motion != null && (rest is Rest.Sit or Rest.Edge or Rest.Sleep || (mini && ms is Mini.Sit or Mini.Lie));
