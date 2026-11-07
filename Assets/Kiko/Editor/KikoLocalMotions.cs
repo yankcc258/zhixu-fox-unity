@@ -93,6 +93,7 @@ namespace Kiko.EditorTools
                     int n = Mathf.Max(2, Mathf.CeilToInt(len * Fps) + 1);
                     var frames = new float[n * bones.Count * 3];
                     var hips = new float[n];
+                    var armDown = new bool[n];
                     var nw = new Dictionary<HumanBodyBones, Quaternion>();
                     for (int f = 0; f < n; f++)
                     {
@@ -120,6 +121,9 @@ namespace Kiko.EditorTools
                         low = Mathf.Min(low, rig[HumanBodyBones.Hips].position.y - 0.10f); // 屁股
                         float lift = Mathf.Max(0, 0.04f - low);
                         hips[f] = R((rig[HumanBodyBones.Hips].position.y + lift - restHips) / restHips * 1000f) / 1000f;
+                        // 手放下来了没（DM 的片段开头和结尾是 T-pose）
+                        armDown[f] = rig[HumanBodyBones.LeftUpperArm].position.y - rig[HumanBodyBones.LeftHand].position.y > 0.2f
+                                     && rig[HumanBodyBones.RightUpperArm].position.y - rig[HumanBodyBones.RightHand].position.y > 0.2f;
                     }
                     // 「站着 → 坐下/躺下 → 坐着 → 站起来（最后还回 T-pose）」的长片段：
                     // 留 [0, 站好为止]，标出中间髋最低、稳定的那段 [loopStart, loopEnd]（运行时先放坐下，再在这段里来回放，起身时往后放）
@@ -137,11 +141,18 @@ namespace Kiko.EditorTools
                         {
                             int end = bestS + bestL - 1, stop = n - 1;
                             for (int f = end + 1; f < n; f++) if (hips[f] >= hips[0] - 0.03f) { stop = f; break; } // 站好了（后面是回 T-pose，不要）
-                            int nb = bones.Count, keep = stop + 1;
-                            frames = frames.Take(keep * nb * 3).ToArray();
-                            hips = hips.Take(keep).ToArray();
-                            ls = bestS; le = end; n = keep;
-                            Debug.Log($"[Kiko] {name}：坐下 0–{ls / Fps:F1} 秒，来回 {ls / Fps:F1}–{le / Fps:F1} 秒，起身到 {stop / Fps:F1} 秒");
+                            while (stop > end && !armDown[stop]) stop--; // 站起来时手已经抬成 T 字的帧也不要
+                            // 开头：跳过 T-pose，从「开始往下坐」前 0.4 秒开始
+                            int f0 = 0;
+                            while (f0 < bestS && !armDown[f0]) f0++;
+                            int drop = f0;
+                            while (drop < bestS && hips[drop] > hips[f0] - 0.05f) drop++;
+                            int start = Mathf.Clamp(drop - (int)(0.4f * Fps), f0, bestS - 1);
+                            int nb = bones.Count, keep = stop + 1 - start;
+                            frames = frames.Skip(start * nb * 3).Take(keep * nb * 3).ToArray();
+                            hips = hips.Skip(start).Take(keep).ToArray();
+                            ls = bestS - start; le = end - start; n = keep; stop -= start;
+                            Debug.Log($"[Kiko] {name}：（原片段从 {start / Fps:F1} 秒起）坐下 0–{ls / Fps:F1} 秒，来回 {ls / Fps:F1}–{le / Fps:F1} 秒，起身到 {stop / Fps:F1} 秒");
                         }
                     }
                     list.Add(new KikoMotion
