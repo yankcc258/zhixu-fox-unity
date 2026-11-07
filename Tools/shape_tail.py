@@ -21,6 +21,8 @@ ap = argparse.ArgumentParser()
 ap.add_argument('src'); ap.add_argument('dst')
 ap.add_argument('--scale', type=float, default=1.25, help='和 Unity 里 KikoPet.tailScale 一样')
 ap.add_argument('--bins', type=int, default=24)
+ap.add_argument('--fur-mask', help='顺便画毛长遮罩（lilToon _FurLengthMask）：尾巴根部藏在裙子里的那段不长毛，免得毛从后裙扎出来')
+ap.add_argument('--fur-root', type=float, default=0.20, help='根部多长一段（按尾巴全长比例）毛长从 0 渐变到 1')
 a = ap.parse_args()
 
 d = open(a.src, 'rb').read()
@@ -82,6 +84,35 @@ pos[idx] = newP.astype(np.float32)
 raw = pos.astype(np.float32).tobytes(); BIN[pos_off:pos_off + len(raw)] = raw
 A = j['accessors'][prim['attributes']['POSITION']]
 if 'min' in A: A['min'] = pos.min(0).astype(float).tolist(); A['max'] = pos.max(0).astype(float).tolist()
+
+if a.fur_mask:
+    from PIL import Image
+    N = 512
+    _, uv = view(prim['attributes']['TEXCOORD_0'])
+    _, tri = view(prim['indices']); tri = tri.reshape(-1, 3)
+    sv = np.ones(len(pos)); sv[idx] = s
+    val = np.clip((sv - a.fur_root * 0.35) / (a.fur_root * 0.65), 0, 1)
+    val = val * val * (3 - 2 * val)
+    img = np.ones((N, N), np.float32)
+    for t in tri:
+        P2 = uv[t].astype(np.float64) * N
+        if val[t].min() >= 1: continue
+        x0, y0 = np.floor(P2.min(0)).astype(int) - 1; x1, y1 = np.ceil(P2.max(0)).astype(int) + 1
+        x0, y0 = max(x0, 0), max(y0, 0); x1, y1 = min(x1, N - 1), min(y1, N - 1)
+        if x1 < x0 or y1 < y0: continue
+        gx, gy = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
+        (ax, ay), (bx, by), (cx, cy) = P2
+        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(den) < 1e-12: continue
+        w1 = ((by - cy) * (gx - cx) + (cx - bx) * (gy - cy)) / den
+        w2 = ((cy - ay) * (gx - cx) + (ax - cx) * (gy - cy)) / den
+        w3 = 1 - w1 - w2
+        ins = (w1 >= -0.05) & (w2 >= -0.05) & (w3 >= -0.05)
+        v = w1 * val[t[0]] + w2 * val[t[1]] + w3 * val[t[2]]
+        sub = img[y0:y1 + 1, x0:x1 + 1]
+        sub[ins] = np.minimum(sub[ins], v[ins])
+    Image.fromarray((img * 255).astype(np.uint8), 'L').save(a.fur_mask)  # glTF 的 UV 原点在左上，和图片一样
+    print('fur mask', a.fur_mask, 'masked texels', int((img < 0.99).sum()))
 
 print(f'tail verts {len(idx)}, chain length {cum[-1]:.3f} m (×{a.scale} = {cum[-1] * a.scale:.2f} m in Unity)')
 for k in range(0, a.bins, max(1, a.bins // 8)):

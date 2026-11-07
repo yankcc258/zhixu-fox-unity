@@ -274,6 +274,16 @@ namespace Kiko.EditorTools
                 d.SetFloat("_FurCutoutLength", 0.7f);
                 d.SetColor("_FurRimColor", new Color(0.92f, 0.94f, 1f, 1f));
                 d.SetFloat("_FurRimFresnelPower", 3f);
+                // 尾巴根部（藏在裙子里那段）不长毛，免得毛从后裙扎出来；遮罩由 Tools/shape_tail.py --fur-mask 生成
+                var furMaskPath = Root + "/Textures/tail_fur_mask.png";
+                if (AssetImporter.GetAtPath(furMaskPath) is TextureImporter fti && fti.sRGBTexture)
+                {
+                    fti.sRGBTexture = false;
+                    fti.textureCompression = TextureImporterCompression.Uncompressed;
+                    fti.SaveAndReimport();
+                }
+                var furMask = AssetDatabase.LoadAssetAtPath<Texture2D>(furMaskPath);
+                if (furMask) d.SetTexture("_FurLengthMask", furMask);
             }
         }
 
