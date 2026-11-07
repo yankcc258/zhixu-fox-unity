@@ -300,10 +300,10 @@ namespace Kiko
             }
             foreach (var c in skirtChains)
             {
-                // 链根（名字里的 0）相对髋部的水平方位：正前 = 1，正侧 = 0，后面 = 0
+                // 链根（名字里的 0）相对髋部的水平方位
                 var root = c.joints.OrderBy(j => j.name).First().transform;
                 var flat = Vector3.ProjectOnPlane(root.position - hips.position, Vector3.up).normalized;
-                c.front = Mathf.Clamp01(Vector3.Dot(flat, fwd) * 1.25f);
+                c.front = Mathf.Clamp01(Vector3.Dot(flat, fwd) * 0.8f + 0.6f); // 正前 1、正侧 0.6、斜后 ~0.2、正后 0（侧身翘腿时侧片也要盖住大腿）
             }
             Log($"skirt drape chains {skirtChains.Count}: front≥0.5 {skirtChains.Count(c => c.front >= 0.5f)}");
         }
