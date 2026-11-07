@@ -658,7 +658,7 @@ namespace Kiko
         {
             var win = Win32.WindowRect;
             var wa = Win32.WorkAreaAt(new Vector2Int(win.x + win.width / 2, win.y + win.height / 2));
-            if (Mathf.Abs(win.y - (wa.yMax - win.height)) > 3) return false; // 不在地上（被挂在半空）就不坐
+            if (Mathf.Abs(win.y - (wa.yMax - win.height)) > 3) { Log("rest: edge skipped (not on floor)"); return false; } // 不在地上（被挂在半空）就不坐
             var m = PickMotion(EdgeSet);
             if (m == null) return false;
             var mo = motions[m];
@@ -680,7 +680,7 @@ namespace Kiko
         {
             var win = Win32.WindowRect;
             var wa = Win32.WorkAreaAt(new Vector2Int(win.x + win.width / 2, win.y + win.height / 2));
-            if (Mathf.Abs(win.y - (wa.yMax - win.height)) > 3) return false;
+            if (Mathf.Abs(win.y - (wa.yMax - win.height)) > 3) { Log("rest: walk skipped (not on floor)"); return false; }
             var m = PickMotion(WalkSet);
             if (m == null) return false;
             float lo = wa.xMin - win.width * 0.2f, hi = wa.xMax - win.width * 0.8f, min = 150 * scale;
