@@ -113,7 +113,13 @@ namespace Kiko.EditorTools
                             frames[(f * bones.Count + i) * 3 + 1] = R(e.y);
                             frames[(f * bones.Count + i) * 3 + 2] = R(e.z);
                         }
-                        hips[f] = R((rig[HumanBodyBones.Hips].position.y - restHips) / restHips * 1000f) / 1000f;
+                        // 落地：别的骨架比例不同，坐/躺时腿和屁股会沉到地板以下（窗口底边 = 地板 = 任务栏）→ 整体往上抬到最低点离地 4cm
+                        float low = float.MaxValue;
+                        foreach (var lb in Ground)
+                            if (rig.TryGetValue(lb, out var lt)) low = Mathf.Min(low, lt.position.y);
+                        low = Mathf.Min(low, rig[HumanBodyBones.Hips].position.y - 0.10f); // 屁股
+                        float lift = Mathf.Max(0, 0.04f - low);
+                        hips[f] = R((rig[HumanBodyBones.Hips].position.y + lift - restHips) / restHips * 1000f) / 1000f;
                     }
                     // 「站着 → 坐下/躺下 → 站起来（最后还回 T-pose）」的长片段：只留中间髋最低、稳定的那一段，来回放
                     bool pp = false;
@@ -152,6 +158,13 @@ namespace Kiko.EditorTools
                 UnityEngine.Object.DestroyImmediate(go);
             }
         }
+
+        static readonly HumanBodyBones[] Ground =
+        {
+            HumanBodyBones.LeftFoot, HumanBodyBones.RightFoot, HumanBodyBones.LeftToes, HumanBodyBones.RightToes,
+            HumanBodyBones.LeftLowerLeg, HumanBodyBones.RightLowerLeg, HumanBodyBones.LeftHand, HumanBodyBones.RightHand,
+            HumanBodyBones.LeftLowerArm, HumanBodyBones.RightLowerArm, HumanBodyBones.Head, HumanBodyBones.Chest,
+        };
 
         static float R(float v) => Mathf.Round(v * 100f) / 100f;
 
