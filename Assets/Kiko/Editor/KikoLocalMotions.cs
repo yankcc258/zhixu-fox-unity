@@ -173,6 +173,17 @@ namespace Kiko.EditorTools
             return new Vector3(x, y, z) * Mathf.Rad2Deg;
         }
 
+        [MenuItem("Kiko/8 试：坐下（Play 里）")]
+        static void TrySit() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.SitDown(60); }
+
+        [MenuItem("Kiko/9 试：睡觉 ∕ 叫醒（Play 里）")]
+        static void TrySleep()
+        {
+            var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>();
+            if (!EditorApplication.isPlaying || !p) return;
+            if (p.Sleeping) p.WakeUp(true); else p.GoSleep();
+        }
+
         [MenuItem("Kiko/7 拍本地动作预览（先进 Play 模式）")]
         static void Shots()
         {
