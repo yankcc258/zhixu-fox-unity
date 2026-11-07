@@ -270,6 +270,64 @@ namespace Kiko
                 n++;
             }
             Log($"skirt joints {n} stiff {skirtStiff} gravity {skirtGravity}");
+            SetupSkirtDrape();
+        }
+
+        // ---------- 裙子搭在腿上 ----------
+        // 主人 11-07：坐下（膝盖抬起来）时裙子往下掉、露出来很怪。真的裙子坐下时前片是搭在大腿上的。
+        // 做法：每条裙摆链按它在腰上的位置（前 / 侧 / 后）分到左腿或右腿，重力方向 = Lerp(往下, 大腿方向, 前片权重 × 大腿抬起程度)。
+        // 站着时大腿朝下，等于没变；坐着/抬腿时前片顺着大腿铺过去，后片照样往下垂到座位上。
+        class SkirtChain { public List<VRM10SpringBoneJoint> joints = new(); public bool left; public float front; }
+        readonly List<SkirtChain> skirtChains = new();
+        Transform legUL, legLL, legUR, legLR;
+        void SetupSkirtDrape()
+        {
+            var all = vrm.GetComponentsInChildren<Transform>(true);
+            Transform F(string n) => all.FirstOrDefault(t => t.name == n);
+            var hips = F("J_Bip_C_Hips");
+            legUL = F("J_Bip_L_UpperLeg"); legLL = F("J_Bip_L_LowerLeg"); legUR = F("J_Bip_R_UpperLeg"); legLR = F("J_Bip_R_LowerLeg");
+            if (!hips || !legUL || !legLL || !legUR || !legLR) { Log("skirt drape: 找不到腿骨"); return; }
+            var fwd = Vector3.ProjectOnPlane(vrm.transform.forward, Vector3.up).normalized;
+            var rx = new System.Text.RegularExpressions.Regex(@"^J_Sec_([LR])_Skirt(Front|Side|Back)\d(?:_end)?_(\d+)$");
+            var byKey = new Dictionary<string, SkirtChain>();
+            foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
+            {
+                var m = rx.Match(j.name);
+                if (!m.Success) continue;
+                string key = m.Groups[1].Value + m.Groups[2].Value + m.Groups[3].Value;
+                if (!byKey.TryGetValue(key, out var c)) { c = new SkirtChain { left = m.Groups[1].Value == "L" }; byKey[key] = c; skirtChains.Add(c); }
+                c.joints.Add(j);
+            }
+            foreach (var c in skirtChains)
+            {
+                // 链根（名字里的 0）相对髋部的水平方位：正前 = 1，正侧 = 0，后面 = 0
+                var root = c.joints.OrderBy(j => j.name).First().transform;
+                var flat = Vector3.ProjectOnPlane(root.position - hips.position, Vector3.up).normalized;
+                c.front = Mathf.Clamp01(Vector3.Dot(flat, fwd) * 1.25f);
+            }
+            Log($"skirt drape chains {skirtChains.Count}: front≥0.5 {skirtChains.Count(c => c.front >= 0.5f)}");
+        }
+
+        void UpdateSkirt()
+        {
+            if (skirtChains.Count == 0) return;
+            var sb = vrm.Runtime.SpringBone;
+            var tl = (legLL.position - legUL.position).normalized;
+            var tr = (legLR.position - legUR.position).normalized;
+            float raiseL = Mathf.Clamp01(Vector3.Angle(tl, Vector3.down) / 50f), raiseR = Mathf.Clamp01(Vector3.Angle(tr, Vector3.down) / 50f);
+            foreach (var c in skirtChains)
+            {
+                var thigh = c.left ? tl : tr;
+                float w = c.front * (c.left ? raiseL : raiseR);
+                var dir = Vector3.Slerp(Vector3.down, thigh, w);
+                float g = skirtGravity * (1 + 0.8f * w); // 抬腿时前片多压一点，贴在腿上
+                foreach (var j in c.joints)
+                {
+                    if ((j.m_gravityDir - dir).sqrMagnitude < 1e-4f && Mathf.Abs(j.m_gravityPower - g) < 1e-3f) continue;
+                    j.m_gravityDir = dir; j.m_gravityPower = g;
+                    sb.SetJointLevel(j.transform, j.Blittable);
+                }
+            }
         }
 
         void SetupTailPhysics()
@@ -436,6 +494,7 @@ namespace Kiko
             UpdatePose(dt);
             UpdateFace(dt);
             UpdateTail(dt);
+            UpdateSkirt();
             UpdateBell(dt);
             UpdateRest();
             vrm.transform.rotation = Quaternion.Slerp(vrm.transform.rotation, Quaternion.Euler(0, yawGoal, 0), 1 - Mathf.Exp(-dt * 7f));
