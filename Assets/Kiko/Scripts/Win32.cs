@@ -140,6 +140,71 @@ namespace Kiko
             return list;
         }
 
+        // ---------- 桌面图标的位置（explorer 里的 SysListView32；跨进程读 LVM_GETITEMRECT）----------
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string cls, string name);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string cls, string name);
+        [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+        [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr h, uint msg, IntPtr w, IntPtr l);
+        [DllImport("user32.dll")] static extern bool ClientToScreen(IntPtr h, ref POINT p);
+        [DllImport("kernel32.dll")] static extern IntPtr OpenProcess(uint access, bool inherit, uint pid);
+        [DllImport("kernel32.dll")] static extern IntPtr VirtualAllocEx(IntPtr proc, IntPtr addr, UIntPtr size, uint type, uint protect);
+        [DllImport("kernel32.dll")] static extern bool VirtualFreeEx(IntPtr proc, IntPtr addr, UIntPtr size, uint type);
+        [DllImport("kernel32.dll")] static extern bool WriteProcessMemory(IntPtr proc, IntPtr addr, ref RECT buf, UIntPtr size, out UIntPtr done);
+        [DllImport("kernel32.dll")] static extern bool ReadProcessMemory(IntPtr proc, IntPtr addr, out RECT buf, UIntPtr size, out UIntPtr done);
+        [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr h);
+
+        static IntPtr DesktopListView()
+        {
+            var dv = FindWindowEx(FindWindow("Progman", null), IntPtr.Zero, "SHELLDLL_DefView", null);
+            for (IntPtr w = IntPtr.Zero; dv == IntPtr.Zero;) // 换过壁纸 / 开过 Win+Tab 后图标层会挪到某个 WorkerW 下面
+            {
+                w = FindWindowEx(IntPtr.Zero, w, "WorkerW", null);
+                if (w == IntPtr.Zero) break;
+                dv = FindWindowEx(w, IntPtr.Zero, "SHELLDLL_DefView", null);
+            }
+            return dv == IntPtr.Zero ? IntPtr.Zero : FindWindowEx(dv, IntPtr.Zero, "SysListView32", null);
+        }
+
+        static bool iconFailLogged;
+        /// 桌面图标（图案那一块）的屏幕位置；图标藏起来了 / 读不到就返回空
+        public static List<RectInt> DesktopIcons()
+        {
+            var list = new List<RectInt>();
+            try
+            {
+                var lv = DesktopListView();
+                if (lv == IntPtr.Zero || !IsWindowVisible(lv)) return list;
+                int n = Math.Min(300, (int)SendMessage(lv, 0x1004, IntPtr.Zero, IntPtr.Zero)); // LVM_GETITEMCOUNT
+                if (n <= 0) return list;
+                GetWindowThreadProcessId(lv, out uint pid);
+                var proc = OpenProcess(0x0008 | 0x0010 | 0x0020, false, pid); // VM_OPERATION | VM_READ | VM_WRITE
+                if (proc == IntPtr.Zero) { if (!iconFailLogged) { iconFailLogged = true; Debug.Log("[Kiko] 读不到桌面图标（OpenProcess 失败）"); } return list; }
+                var mem = VirtualAllocEx(proc, IntPtr.Zero, (UIntPtr)16, 0x1000 | 0x2000, 0x04);
+                try
+                {
+                    var o = new POINT();
+                    ClientToScreen(lv, ref o);
+                    var size = (UIntPtr)(uint)Marshal.SizeOf<RECT>();
+                    for (int i = 0; i < n; i++)
+                    {
+                        var r = new RECT { Left = 1 }; // LVIR_ICON
+                        WriteProcessMemory(proc, mem, ref r, size, out _);
+                        if (SendMessage(lv, 0x100E, (IntPtr)i, mem) == IntPtr.Zero) continue; // LVM_GETITEMRECT
+                        ReadProcessMemory(proc, mem, out r, size, out _);
+                        if (r.Right - r.Left > 8 && r.Bottom - r.Top > 8)
+                            list.Add(new RectInt(o.X + r.Left, o.Y + r.Top, r.Right - r.Left, r.Bottom - r.Top));
+                    }
+                }
+                finally
+                {
+                    VirtualFreeEx(proc, mem, UIntPtr.Zero, 0x8000);
+                    CloseHandle(proc);
+                }
+            }
+            catch (Exception e) { if (!iconFailLogged) { iconFailLogged = true; Debug.Log("[Kiko] 读桌面图标出错 " + e.Message); } }
+            return list;
+        }
+
         /// 某个窗口现在的位置；关掉 / 最小化 / 藏起来了返回 false
         public static bool RectOf(IntPtr h, out RectInt r) => VisibleRect(h, out r);
 
@@ -238,6 +303,14 @@ namespace Kiko
                 new() { h = (IntPtr)1, r = new RectInt(W / 2, (int)(H * 1.25f), W, (int)(H * 0.6f)), title = "假窗口A" },
                 new() { h = (IntPtr)2, r = new RectInt(W * 2, (int)(H * 0.9f), W, H), title = "假窗口B" },
             };
+        }
+        // 编辑器里假装桌面左边有一列图标
+        public static List<RectInt> DesktopIcons()
+        {
+            int W = Screen.width, H = Screen.height;
+            var l = new List<RectInt>();
+            for (int i = 0; i < 4; i++) l.Add(new RectInt(W / 8, (int)(H * (0.6f + i * 0.25f)), 76, 70));
+            return l;
         }
         public static bool RectOf(IntPtr h, out RectInt r)
         {

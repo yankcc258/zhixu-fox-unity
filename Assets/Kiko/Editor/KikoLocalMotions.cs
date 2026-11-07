@@ -228,6 +228,12 @@ namespace Kiko.EditorTools
         [MenuItem("Kiko/8c 试：变小去窗口上（Play 里，再点 = 变回来）")]
         static void TryMini() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { if (p.InMini) p.ComeBack(); else { ToFloor(); if (!p.EnterMini("sit")) Debug.LogWarning("[Kiko] EnterMini 没开始"); } } }
 
+        [MenuItem("Kiko/8d 试：变小去桌面图标上坐（Play 里）")]
+        static void TryMiniIcon() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { p.DebugPrefer = "icon"; if (!p.InMini) ToFloor(); p.EnterMini("sit"); } }
+
+        [MenuItem("Kiko/8e 试：变小去窗口上坐（Play 里）")]
+        static void TryMiniWin() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) { p.DebugPrefer = "window"; if (!p.InMini) ToFloor(); p.EnterMini("sit"); } }
+
         [MenuItem("Kiko/8 试：坐下（Play 里）")]
         static void TrySit() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.SitDown(60); }
 

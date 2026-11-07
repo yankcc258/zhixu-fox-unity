@@ -164,7 +164,11 @@ namespace Kiko
         enum Mini { Shrink, Idle, Walk, Jump, Sit, Lie, Look, Grow }
         Mini ms;
         float msT, msUntil;
-        struct Plat { public IntPtr h; public int x0, x1, y; public string title; }
+        struct Plat { public IntPtr h; public int x0, x1, y; public string title; public bool icon; }
+        static bool IsIcon(IntPtr h) => (long)h < -1; // 桌面图标没有窗口句柄，用负数编号
+        int M(Plat p) => p.icon ? Mathf.RoundToInt(6 * scale) : Margin; // 图标很窄，站在中间就行
+        List<RectInt> icons = new();
+        float nextIconScan;
         readonly List<Plat> plats = new();
         float nextScan;
         IntPtr onH;          // 站在哪个窗口上（Zero = 任务栏）
@@ -177,6 +181,7 @@ namespace Kiko
         Vector2 jumpFrom, jumpTo;
         float jumpDur, jumpH, walkToX, walkX, miniDrop;
         bool mini => rest == Rest.Mini;
+        [NonSerialized] public string DebugPrefer; // 编辑器菜单试：指定去 "icon" / "window"
         public bool InMini => mini;
         public bool MiniAsleep => mini && ms == Mini.Lie && lieAsleep;
         bool Walking => rest == Rest.Walk || (mini && ms == Mini.Walk);
@@ -259,6 +264,21 @@ namespace Kiko
                 }
                 above.Add(r);
             }
+            // 桌面图标（主人 11-07：也可以坐在桌面图标上）：在所有窗口下面，被任何窗口挡住的那段都不算；图标位置 2 秒读一次
+            if (Time.time > nextIconScan) { nextIconScan = Time.time + 2f; icons = Win32.DesktopIcons(); }
+            int iconW = Mathf.RoundToInt(28 * scale);
+            for (int i = 0; i < icons.Count; i++)
+            {
+                var r = icons[i];
+                int y = r.yMin + Mathf.RoundToInt(4 * scale); // 图标格子上面有几像素空白
+                if (r.xMax <= wa.xMin || r.xMin >= wa.xMax || y <= wa.yMin + headroom || y >= wa.yMax - 20) continue;
+                int pad = r.width / 5; // 格子比图标图案宽，两边收一点
+                var segs = new List<Vector2Int> { new(r.xMin + pad, r.xMax - pad) };
+                foreach (var a in above)
+                    if (a.yMin <= y - 2 && a.yMax > y - 2) segs = Cut(segs, a.xMin, a.xMax);
+                foreach (var sg in segs)
+                    if (sg.y - sg.x >= iconW) plats.Add(new Plat { h = (IntPtr)(-(i + 2)), x0 = sg.x, x1 = sg.y, y = y, title = "图标" + i, icon = true });
+            }
             plats.Add(new Plat { h = IntPtr.Zero, x0 = wa.xMin, x1 = wa.xMax, y = wa.yMax, title = "任务栏" });
         }
 
@@ -279,7 +299,7 @@ namespace Kiko
         {
             Plat best = plats.Last();
             foreach (var p in plats)
-                if (p.y >= fy - 3 && fx >= p.x0 + Margin / 2 && fx <= p.x1 - Margin / 2 && p.y < best.y) best = p;
+                if (p.y >= fy - 3 && fx >= p.x0 + M(p) / 2 && fx <= p.x1 - M(p) / 2 && p.y < best.y) best = p;
             return best;
         }
 
@@ -287,13 +307,13 @@ namespace Kiko
         {
             onH = p.h;
             surfY = p.y;
-            if (onH != IntPtr.Zero && !Win32.RectOf(onH, out onRect)) onH = IntPtr.Zero;
+            if (onH != IntPtr.Zero && !IsIcon(onH) && !Win32.RectOf(onH, out onRect)) onH = IntPtr.Zero;
         }
 
         // 脚下的窗口被拖走 → 跟着走；关掉 / 最小化 / 被别的窗口盖住 → 掉下去
         void FollowPlatform()
         {
-            if (onH == IntPtr.Zero || state != State.Idle || ms == Mini.Jump) return;
+            if (onH == IntPtr.Zero || IsIcon(onH) || state != State.Idle || ms == Mini.Jump) return;
             if (!Win32.RectOf(onH, out var r)) { MiniFall("窗口没了"); return; }
             if (r.position != onRect.position)
             {
@@ -345,7 +365,8 @@ namespace Kiko
                     && !plats.Any(p => p.h == onH && FeetX >= p.x0 && FeetX <= p.x1)) MiniFall("被盖住了");
             }
             FollowPlatform();
-            if (state != State.Idle) return; // 被拖着 / 正在掉：UpdateInput 管
+            if (landUntil > 0 && Time.time > landUntil) { landUntil = 0; SetJumpPose(null, 0); }
+            if (state != State.Idle) { if (ms == Mini.Jump) { ms = Mini.Idle; SetJumpPose(null, 0); } return; } // 被拖着 / 正在掉：UpdateInput 管
             msT += dt;
             switch (ms)
             {
@@ -367,12 +388,17 @@ namespace Kiko
                 }
                 case Mini.Jump:
                 {
-                    float u = Mathf.Clamp01(msT / jumpDur);
+                    // 先蹲一下蓄力（窗口不动）→ 蹬出去 → 空中收腿 → 快落地时腿伸直 → 落地蹲一下缓冲
+                    if (msT < JumpPre) { SetJumpPose(Crouch, -0.07f); break; }
+                    float u = Mathf.Clamp01((msT - JumpPre) / jumpDur);
+                    SetJumpPose(u < 0.12f || u > 0.82f ? null : Tuck, 0);
                     float x = Mathf.Lerp(jumpFrom.x, jumpTo.x, u);
                     float y = Mathf.Lerp(jumpFrom.y, jumpTo.y, u) - jumpH * 4f * u * (1 - u);
                     PlaceFeet(x, y);
                     if (u >= 1)
                     {
+                        SetJumpPose(Crouch, -0.06f);
+                        landUntil = Time.time + 0.22f;
                         StandOn(goalPlat);
                         surfY = jumpTo.y;
                         yawGoal = 0;
@@ -443,13 +469,19 @@ namespace Kiko
             if (!hasGoal)
             {
                 if (string.IsNullOrEmpty(miniGoal)) miniGoal = Night ? "lie" : Random.value < 0.5f ? "sit" : Random.value < 0.6f ? "wander" : "lie";
-                var wins = plats.Where(p => p.h != IntPtr.Zero && p.x1 - p.x0 >= Margin * 3).ToList();
+                var wins = plats.Where(p => p.h != IntPtr.Zero && p.x1 - p.x0 >= (p.icon ? 0 : Margin * 3)).ToList();
+                // 图标和窗口都有时，四成去图标上
+                var ic = wins.Where(p => p.icon).ToList();
+                var wn = wins.Where(p => !p.icon).ToList();
+                if (miniGoal == "lie") wins = wn; // 图标太窄，躺不下
+                else if (DebugPrefer != null && (DebugPrefer == "icon" ? ic : wn).Count > 0) wins = DebugPrefer == "icon" ? ic : wn;
+                else if (ic.Count > 0 && wn.Count > 0) wins = Random.value < 0.4f ? ic : wn;
                 // 已经在窗口上了：一半留在这个窗口上，一半换一个
                 var here = wins.Where(p => p.h == onH && FeetX >= p.x0 && FeetX <= p.x1).ToList();
                 if (here.Count > 0 && (miniGoal != "wander" && Random.value < 0.5f)) goalPlat = here[0];
                 else if (wins.Count > 0) goalPlat = wins[Random.Range(0, wins.Count)];
                 else goalPlat = plats.Last(); // 桌面上没有窗口：就在任务栏上
-                goalX = Mathf.RoundToInt(Random.Range(goalPlat.x0 + Margin * 1.5f, goalPlat.x1 - Margin * 1.5f));
+                goalX = goalPlat.icon ? (goalPlat.x0 + goalPlat.x1) / 2 : Mathf.RoundToInt(Random.Range(goalPlat.x0 + Margin * 1.5f, goalPlat.x1 - Margin * 1.5f));
                 hasGoal = true;
                 Log($"mini: goal {miniGoal} → {goalPlat.title} x {goalX}");
             }
@@ -463,9 +495,9 @@ namespace Kiko
                 return;
             }
             // 换到别的边：离得够近就直接跳；太远先沿着现在这条边走近一点（一跳最远横着 reach 像素）
-            int landX = Mathf.Clamp(goalX, goalPlat.x0 + Margin, goalPlat.x1 - Margin);
+            int landX = goalPlat.icon ? goalX : Mathf.Clamp(goalX, goalPlat.x0 + Margin, goalPlat.x1 - Margin);
             int reach = Mathf.RoundToInt(480 * scale);
-            int takeoff = Mathf.Clamp(landX + Mathf.Clamp(FeetX - landX, -reach, reach), cur.x0 + Margin, cur.x1 - Margin);
+            int takeoff = Mathf.Clamp(landX + Mathf.Clamp(FeetX - landX, -reach, reach), cur.x0 + M(cur), cur.x1 - M(cur));
             if (Mathf.Abs(FeetX - takeoff) > 6) { StartMiniWalk(takeoff); return; }
             StartJump(new Vector2(landX, goalPlat.y));
         }
@@ -479,8 +511,16 @@ namespace Kiko
             {
                 case "sit":
                 {
-                    // 窗口上 = 坐在边上腿垂下去；任务栏上 = 坐地上
-                    var m = onH != IntPtr.Zero ? PickMotion(MiniEdgeSet) : PickMotion(SitSet);
+                    // 窗口 / 图标上 = 坐在边上腿垂下去（多半是壁纸那样并膝、手放膝盖上，偶尔翘腿）；任务栏上 = 坐地上
+                    string m;
+                    ledgeIK = false;
+                    if (onH == IntPtr.Zero) m = PickMotion(SitSet);
+                    else
+                    {
+                        m = Random.value < 0.75f ? PickMotion(MiniLedgeSet) : null;
+                        if (m != null) { ledgeIK = true; ledgeTilt = Random.Range(6f, 12f) * (Random.value < 0.5f ? 1 : -1); }
+                        else m = PickMotion(MiniEdgeSet);
+                    }
                     if (m == null) goto default;
                     sec = Random.Range(60f, 180f);
                     Act(m);
@@ -548,10 +588,122 @@ namespace Kiko
             jumpH = (up > 0 ? up * 0.75f : 0) + 45f * scale;
             jumpDur = Mathf.Clamp(0.45f + 0.0006f * (Mathf.Abs(dx) + Mathf.Abs(up)) / scale, 0.45f, 1.4f);
             yawGoal = Mathf.Abs(dx) > 40 ? (dx > 0 ? -60f : 60f) : 0;
-            Act("Hop");
+            if (motion != null) StopMotion(0.2f);
+            action = null;
             onH = IntPtr.Zero;
             ms = Mini.Jump; msT = 0;
             Log($"mini: jump {jumpFrom} → {to} ({jumpDur:F2}s, up {up:F0}px) → {goalPlat.title}");
+        }
+
+        // ---------- 跳的姿势：叠在弹簧站姿上（以前放 2 秒多的 Hop 动捕，和窗口的抛物线对不上，看着僵）----------
+        const float JumpPre = 0.2f;
+        float landUntil, jumpSink;
+        readonly Dictionary<HumanBodyBones, Vector3> jumpAdd = new();
+        static readonly Dictionary<HumanBodyBones, Vector3> Crouch = new()
+        {
+            [HumanBodyBones.LeftUpperLeg] = new(-28, 0, 0), [HumanBodyBones.RightUpperLeg] = new(-28, 0, 0),
+            [HumanBodyBones.LeftLowerLeg] = new(48, 0, 0), [HumanBodyBones.RightLowerLeg] = new(48, 0, 0),
+            [HumanBodyBones.Spine] = new(12, 0, 0), [HumanBodyBones.Head] = new(-6, 0, 0),
+        };
+        static readonly Dictionary<HumanBodyBones, Vector3> Tuck = new()
+        {
+            [HumanBodyBones.LeftUpperLeg] = new(-40, 0, 3), [HumanBodyBones.RightUpperLeg] = new(-40, 0, -3),
+            [HumanBodyBones.LeftLowerLeg] = new(72, 0, 0), [HumanBodyBones.RightLowerLeg] = new(72, 0, 0),
+            [HumanBodyBones.Spine] = new(-3, 0, 0), [HumanBodyBones.Head] = new(-5, 0, 0),
+        };
+        void SetJumpPose(Dictionary<HumanBodyBones, Vector3> p, float sink)
+        {
+            jumpAdd.Clear();
+            if (p != null) foreach (var kv in p) jumpAdd[kv.Key] = kv.Value;
+            jumpSink = sink;
+        }
+
+        // ---------- 坐在边上（主人的壁纸那样）：膝盖并拢、双手放在膝盖上、身子微微前倾、歪着头笑 ----------
+        // 底子是坐椅子的动捕（腿垂下去），上面用 IK 改：大腿往里收到膝盖并拢，小腿垂在膝盖下面，手臂两节 IK 把手放到膝盖上
+        static readonly string[] MiniLedgeSet = { "L_EJ_09_wait_sitliedown_F", "L_EJ_10_wait_sitliedown_F", "L_EJ_12_wait_sitliedown_F" };
+        bool ledgeIK;
+        float ledgeW, ledgeTilt;
+
+        void ApplyLedgeSit(float dt)
+        {
+            float want = mini && ms == Mini.Sit && ledgeIK && motion != null ? SegProgress() : 0;
+            ledgeW = Mathf.MoveTowards(ledgeW, want, dt * 2.5f);
+            if (ledgeW < 0.002f || shooting) return;
+            float w = ledgeW;
+            var root = vrm.transform;
+            Vector3 R = root.right, F = root.forward;
+            Transform T(HumanBodyBones b) => rig.TryGetValue(b, out var t) ? t : null;
+            void Turn(HumanBodyBones b, Quaternion q) { var t = T(b); if (t) t.rotation = Quaternion.Slerp(Quaternion.identity, q, w) * t.rotation; }
+            // 1) 上身微微前倾，头歪着、稍微低一点，慢慢晃
+            float sway = Mathf.Sin(Time.time * 0.45f) * 2.5f;
+            Turn(HumanBodyBones.Spine, Quaternion.AngleAxis(6f, R));
+            Turn(HumanBodyBones.Head, Quaternion.AngleAxis(ledgeTilt + sway, F) * Quaternion.AngleAxis(5f, R));
+            // 2) 膝盖并拢，小腿垂在膝盖下面（模型面朝 +z，左腿在 +x）
+            for (int s = 0; s < 2; s++)
+            {
+                float side = s == 0 ? 1 : -1;
+                var ul = T(s == 0 ? HumanBodyBones.LeftUpperLeg : HumanBodyBones.RightUpperLeg);
+                var ll = T(s == 0 ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg);
+                var ft = T(s == 0 ? HumanBodyBones.LeftFoot : HumanBodyBones.RightFoot);
+                if (!ul || !ll || !ft) continue;
+                Vector3 H = ul.position, K = ll.position;
+                var kl = root.InverseTransformPoint(K);
+                var k2 = root.TransformPoint(new Vector3(side * 0.055f, kl.y, kl.z));
+                ul.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(K - H, k2 - H), w) * ul.rotation;
+                K = ll.position;
+                var fp = ft.position;
+                var fl = root.InverseTransformPoint(fp);
+                kl = root.InverseTransformPoint(K);
+                var f2 = root.TransformPoint(new Vector3(side * 0.06f, fl.y, Mathf.Lerp(fl.z, kl.z, 0.5f)));
+                ll.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(fp - K, f2 - K), w) * ll.rotation;
+            }
+            // 3) 手放在膝盖上（手肘往外、往后）
+            for (int s = 0; s < 2; s++)
+            {
+                float side = s == 0 ? 1 : -1;
+                var up = T(s == 0 ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm);
+                var lo = T(s == 0 ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm);
+                var hd = T(s == 0 ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
+                var knee = T(s == 0 ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg);
+                if (!up || !lo || !hd || !knee) continue;
+                var target = knee.position + Vector3.up * 0.065f - R * side * 0.012f;
+                var pole = root.TransformDirection(new Vector3(side, -0.4f, -0.6f));
+                TwoBoneIK(up, lo, hd, target, pole, w);
+            }
+        }
+
+        static void TwoBoneIK(Transform up, Transform lo, Transform end, Vector3 target, Vector3 pole, float w)
+        {
+            Quaternion u0 = up.localRotation, l0 = lo.localRotation;
+            Vector3 S = up.position, E = lo.position, W = end.position;
+            float a = (E - S).magnitude, b = (W - E).magnitude;
+            var st = target - S;
+            float d = Mathf.Clamp(st.magnitude, Mathf.Abs(a - b) + 1e-3f, a + b - 1e-3f);
+            var dir = st.normalized;
+            float cosA = Mathf.Clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1);
+            var bend = Vector3.ProjectOnPlane(pole, dir);
+            if (bend.sqrMagnitude < 1e-8f) bend = Vector3.ProjectOnPlane(E - S, dir);
+            bend.Normalize();
+            var e2 = S + dir * (a * cosA) + bend * (a * Mathf.Sqrt(1 - cosA * cosA));
+            up.rotation = Quaternion.FromToRotation(E - S, e2 - S) * up.rotation;
+            E = lo.position; W = end.position;
+            lo.rotation = Quaternion.FromToRotation(W - E, S + dir * d - E) * lo.rotation;
+            Quaternion u1 = up.localRotation, l1 = lo.localRotation;
+            up.localRotation = Quaternion.Slerp(u0, u1, w);
+            lo.localRotation = Quaternion.Slerp(l0, l1, w);
+        }
+
+        /// 动捕里（坐着、躺着）也带一点呼吸和晃动，不那么僵
+        bool BreatheOnMotion => motion != null && (rest is Rest.Sit or Rest.Edge or Rest.Sleep || (mini && ms is Mini.Sit or Mini.Lie));
+
+        /// 坐在边上时淡淡地笑
+        void SitFace()
+        {
+            if (ledgeW < 0.05f) return;
+            expGoal.TryGetValue("happy", out var h);
+            expGoal.TryGetValue("relaxed", out var r);
+            expGoal["happy"] = Mathf.Max(h, 0.3f * ledgeW);
+            expGoal["relaxed"] = Mathf.Max(r, 0.35f * ledgeW);
         }
 
         void StartGrow()

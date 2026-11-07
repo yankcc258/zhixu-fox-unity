@@ -494,6 +494,7 @@ namespace Kiko
             IdleFidget();
             UpdateLook();
             UpdatePose(dt);
+            ApplyLedgeSit(dt);
             UpdateFace(dt);
             UpdateTail(dt);
             UpdateSkirt();
@@ -987,6 +988,7 @@ namespace Kiko
             // 动作片段求值；放完了回站姿
             float sink = 0;
             if (action != null && !acts.Eval(action, (now - actStart) * 1000f, clipPose, out sink)) { action = null; sink = 0; }
+            sink += jumpSink;
             blendW = Mathf.Max(0, blendW - dt / blendDur);
             float bw = blendW * blendW * (3 - 2 * blendW); // smoothstep
             // 动捕：放完了（不循环的 / 起身放到结尾）就交回弹簧
@@ -1000,6 +1002,7 @@ namespace Kiko
             }
             bool mo = motion != null;
             bool idle = action == null && !mo && state == State.Idle;
+            bool breathe = BreatheOnMotion;
             hipsV += ((sink - hipsNow) * ST - hipsV * DM) * dt;
             hipsNow += hipsV * dt;
             // 有的动捕太用力（掉落是 Mixamo 的，上身猛往前扑，主人：太有力量感、出戏）→ 只用一部分
@@ -1018,6 +1021,7 @@ namespace Kiko
                 if (!spring) goal = Vector3.zero;
                 else goal = action != null && clipPose.TryGetValue(b, out var cp) ? cp : Base(b);
                 if (spring && idle) goal += Idle(b, br, ws, now);
+                if (spring && jumpAdd.TryGetValue(b, out var ja)) goal += ja; // 小只跳：蹲 / 收腿
                 var v = vel[b];
                 v += ((goal - cur[b]) * ST - v * DM) * dt;
                 vel[b] = v;
@@ -1026,6 +1030,7 @@ namespace Kiko
                 float bm = mw;
                 if (mo && Walking && WalkMask.TryGetValue(b, out var wm)) bm = wm; // 走路：上半身用站姿，腿步子缩小
                 var q = mo && motionPose.TryGetValue(b, out var mq) ? (bm < 1 ? Quaternion.Slerp(KikoPose.ToUnity(cur[b]), mq, bm) : mq) : KikoPose.ToUnity(cur[b]);
+                if (breathe && spring) q *= KikoPose.ToUnity(Idle(b, br, ws, now) * 0.8f); // 坐着 / 躺着的动捕上叠一点呼吸
                 if (bw > 0 && fromQ.TryGetValue(b, out var fq)) q = Quaternion.Slerp(q, fq, bw);
                 outQ[b] = q;
             }
@@ -1086,6 +1091,7 @@ namespace Kiko
             foreach (var k in expNow.Keys.ToList()) expGoal[k] = 0;
             if (acts != null && acts.Exp.TryGetValue(mood, out var e)) foreach (var kv in e) expGoal[kv.Key] = kv.Value;
             if (action?.expNames != null) for (int i = 0; i < action.expNames.Length; i++) expGoal[action.expNames[i]] = action.expValues[i];
+            SitFace();
             float k25 = 1 - Mathf.Exp(-dt / 0.08f); // ≈ 0.25 秒到位
             foreach (var kv in expGoal)
             {
