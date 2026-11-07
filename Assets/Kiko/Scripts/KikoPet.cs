@@ -72,6 +72,7 @@ namespace Kiko
         readonly Dictionary<string, ExpressionKey> expKey = new();
 
         enum State { Idle, Pressed, Drag, Fall, Land }
+        bool userDrop; // 这次掉落是被主人拎起来放手的（不是脚下窗口没了自己掉的）
         State state = State.Idle;
         Vector2Int pressCursor, pressWin;
         float fallY, fallV, stateT, flinchUntil, blinkNext = 2f, blinkT = -1f;
@@ -541,7 +542,7 @@ namespace Kiko
                     break;
                 case State.Drag:
                     Win32.MoveWindow(pressWin + (c - pressCursor));
-                    if (!Win32.LeftDown) { fallY = Win32.WindowRect.y; fallV = 0; Go(State.Fall); }
+                    if (!Win32.LeftDown) { fallY = Win32.WindowRect.y; fallV = 0; userDrop = true; Go(State.Fall); }
                     break;
                 case State.Fall:
                 {
@@ -571,7 +572,7 @@ namespace Kiko
                 yawGoal = 0; SetMood("dangle", 0); // → Hang（循环）
             }
             else if (s == State.Fall) { SetMood("surprised", 0); Act("Fall"); }
-            else if (s == State.Land) { Act("Land"); SetMood("idle", 0); talk.OnDropped(); if (mini) MiniLanded(); }
+            else if (s == State.Land) { Act("Land"); SetMood("idle", 0); if (userDrop) talk.OnDropped(); userDrop = false; if (mini) MiniLanded(); } // 自己掉下来的不说「放我下来」
             else if (s == State.Idle && mood == "dangle") SetMood("idle", 0);
         }
 
