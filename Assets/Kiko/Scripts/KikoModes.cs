@@ -103,11 +103,24 @@ namespace Kiko
             restUntil = Time.time + sec;
             if (mood != "idle") SetMood("idle", 0);
             UsePeekStand(true);
-            float ledge = restChestY + 0.02f;
-            SetView(ledge, (restHeadY + 0.3f - ledge) * WinH / baseHeight * 1.1f, 0.9f);
+            BustView(restChestY + 0.02f, 0.9f);
+            bustMeasureAt = Time.time + 0.8f; // 姿势搭好以后量一下前臂实际在哪，窗台（窗口底边）对齐到前臂下沿
             idleNext = Time.time + 3f;
             Log($"rest: bust {sec:F0}s");
             return true;
+        }
+
+        float bustMeasureAt;
+        void BustView(float ledge, float dur) => SetView(ledge, (restHeadY + 0.3f - ledge) * WinH / baseHeight * 1.1f, dur);
+
+        void MeasureBust()
+        {
+            bustMeasureAt = 0;
+            float Y(HumanBodyBones b) => rig.TryGetValue(b, out var t) ? t.position.y : restChestY;
+            float fl = (Y(HumanBodyBones.LeftLowerArm) + Y(HumanBodyBones.LeftHand)) / 2f, fr = (Y(HumanBodyBones.RightLowerArm) + Y(HumanBodyBones.RightHand)) / 2f;
+            float arm = Mathf.Min(fl, fr), ledge = Mathf.Clamp(arm - 0.035f, restChestY - 0.25f, restChestY + 0.05f);
+            Log($"bust measure chest {restChestY:F3} head {restHeadY:F3} elbowL {Y(HumanBodyBones.LeftLowerArm):F3} handL {Y(HumanBodyBones.LeftHand):F3} elbowR {Y(HumanBodyBones.RightLowerArm):F3} handR {Y(HumanBodyBones.RightHand):F3} → ledge {ledge:F3}");
+            BustView(ledge, 0.5f);
         }
 
         public void ExitBust(float dur = 0.9f)

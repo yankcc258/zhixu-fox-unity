@@ -805,6 +805,7 @@ namespace Kiko
             if (rest == Rest.Mini) return; // 小只：UpdateMini 管
             if (rest == Rest.Bust)
             {
+                if (bustMeasureAt > 0 && Time.time > bustMeasureAt) MeasureBust();
                 if (Time.time > restUntil) { ExitBust(); Act("Stretch"); }
                 return;
             }
