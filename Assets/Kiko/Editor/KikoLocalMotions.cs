@@ -20,7 +20,7 @@ namespace Kiko.EditorTools
         const string Dir = "Assets/LocalMotions";
         const string Out = Dir + "/Resources/kiko_motions_local.json";
         const string VrmPath = "Assets/Kiko/Models/kiko.vrm";
-        const float Fps = 20f, MaxSec = 12f;
+        const float Fps = 15f, MaxSec = 30f; // DM 的「坐下/躺下」是从站着开始的 20 多秒长片段，截短了就只剩站着
 
         [MenuItem("Kiko/6 烘焙本地动作（Assets∕LocalMotions）")]
         public static void Bake()

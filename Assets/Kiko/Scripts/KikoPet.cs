@@ -758,10 +758,19 @@ namespace Kiko
                 yield return new WaitForSeconds(0.5f);
                 Act(name);
                 var m = motions[name];
-                yield return new WaitForSeconds(Mathf.Clamp(m.Duration * 0.4f, 0.8f, 2.5f));
-                yield return Shot(dir, name + "_f", 1.2f, 1.8f);
-                cam.transform.SetPositionAndRotation(Quaternion.Euler(0, 90, 0) * far, Quaternion.Euler(0, 270, 0));
-                yield return Shot(dir, name + "_s", 1.2f, 1.8f);
+                // 长片段（站着→坐下→躺下）直接跳到 30% / 60% / 90% 各拍一张正面，60% 再拍侧面
+                foreach (var (k, u) in new[] { ("a", 0.3f), ("b", 0.6f), ("c", 0.9f) })
+                {
+                    motionT = m.Duration * u;
+                    yield return new WaitForSeconds(0.6f);
+                    cam.transform.SetPositionAndRotation(far, camRot);
+                    yield return Shot(dir, $"{name}_{k}", 1f, 1.8f);
+                    if (k == "b")
+                    {
+                        cam.transform.SetPositionAndRotation(Quaternion.Euler(0, 90, 0) * far, Quaternion.Euler(0, 270, 0));
+                        yield return Shot(dir, name + "_s", 1f, 1.8f);
+                    }
+                }
             }
             action = null; StopMotion(); SetMood("idle", 0);
             cam.transform.SetPositionAndRotation(camPos, camRot);
