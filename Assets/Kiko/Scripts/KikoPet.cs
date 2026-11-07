@@ -24,8 +24,8 @@ namespace Kiko
         [Header("尾巴静止姿势（弹簧骨以此为准）")]
         [Tooltip("每节往侧面弯的角度（每节累加；负 = 角色左边，正面看在画面右边）")] public float tailSide = -2f; // 11-07 照 A2 三视图：基本垂直，正面只从腿边露一点
         [Tooltip("尾巴根往下压的角度（静止时先往下垂）")] public float tailRootDroop = 10f; // 根部先往后伸再垂：尾巴很粗，离腿太近会把大腿裹进去
-        [Tooltip("后面每节往上翘的角度（每节累加；尾尖微微勾一下）")] public float tailLift = 2.5f;
-        [Tooltip("尾巴整体放大；粗细在 Tools/shape_tail.py 里按这个倍数换算，改了要一起改")] public float tailScale = 1.25f;
+        [Tooltip("后面每节往上翘的角度（每节累加；尾尖微微勾一下）")] public float tailLift = 4f;
+        [Tooltip("尾巴整体放大；粗细在 Tools/shape_tail.py 里按这个倍数换算，改了要一起改")] public float tailScale = 1.45f;
         [Header("尾巴物理（主人：要朝下、随重力晃来晃去）")]
         [Tooltip("弹簧硬度：越小越软、越容易被重力拉下去")] public float tailStiff = 0.8f;
         [Tooltip("重力")] public float tailGravity = 0.4f;
@@ -114,6 +114,24 @@ namespace Kiko
             vrm.LookAtTarget = lookTarget;
         }
 
+        // 11-07 日志：上次窗口是 340 宽，这次要 400，启动两帧后还是 337 → 等一秒再看，没变过来就再设一次（尾巴甩起来别被窗口边切掉）
+        System.Collections.IEnumerator CheckWindowSize(int w, int h)
+        {
+            yield return new WaitForSeconds(1f);
+            if (Mathf.Abs(Screen.width - w) <= 2 && Mathf.Abs(Screen.height - h) <= 2) { Log($"window ok {Screen.width}x{Screen.height}"); yield break; }
+            Log($"window size {Screen.width}x{Screen.height} ≠ {w}x{h}，重设");
+            Screen.SetResolution(w, h, FullScreenMode.Windowed);
+            yield return null;
+            yield return null;
+            uwc.isTransparent = false;
+            uwc.isTransparent = true;
+            var wa = Win32.WorkArea;
+            yield return null;
+            Win32.MoveWindow(new Vector2Int(wa.xMax - w - 16, wa.yMax - h));
+            yield return new WaitForSeconds(0.5f);
+            Log($"window now {Screen.width}x{Screen.height} transparent {uwc.isTransparent}");
+        }
+
         System.Collections.IEnumerator Start()
         {
             // 窗口大小：按工作区高度放大（1080p ≈ 1，2K ≈ 1.35），和 Tauri 版 figScale 一样
@@ -136,6 +154,9 @@ namespace Kiko
             Win32.MoveWindow(new Vector2Int(wa.xMax - w - 16, wa.yMax - h));
 #endif
             Log($"workArea {wa} scale {scale} window {w}x{h} screen {Screen.width}x{Screen.height} transparent {uwc.isTransparent}");
+#if !UNITY_EDITOR
+            StartCoroutine(CheckWindowSize(w, h));
+#endif
 
             if (!vrm) yield break;
             // 场景里摆好的预制体没有 ControlRig，自己做「规范化骨骼」：记下 T-pose 时每根骨头的世界旋转，
@@ -283,13 +304,31 @@ namespace Kiko
             int ns = 0;
             foreach (var sp in vrm.SpringBone.Springs)
                 if (sp.Joints.Count > 0 && sp.Joints[0] && sp.Joints[0].name.Contains("Skirt")) { sp.ColliderGroups.Add(group); ns++; }
+            // 小腿模型里没有碰撞体：给尾巴单独加一组（小腿 → 脚踝的胶囊），尾巴变长以后垂到脚踝也不穿进小腿
+            var calves = chain[0].gameObject.AddComponent<VRM10SpringBoneColliderGroup>();
+            calves.Name = "KikoCalves";
+            foreach (var (lo, ft) in new[] { (HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftFoot), (HumanBodyBones.RightLowerLeg, HumanBodyBones.RightFoot) })
+            {
+                if (!vrm.TryGetBoneTransform(lo, out var lt) || !vrm.TryGetBoneTransform(ft, out var fb) || !lt || !fb) continue;
+                var go = new GameObject("KikoCalfCollider");
+                go.transform.SetParent(lt, false);
+                var c = go.AddComponent<VRM10SpringBoneCollider>();
+                c.ColliderType = VRM10SpringBoneColliderTypes.Capsule;
+                c.Offset = Vector3.zero;
+                c.Tail = go.transform.InverseTransformPoint(fb.position);
+                var ls = go.transform.lossyScale;
+                c.Radius = 0.05f / Mathf.Max(ls.x, Mathf.Max(ls.y, ls.z));
+                calves.Colliders.Add(c);
+            }
+            vrm.SpringBone.ColliderGroups.Add(calves);
             // 尾巴本身也躲开大腿（用模型自带的大腿碰撞组），关节半径按尾巴粗细的一半
             foreach (var sp in vrm.SpringBone.Springs)
                 if (sp.Joints.Count > 0 && sp.Joints[0] && sp.Joints[0].name.StartsWith("J_Opt_C_FoxTail"))
                 {
+                    if (!sp.ColliderGroups.Contains(calves)) sp.ColliderGroups.Add(calves);
                     foreach (var g in vrm.SpringBone.ColliderGroups)
                         if (g && ((g.Name ?? "").Contains("UpperLeg") || g.gameObject.name.Contains("UpperLeg")) && !sp.ColliderGroups.Contains(g)) sp.ColliderGroups.Add(g);
-                    foreach (var jt in sp.Joints) if (jt) jt.m_jointRadius = Mathf.Max(jt.m_jointRadius, 0.035f);
+                    foreach (var jt in sp.Joints) if (jt) jt.m_jointRadius = Mathf.Max(jt.m_jointRadius, 0.05f);
                 }
             Log($"tail skirt: {group.Colliders.Count} capsules r [{string.Join(", ", radii)}] → {ns} skirt springs");
         }

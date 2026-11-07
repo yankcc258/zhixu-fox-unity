@@ -13,13 +13,13 @@ import argparse, json, struct
 import numpy as np
 
 # (s, 目标半径 米)：照 A2 三视图背面——根部从裙子开口出来很细，往下慢慢变粗，膝盖附近最粗，尾尖收尖
-TARGET = [(0.00, 0.028), (0.12, 0.048), (0.30, 0.076), (0.48, 0.094), (0.62, 0.096),
-          (0.74, 0.086), (0.85, 0.064), (0.93, 0.038), (1.00, 0.008)]
+TARGET = [(0.00, 0.030), (0.12, 0.056), (0.30, 0.090), (0.48, 0.110), (0.64, 0.116),
+          (0.77, 0.104), (0.87, 0.080), (0.94, 0.050), (1.00, 0.012)]  # 11-07 第二版：主人要「和设计稿差不多」→ 再蓬一点
 CHAIN = ['J_Opt_C_FoxTail1_01', 'J_Opt_C_FoxTail2_01', 'J_Opt_C_FoxTail3_01', 'J_Opt_C_FoxTail4_01', 'J_Opt_C_FoxTail5_01']
 
 ap = argparse.ArgumentParser()
 ap.add_argument('src'); ap.add_argument('dst')
-ap.add_argument('--scale', type=float, default=1.25, help='和 Unity 里 KikoPet.tailScale 一样')
+ap.add_argument('--scale', type=float, default=1.45, help='和 Unity 里 KikoPet.tailScale 一样')
 ap.add_argument('--bins', type=int, default=24)
 ap.add_argument('--fur-mask', help='顺便画毛长遮罩（lilToon _FurLengthMask）：尾巴根部藏在裙子里的那段不长毛，免得毛从后裙扎出来')
 ap.add_argument('--fur-root', type=float, default=0.34, help='根部多长一段（按尾巴全长比例）毛长从 0 渐变到 1')
