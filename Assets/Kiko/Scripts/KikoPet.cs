@@ -95,6 +95,8 @@ namespace Kiko
             if (!vrm) { Log("没找到 Vrm10Instance"); return; }
             gameObject.AddComponent<KikoLate>().pet = this;
             talk = gameObject.AddComponent<KikoTalk>();
+            Brain = gameObject.AddComponent<KikoBrain>();
+            Brain.pet = this; Brain.talk = talk;
             talk.pet = this;
             var json = Resources.Load<TextAsset>("kiko_acts");
             if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
@@ -210,7 +212,7 @@ namespace Kiko
         public float UiScale => scale;
         public bool CanChat => ready && state == State.Idle && !shooting;
         int WinH => baseHeight + bubbleSpace;
-        void SayHello() { if (!shooting) talk.Hello(); }
+        void SayHello() { if (!shooting) { talk.Hello(); Brain.Tell("电脑开着，桌面上的她出来了"); } }
 
         // 尾巴：模型里的静止姿势基本是朝正后方垂着，从正面只露一点尾尖（主人：看不见尾巴）。
         // 在弹簧骨初始化之前（Awake）把每节往侧面、往上再弯一点，弹簧骨就把这个当静止姿势，还是会跟着晃
@@ -679,6 +681,7 @@ namespace Kiko
             ["wave"] = new[] { "L_AGIA_Other_waving_arm_01" },
         };
         public bool Sleeping => rest == Rest.Sleep || MiniAsleep;
+        public KikoBrain Brain { get; private set; }
         public bool Resting => rest != Rest.None;
         static bool Night { get { int h = System.DateTime.Now.Hour; return h >= 23 || h < 6; } }
 
@@ -717,6 +720,7 @@ namespace Kiko
             rest = Rest.Sleep;
             restUntil = Night ? float.MaxValue : Time.time + Random.Range(600f, 1200f);
             talk.OnSleep();
+            Brain.Tell("在桌面上团成一团睡着了");
             Log($"rest: sleep {m}");
             return true;
         }
@@ -729,7 +733,7 @@ namespace Kiko
             // 慢慢（1 秒）从睡姿 Slerp 回站姿；自然醒再伸个懒腰（wake → Stretch）
             StopMotion(1.0f);
             SetMood(gently ? "wake" : "sleepy", 6f);
-            if (gently) talk.SayKey("wakeUp", null, 5f);
+            if (gently) { talk.SayKey("wakeUp", null, 5f); Brain.Tell("在桌面上睡醒了"); }
             Log("rest: wake " + (gently ? "(自然醒)" : "(被戳醒)"));
         }
 

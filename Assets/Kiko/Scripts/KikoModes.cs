@@ -107,6 +107,7 @@ namespace Kiko
             bustMeasureAt = Time.time + 0.8f; // 姿势搭好以后量一下前臂实际在哪，窗台（窗口底边）对齐到前臂下沿
             idleNext = Time.time + 3f;
             Log($"rest: bust {sec:F0}s");
+            Brain.Tell("趴在桌面任务栏的边上探着头");
             return true;
         }
 
@@ -233,6 +234,7 @@ namespace Kiko
             SetMood("surprised", 1.2f);
             ms = Mini.Look; msT = 0;
             Log("mini: come back");
+            Brain.Tell("在桌面上被 Yank 点了一下，跑回来变回原来的大小");
         }
 
         void MiniPoke()
@@ -528,6 +530,7 @@ namespace Kiko
                     ms = Mini.Sit; msUntil = Time.time + sec;
                     if (onH != IntPtr.Zero) Win32.BringToTop();
                     Log($"mini: sit {m} drop {miniDrop:F0}px {sec:F0}s");
+                    Brain.Tell(goalPlat.icon ? "变小坐在桌面图标上" : onH != IntPtr.Zero ? "变小爬到桌面上一个窗口的边上坐着" : "变小坐在任务栏上");
                     return;
                 }
                 case "lie":
@@ -542,6 +545,7 @@ namespace Kiko
                     ms = Mini.Lie; msUntil = Time.time + sec;
                     talk.OnSleep();
                     Log($"mini: lie {m} {sec:F0}s");
+                    Brain.Tell(onH != IntPtr.Zero ? "变小躺在桌面上一个窗口顶上睡着了" : "变小趴在任务栏上睡着了");
                     return;
                 }
                 default: // wander：站一会儿，然后去别处

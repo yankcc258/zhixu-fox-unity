@@ -137,6 +137,7 @@ namespace Kiko
                 warnedAt = now;
                 pokes.Clear();
                 SayKey("angry", "angry", 6f, 0.5f);
+                pet.Brain.Grudge("angry");
                 return false;
             }
             int h = DateTime.Now.Hour;
@@ -162,6 +163,8 @@ namespace Kiko
             warnedAt = -999;
             pokes.Clear();
             SayKey("runAway", "angry", 1.8f);
+            pet.Brain.Grudge("runaway");
+            pet.Brain.Tell("在桌面上被 Yank 连戳，生气躲起来了一会儿");
             yield return new WaitForSeconds(1.6f);
             hidden = true;
             Hide();
@@ -233,6 +236,8 @@ namespace Kiko
         {
             groggyAt = Time.time;
             SayKey("groggy", "sleepy", 6f);
+            pet.Brain.Grudge("woke");
+            pet.Brain.Tell("在桌面上睡着时被 Yank 戳醒了");
         }
 
         /// 刚被戳醒 12 秒内又戳 → 起床气。返回 true 表示已经处理了
@@ -257,8 +262,16 @@ namespace Kiko
             KikoPet.Log("menu → " + id);
             switch (id)
             {
-                case 1: if (pet.Sleeping) SayKey("sleepTalk", null, 5f); else Chat(); break;
-                case 2: if (pet.Sleeping) SayKey("patSleep", null, 4f); else SayKey("pat", "pat", 4f); break;
+                // 说句话：配好钥匙 = 打字和她聊（知序那套脑子，和网页共用记忆）；没配 = 随机说一句
+                case 1:
+                    if (pet.Sleeping) SayKey("sleepTalk", null, 5f);
+                    else if (pet.Brain.Online) pet.Brain.OpenInput();
+                    else Chat();
+                    break;
+                case 2:
+                    if (pet.Sleeping) SayKey("patSleep", null, 4f); else SayKey("pat", "pat", 4f);
+                    pet.Brain.PayPat(); // 摸头还记仇本的账（每天最多 3 次，服务器管）
+                    break;
                 case 4:
                     // 主人 11-07：明确让她坐下 → 缩小，去桌面上找个程序窗口爬上去坐着
                     if (pet.Sleeping && !pet.InMini) pet.WakeUp(true);

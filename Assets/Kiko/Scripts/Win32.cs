@@ -247,6 +247,9 @@ namespace Kiko
             return r;
         }
 
+        /// 把键盘焦点给这个窗口（打字和她说话）
+        public static void Focus() { if (Hwnd != IntPtr.Zero) SetForegroundWindow(Hwnd); }
+
         /// 藏起 / 显示窗口（被戳烦了躲一会儿）
         public static void ShowWindow(bool show)
         {
@@ -294,6 +297,7 @@ namespace Kiko
         public static RectInt WorkAreaAt(Vector2Int pt) => WorkArea;
         public static RectInt MonitorAt(Vector2Int pt) => new RectInt(0, 0, WorkArea.width, WorkArea.height + 72); // 假装任务栏 72px
         public static void BringToTop() { }
+        public static void Focus() { }
         // 编辑器里假装桌面上有两个窗口（坐标和上面的假工作区一致），用来试小只模式的跳上跳下
         public static List<WinInfo> TopWindows()
         {
