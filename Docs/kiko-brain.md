@@ -6,7 +6,7 @@
 
 1. Cloudflare → Zero Trust → Access → Service Auth → Service Tokens → **Create Service Token**，名字 `kiko-desktop`，有效期选不过期。马上复制 **Client ID** 和 **Client Secret**（Secret 只显示一次）。
 2. Access → Applications → 知序 → Policies：Service Auth 那条规则（obsidian-sync 用的）里把 `kiko-desktop` 也加进去。
-3. 在知序代码文件夹里：`npx wrangler secret put PET_CLIENT_ID`，粘贴 Client ID（结尾 `.access`）。
+3. Cloudflare 后台 → Workers & Pages → yank-study-lab → Settings → Variables and Secrets → Add：类型选 **Secret**，名字 `PET_CLIENT_ID`，值是 Client ID（结尾 `.access`）。（知序在 GitHub 上、由 Cloudflare 自动部署，本地不需要知序文件夹；选 Secret 是因为普通变量会在下次部署时被 wrangler.toml 覆盖掉。）
 4. 桌宠第一次启动会自动建 `%APPDATA%\ZhixuFox\brain.json`。用记事本打开，填：
    ```json
    {
