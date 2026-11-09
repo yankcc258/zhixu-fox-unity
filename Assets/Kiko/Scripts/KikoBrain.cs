@@ -109,6 +109,40 @@ namespace Kiko
             r.Dispose();
         }
 
+        // ---------- 自己想起前几天的事搭话（知序 /api/pet/muse，每天最多 6 次，服务器管）----------
+        // 没配钥匙 / 今天说够了 / 失败 → 返回 false，调用的地方改说本地台词
+        float museBlockedUntil;
+        public bool Muse()
+        {
+            if (!Online || Busy || Time.time < museBlockedUntil) return false;
+            StartCoroutine(MuseCo());
+            return true;
+        }
+
+        IEnumerator MuseCo()
+        {
+            Busy = true;
+            var r = Req("muse", "POST", "{}");
+            yield return r.SendWebRequest();
+            Busy = false;
+            ChatRes res = null;
+            try { res = JsonUtility.FromJson<ChatRes>(r.downloadHandler.text); } catch { }
+            if (r.result == UnityWebRequest.Result.Success && !string.IsNullOrEmpty(res?.reply))
+            {
+                MoodMap.TryGetValue(res.mood ?? "", out var mood);
+                talk.Say(res.reply, mood, Mathf.Clamp(3f + res.reply.Length * 0.12f, 5f, 12f));
+                KikoPet.Log("brain: muse ok");
+            }
+            else
+            {
+                // 429 今天说够了 / 503 记忆还没开 / 404 最近没什么可想的：过一阵再试，这次改说本地台词
+                museBlockedUntil = Time.time + (r.responseCode == 429 ? 6 * 3600 : 1800);
+                KikoPet.Log($"brain: muse 跳过 {r.responseCode}");
+                talk.Chat(true);
+            }
+            r.Dispose();
+        }
+
         // ---------- 发生的事 / 记仇本（不等回应，失败就算了）----------
         public void Tell(string text)
         {

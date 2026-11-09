@@ -191,9 +191,11 @@ namespace Kiko
             nextChat = c == 0 ? float.MaxValue : Time.time + Random.Range(Gap[c].x, Gap[c].y) * 60f;
         }
 
-        public void Chat()
+        /// 闲聊。配了钥匙时三成概率改成「想起前几天的事」（知序长期记忆）；localOnly = 那边失败了，只说本地台词
+        public void Chat(bool localOnly = false)
         {
             ScheduleChat();
+            if (!localOnly && pet.Brain.Online && Random.value < 0.35f && pet.Brain.Muse()) return;
             int h = DateTime.Now.Hour;
             var pool = new List<string>();
             void Add(string k, int times = 1) { if (lines.TryGetValue(k, out var a)) for (int i = 0; i < times; i++) pool.AddRange(a); }
