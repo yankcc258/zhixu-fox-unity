@@ -12,6 +12,8 @@ namespace Kiko
         class Outfit { public string label; public SkinnedMeshRenderer[] meshes = new SkinnedMeshRenderer[0]; public bool[] on = new bool[0]; public bool keepBase = true, hideUniform; }
         readonly List<Outfit> outfits = new();
         SkinnedMeshRenderer[] baseMeshes = new SkinnedMeshRenderer[0];
+        // VRM 的身体把腿缩掉了（靠原版白裤袜当腿）→ 穿别的衣服时换成 FBX 里那副完整的身体（KikoBase 里的 Manuka_body）
+        SkinnedMeshRenderer vrmBody, fullBody;
         readonly List<SkinnedMeshRenderer> uniform = new();
         int outfitIdx;
         public int OutfitCount => outfits.Count;
@@ -21,9 +23,14 @@ namespace Kiko
         {
             KikoDress.Springs.Clear();
             uniform.AddRange(vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(r => r.name.Contains("Manuka_costume") || r.name.Contains("Manuka_underwear_stocking")));
+            vrmBody = vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true).FirstOrDefault(r => r.name.StartsWith("Manuka_body"));
             outfits.Add(new Outfit { label = "原来的制服" });
             var baseLayer = GameObject.Find("KikoBase");
-            if (baseLayer && KikoDress.Apply(vrm, baseLayer, Log)) baseMeshes = KikoDress.LastMeshes;
+            if (baseLayer && KikoDress.Apply(vrm, baseLayer, Log))
+            {
+                fullBody = KikoDress.LastMeshes.FirstOrDefault(r => r.name == "Manuka_body");
+                baseMeshes = KikoDress.LastMeshes.Where(r => r != fullBody).ToArray();
+            }
             foreach (var info in FindObjectsByType<KikoOutfitInfo>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).OrderBy(i => i.transform.GetSiblingIndex()))
             {
                 var on = info.GetComponentsInChildren<SkinnedMeshRenderer>(true).Select(r => r.enabled && r.gameObject.activeSelf).ToArray();
@@ -43,9 +50,12 @@ namespace Kiko
                     if (outfits[k].meshes[m]) outfits[k].meshes[m].enabled = k == outfitIdx && outfits[k].on[m];
             foreach (var r in uniform) if (r) r.enabled = !cur.hideUniform;
             foreach (var r in baseMeshes) if (r) r.enabled = cur.keepBase;
+            bool bare = cur.hideUniform && fullBody && vrmBody;
+            if (fullBody) fullBody.enabled = bare;
+            if (vrmBody) vrmBody.enabled = !bare;
             dressed = outfitIdx > 0;
             if (save) { PlayerPrefs.SetInt("kiko.outfit", outfitIdx); PlayerPrefs.Save(); }
-            Log($"wardrobe: 穿 {outfitIdx}/{outfits.Count} {cur.label}（底层内衣 {(cur.keepBase ? "留" : "收")}）");
+            Log($"wardrobe: 穿 {outfitIdx}/{outfits.Count} {cur.label}（底层内衣 {(cur.keepBase ? "留" : "收")}，身体 {(bare ? "完整版" : "原版")}）");
         }
 
         public string NextOutfit() { Wear(outfitIdx + 1); return OutfitLabel; }

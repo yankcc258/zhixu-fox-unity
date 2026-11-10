@@ -390,14 +390,21 @@ namespace Kiko.EditorTools
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
             go.name = "KikoBase";
-            int kept = 0;
+            // 身体也从 FBX 拿一份：VRM 里的身体把「穿长袜时把腿缩掉」的形态键烤死了（腿缩成一条线，靠白裤袜当腿），
+            // 换别的衣服腿就空了（主人 11-10「腿不见了」）。FBX 里的身体是完整的，换装时用它顶替 VRM 的身体。
+            var bodyMat = AssetDatabase.FindAssets("Manuka_body t:Material", new[] { "Assets/LocalModels/Materials" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<Material>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault();
+            int kept = 0; bool gotBody = false;
             foreach (var r in go.GetComponentsInChildren<Renderer>(true))
             {
-                bool keep = r is SkinnedMeshRenderer && (r.name.Contains("underwear_bra") || r.name.Contains("underwear_panty"));
-                if (!keep) { UnityEngine.Object.DestroyImmediate(r.gameObject); continue; }
-                r.sharedMaterials = r.sharedMaterials.Select(_ => mat).ToArray();
+                bool under = r is SkinnedMeshRenderer && (r.name.Contains("underwear_bra") || r.name.Contains("underwear_panty"));
+                bool body = r is SkinnedMeshRenderer && r.name == "Manuka_body" && bodyMat;
+                if (!under && !body) { UnityEngine.Object.DestroyImmediate(r.gameObject); continue; }
+                r.sharedMaterials = r.sharedMaterials.Select(_ => body ? bodyMat : mat).ToArray();
+                gotBody |= body;
                 kept++;
             }
+            if (!gotBody) Debug.LogWarning("[Kiko] FBX 里没找到 Manuka_body（或没有身体材质）——换装后腿会是空的");
             Debug.Log($"[Kiko] 内衣底层放进场景了（{kept} 个网格）");
         }
 
