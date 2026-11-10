@@ -220,7 +220,7 @@ namespace Kiko
         // 在弹簧骨初始化之前（Awake）把每节往侧面、往上再弯一点，弹簧骨就把这个当静止姿势，还是会跟着晃
         // ---------- 换模型（11-10 起：BOOTH 买的马努卡改成希狐；模型文件不进仓库，在 Assets/LocalModels/）----------
         // VRoid 版：骨骼叫 J_Opt_C_FoxTail*、表情用 VRM 表情 + Fcl 形态键；别的模型：尾巴骨骼名里带 tail，表情直接写脸上的形态键
-        bool vroid = true;
+        bool vroid = true, dressed;
         string tailPrefix = "J_Opt_C_FoxTail";
         SkinnedMeshRenderer faceSmr;
         readonly Dictionary<string, int> faceBS = new();
@@ -249,6 +249,9 @@ namespace Kiko
                 float top = vrm.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).Max(r => r.bounds.max.y);
                 headTopOff = Mathf.Clamp(top - head.position.y + 0.02f, 0.2f, 0.5f);
             }
+            // 换装：场景里有 KikoOutfit（BOOTH 买的对应衣服）就穿上，原来的制服藏起来
+            var outfit = GameObject.Find("KikoOutfit");
+            if (outfit) dressed = KikoDress.Apply(vrm, outfit, Log, new[] { "Manuka_costume", "Manuka_underwear" });
             Log($"model: 非 VRoid（tail {tailPrefix}，脸 {(faceSmr ? faceSmr.name : "?")} {faceBS.Count} 形态键，头顶 +{headTopOff:F2}m）");
         }
 
@@ -329,26 +332,36 @@ namespace Kiko
         Transform legUL, legLL, legUR, legLR;
         void SetupSkirtDrape()
         {
-            var all = vrm.GetComponentsInChildren<Transform>(true);
-            Transform F(string n) => all.FirstOrDefault(t => t.name == n);
-            var hips = F("J_Bip_C_Hips");
-            legUL = F("J_Bip_L_UpperLeg"); legLL = F("J_Bip_L_LowerLeg"); legUR = F("J_Bip_R_UpperLeg"); legLR = F("J_Bip_R_LowerLeg");
+            Transform B(HumanBodyBones b) => vrm.TryGetBoneTransform(b, out var t) ? t : null;
+            var hips = B(HumanBodyBones.Hips);
+            legUL = B(HumanBodyBones.LeftUpperLeg); legLL = B(HumanBodyBones.LeftLowerLeg); legUR = B(HumanBodyBones.RightUpperLeg); legLR = B(HumanBodyBones.RightLowerLeg);
             if (!hips || !legUL || !legLL || !legUR || !legLR) { Log("skirt drape: 找不到腿骨"); return; }
             var fwd = Vector3.ProjectOnPlane(vrm.transform.forward, Vector3.up).normalized;
-            var rx = new System.Text.RegularExpressions.Regex(@"^J_Sec_([LR])_Skirt(Front|Side|Back)\d(?:_end)?_(\d+)$");
-            var byKey = new Dictionary<string, SkirtChain>();
-            foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
+            if (vroid)
             {
-                var m = rx.Match(j.name);
-                if (!m.Success) continue;
-                string key = m.Groups[1].Value + m.Groups[2].Value + m.Groups[3].Value;
-                if (!byKey.TryGetValue(key, out var c)) { c = new SkirtChain { left = m.Groups[1].Value == "L" }; byKey[key] = c; skirtChains.Add(c); }
-                c.joints.Add(j);
+                var rx = new System.Text.RegularExpressions.Regex(@"^J_Sec_([LR])_Skirt(Front|Side|Back)\d(?:_end)?_(\d+)$");
+                var byKey = new Dictionary<string, SkirtChain>();
+                foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
+                {
+                    var m = rx.Match(j.name);
+                    if (!m.Success) continue;
+                    string key = m.Groups[1].Value + m.Groups[2].Value + m.Groups[3].Value;
+                    if (!byKey.TryGetValue(key, out var c)) { c = new SkirtChain { left = m.Groups[1].Value == "L" }; byKey[key] = c; skirtChains.Add(c); }
+                    c.joints.Add(j);
+                }
             }
+            else
+                // 换装穿上的裙子：每条弹簧链就是一片裙摆；归左腿还是右腿看链根离哪条大腿近
+                foreach (var (name, joints) in KikoDress.Springs)
+                    if (name.Contains("Skirt") && joints.Count > 0)
+                    {
+                        var rp = joints[0].transform.position;
+                        skirtChains.Add(new SkirtChain { joints = joints.ToList(), left = (rp - legUL.position).sqrMagnitude <= (rp - legUR.position).sqrMagnitude });
+                    }
             foreach (var c in skirtChains)
             {
                 // 链根（名字里的 0）相对髋部的水平方位
-                c.joints = c.joints.OrderBy(j => j.name).ToList(); // 0、1、2、2_end：从腰往下
+                if (vroid) c.joints = c.joints.OrderBy(j => j.name).ToList(); // 0、1、2、2_end：从腰往下
                 c.bones = c.joints.Select(j => j.transform).ToList();
                 var tip = c.bones[^1];
                 if (tip.childCount > 0) c.bones.Add(tip.GetChild(0)); // 最后一节的尾端

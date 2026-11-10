@@ -43,3 +43,6 @@ crashlytics-build.properties
 /Assets/LocalModels/
 /Assets/LocalModels.meta
 /Shots/
+# BOOTH 买的衣服（Cyber Maid for Manuka，Demicrown）
+/Assets/Demicrown/
+/Assets/Demicrown.meta

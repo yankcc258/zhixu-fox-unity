@@ -357,8 +357,55 @@ namespace Kiko.EditorTools
                 _vrm = VrmPath; _matDir = Root + "/Materials"; _texDir = Root + "/Textures/vrm";
             }
             CreateSceneFor(LocalVrm, LocalScene);
+            AddOutfit();
+            EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             EditorPrefs.SetBool("kiko.localModel", true);
             Debug.Log("[Kiko] 现在用马努卡：Play / 打包 都是 " + LocalScene);
+        }
+
+        // 衣服：BOOTH 买的马努卡对应衣服（本机 Assets/Demicrown/…，不进仓库）。预制体实例放进场景叫 KikoOutfit，运行时 KikoDress 把它穿到身上。
+        // 材质换成我们自己的 lilToon 裁切材质（原来是半透明模式，在透明窗口里会透出桌面）；FBX 打开 Read/Write（运行时要改 bindpose）
+        const string OutfitDir = "Assets/Demicrown/Cyber Maid_Manuka";
+        static void AddOutfit()
+        {
+            var prefabPath = OutfitDir + "/cybermaid_Manuka.prefab";
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (!prefab) { Debug.Log("[Kiko] 没有衣服预制体 " + prefabPath + "，先穿原来的制服"); return; }
+            if (AssetImporter.GetAtPath(OutfitDir + "/cybermaid_Manuka.fbx") is ModelImporter mi && !mi.isReadable) { mi.isReadable = true; mi.SaveAndReimport(); }
+            Directory.CreateDirectory("Assets/LocalModels/Materials");
+            Material Make(string name, string tex)
+            {
+                var texPath = $"{OutfitDir}/Materials/Texture/{tex}.png";
+                if (AssetImporter.GetAtPath(texPath) is TextureImporter ti && (ti.maxTextureSize != 2048 || ti.textureCompression != TextureImporterCompression.CompressedHQ))
+                {
+                    ti.maxTextureSize = 2048; ti.textureCompression = TextureImporterCompression.CompressedHQ; ti.anisoLevel = 8; ti.SaveAndReimport();
+                }
+                var path = $"Assets/LocalModels/Materials/{name}.mat";
+                var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (!mat) { mat = new Material(Shader.Find("lilToon")) { name = name }; AssetDatabase.CreateAsset(mat, path); }
+                LilSetup(mat, 1, true);
+                mat.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
+                mat.SetColor("_Color", Color.white);
+                mat.SetFloat("_Cutoff", 0.5f);
+                mat.SetFloat("_Cull", 0); // 裙子里面也画
+                mat.SetFloat("_UseShadow", 1);
+                mat.SetColor("_ShadowColor", new Color(0.78f, 0.78f, 0.88f, 1f));
+                mat.SetFloat("_ShadowBorder", 0.5f);
+                mat.SetFloat("_ShadowBlur", 0.2f);
+                mat.SetFloat("_OutlineWidth", 0.04f);
+                mat.SetColor("_OutlineColor", new Color(0.22f, 0.22f, 0.30f, 1f));
+                EditorUtility.SetDirty(mat);
+                return mat;
+            }
+            Material bodyMat = Make("Outfit_Body", "c002_Body_c"), accMat = Make("Outfit_Acc", "c002_Acc_c");
+            AssetDatabase.SaveAssets();
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            go.name = "KikoOutfit";
+            foreach (var t in go.GetComponentsInChildren<Transform>(true)) GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject); // VRChat 的 PhysBone 脚本这里没有
+            foreach (var r in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                r.sharedMaterials = r.sharedMaterials.Select(m => m && m.name.Contains("Body") ? bodyMat : accMat).ToArray();
+            Debug.Log("[Kiko] 衣服放进场景了：" + prefabPath);
         }
 
         [MenuItem("Kiko/M2 换回 VRoid 希狐")]
