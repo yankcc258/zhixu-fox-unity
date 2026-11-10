@@ -747,6 +747,20 @@ namespace Kiko
             "L_EJ_09_wait_sitliedown_F", "L_EJ_10_wait_sitliedown_F", "L_EJ_11_wait_sitliedown_F", "L_EJ_12_wait_sitliedown_F",
             "L_EJ_13_wait_sitliedown_F", "L_Saneko_sitAFK",
         };
+        // 穿短蓬蓬裙时能用的坐姿：伸腿坐、跪坐、单膝（抱膝 EJ_05、侧坐 EJ_06 正面会露出内衣，11-10 拍图确认）
+        static readonly string[] SitSetSkirt = { "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI" };
+        // 穿短蓬蓬裙时的睡法：跪坐着打瞌睡（团成一团浮着睡，裙子整个翻开）。头和上身不用动捕的，用站姿 + 往前耷拉
+        const string DozeMotion = "L_EJ_08_wait_sitliedown_F";
+        bool Dozing => rest == Rest.Sleep && motion != null && motion.name == DozeMotion;
+        static readonly Dictionary<HumanBodyBones, float> DozeMask = new()
+        {
+            [HumanBodyBones.Head] = 0f, [HumanBodyBones.Neck] = 0f, [HumanBodyBones.UpperChest] = 0.5f, [HumanBodyBones.Chest] = 0.5f, [HumanBodyBones.Spine] = 0.7f,
+        };
+        static readonly Dictionary<HumanBodyBones, Vector3> DozeAdd = new()
+        {
+            [HumanBodyBones.Spine] = new(6, 0, 0), [HumanBodyBones.Chest] = new(8, 0, 0), [HumanBodyBones.Neck] = new(14, 0, 4), [HumanBodyBones.Head] = new(20, 0, 8),
+        };
+        string SleepMotion() => SkirtOn && motions.ContainsKey(DozeMotion) ? DozeMotion : PickMotion(SleepSet);
         static readonly string[] WalkSet = { "Walk", "L_AGIA_Other_walking_01" };
         static readonly string[] SleepSet = { "L_AFK_manmaruCat" }; // 11-07：抱膝守护睡、Lunalit 蜷睡从正面看会走光，不用了
         // 待机里偶尔插的（女仆站、玩头发、背着手、AGIA 普通待机）
@@ -786,7 +800,7 @@ namespace Kiko
 
         public bool SitDown(float sec)
         {
-            var m = PickMotion(SitSet);
+            var m = PickMotion(SkirtOn ? SitSetSkirt : SitSet);
             if (m == null) return false;
             action = null;
             if (mood != "idle") SetMood("idle", 0);
@@ -799,10 +813,11 @@ namespace Kiko
 
         public bool GoSleep()
         {
-            var m = PickMotion(SleepSet);
+            var m = SleepMotion();
             if (m == null) return false;
             SetMood("sleep", 0); // 闭眼脸（会顺手做一下 Slump，马上被睡姿盖掉）
             Act(m);
+            if (m == DozeMotion) action = null; // 打瞌睡：头的耷拉由 DozeAdd 管，不要再叠 Slump
             blendDur = 1.2f; // 慢慢躺/蜷下去
             rest = Rest.Sleep;
             restUntil = Night ? float.MaxValue : Time.time + Random.Range(600f, 1200f);
@@ -1120,6 +1135,8 @@ namespace Kiko
                 else goal = action != null && clipPose.TryGetValue(b, out var cp) ? cp : Base(b);
                 if (spring && idle) goal += Idle(b, br, ws, now);
                 if (spring && jumpAdd.TryGetValue(b, out var ja)) goal += ja; // 小只跳：蹲 / 收腿
+                bool doze = Dozing;
+                if (spring && doze && DozeAdd.TryGetValue(b, out var da)) goal += da; // 跪坐打瞌睡：头往前耷拉
                 var v = vel[b];
                 v += ((goal - cur[b]) * ST - v * DM) * dt;
                 vel[b] = v;
@@ -1127,6 +1144,7 @@ namespace Kiko
                 // 动捕在播：直接用动捕；切换时从冻结的姿势 Slerp 过来
                 float bm = mw;
                 if (mo && Walking && WalkMask.TryGetValue(b, out var wm)) bm = wm; // 走路：上半身用站姿，腿步子缩小
+                if (mo && doze && DozeMask.TryGetValue(b, out var dzm)) bm = dzm;
                 var q = mo && motionPose.TryGetValue(b, out var mq) ? (bm < 1 ? Quaternion.Slerp(KikoPose.ToUnity(cur[b]), mq, bm) : mq) : KikoPose.ToUnity(cur[b]);
                 if (breathe && spring) q *= KikoPose.ToUnity(Idle(b, br, ws, now) * 0.8f); // 坐着 / 躺着的动捕上叠一点呼吸
                 if (bw > 0 && fromQ.TryGetValue(b, out var fq)) q = Quaternion.Slerp(q, fq, bw);
@@ -1464,7 +1482,7 @@ namespace Kiko
             }
             else Log("mode shots: 走路没开始");
             int si = 0;
-            foreach (var m in SitSet.Where(motions.ContainsKey))
+            foreach (var m in (SkirtOn ? SitSetSkirt : SitSet).Where(motions.ContainsKey))
             {
                 action = null; Act(m); rest = Rest.Sit; restUntil = Time.time + 60f;
                 yield return new WaitForSeconds(5.5f);
@@ -1472,10 +1490,10 @@ namespace Kiko
                 Stand(0.6f);
                 yield return new WaitForSeconds(1.3f);
             }
-            foreach (var m in SleepSet.Where(motions.ContainsKey))
+            foreach (var m in new[] { SleepMotion() }.Where(x => x != null))
             {
-                SetMood("sleep", 0); Act(m); blendDur = 1.2f; rest = Rest.Sleep; restUntil = float.MaxValue;
-                yield return new WaitForSeconds(3.5f);
+                SetMood("sleep", 0); Act(m); if (m == DozeMotion) action = null; blendDur = 1.2f; rest = Rest.Sleep; restUntil = float.MaxValue;
+                yield return new WaitForSeconds(6f);
                 yield return Two("m_sleep");
                 Stand(1.0f);
                 yield return new WaitForSeconds(1.6f);
@@ -1505,14 +1523,27 @@ namespace Kiko
                 Stand(0.6f);
                 yield return new WaitForSeconds(1.3f);
             }
+            // 变小以后坐窗口边 / 躺窗口顶上用的姿势：原大小各摆一次（编辑器里假窗口够不着，跳不上去）
+            int mi = 0;
+            foreach (var m in MiniEdgeSet.Concat(MiniLieSet).Where(motions.ContainsKey))
+            {
+                action = null; Act(m); rest = Rest.Sit; restUntil = Time.time + 60f;
+                yield return new WaitForSeconds(5.5f);
+                yield return Shot(dir, $"m_minipose{mi}", 2f, 2f);
+                yawGoal = 40;
+                yield return new WaitForSeconds(0.9f);
+                yield return Shot(dir, $"m_minipose{mi++}_q", 2f, 2f);
+                Stand(0.6f);
+                yield return new WaitForSeconds(1.3f);
+            }
             foreach (var goal in new[] { "sit", "lie" })
             {
                 Floor();
                 DebugPrefer = "window";
                 if (!EnterMini(goal)) { Log("mode shots: 变小没开始 " + goal); continue; }
-                for (int i = 0; i < 16; i++)
+                for (int i = 0; i < 6; i++)
                 {
-                    yield return new WaitForSeconds(1.0f);
+                    yield return new WaitForSeconds(1.5f);
                     yield return Shot(dir, $"m_mini_{goal}_{i:00}", 2f);
                 }
                 ComeBack();

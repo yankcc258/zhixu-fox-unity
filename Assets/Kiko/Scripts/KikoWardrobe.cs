@@ -9,7 +9,7 @@ namespace Kiko
 {
     public partial class KikoPet
     {
-        class Outfit { public string label; public SkinnedMeshRenderer[] meshes = new SkinnedMeshRenderer[0]; public bool[] on = new bool[0]; public bool keepBase = true, hideUniform; public string[] shapes = new string[0]; }
+        class Outfit { public string label; public SkinnedMeshRenderer[] meshes = new SkinnedMeshRenderer[0]; public bool[] on = new bool[0]; public bool keepBase = true, hideUniform, skirt; public string[] shapes = new string[0]; }
         readonly List<Outfit> outfits = new();
         SkinnedMeshRenderer[] baseMeshes = new SkinnedMeshRenderer[0];
         // VRM 的身体把腿缩掉了（靠原版白裤袜当腿）→ 穿别的衣服时换成 FBX 里那副完整的身体（KikoBase 里的 Manuka_body）
@@ -17,6 +17,8 @@ namespace Kiko
         readonly List<SkinnedMeshRenderer> uniform = new();
         int outfitIdx;
         public int OutfitCount => outfits.Count;
+        /// 现在穿的这套有没有裙子（买来的短蓬蓬裙不会顺着腿垂下来 → 抱膝坐、团着睡会走光，这些姿势换掉）
+        public bool SkirtOn => outfits.Count > 0 && outfits[outfitIdx].skirt;
         public string OutfitLabel => outfits.Count > 0 ? outfits[outfitIdx].label : "";
 
         void SetupWardrobe()
@@ -34,8 +36,10 @@ namespace Kiko
             foreach (var info in FindObjectsByType<KikoOutfitInfo>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).OrderBy(i => i.transform.GetSiblingIndex()))
             {
                 var on = info.GetComponentsInChildren<SkinnedMeshRenderer>(true).Select(r => r.enabled && r.gameObject.activeSelf).ToArray();
+                int before = KikoDress.Springs.Count;
                 if (!KikoDress.Apply(vrm, info.gameObject, Log)) continue;
-                outfits.Add(new Outfit { label = info.label, meshes = KikoDress.LastMeshes, on = on, keepBase = info.keepBase, hideUniform = info.hideUniform, shapes = info.bodyShapes ?? new string[0] });
+                bool skirt = KikoDress.Springs.Skip(before).Any(sp => sp.name.Contains("Skirt"));
+                outfits.Add(new Outfit { label = info.label, meshes = KikoDress.LastMeshes, on = on, keepBase = info.keepBase, hideUniform = info.hideUniform, shapes = info.bodyShapes ?? new string[0], skirt = skirt });
             }
             Wear(PlayerPrefs.GetInt("kiko.outfit", 1), false);
         }
