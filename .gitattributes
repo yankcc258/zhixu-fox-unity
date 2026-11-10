@@ -4,3 +4,4 @@
 *.json text eol=lf
 *.vrm binary
 *.png binary
+*.bat text eol=crlf
