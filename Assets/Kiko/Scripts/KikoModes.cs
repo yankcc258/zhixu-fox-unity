@@ -119,7 +119,7 @@ namespace Kiko
             bustMeasureAt = 0;
             float Y(HumanBodyBones b) => rig.TryGetValue(b, out var t) ? t.position.y : restChestY;
             float fl = (Y(HumanBodyBones.LeftLowerArm) + Y(HumanBodyBones.LeftHand)) / 2f, fr = (Y(HumanBodyBones.RightLowerArm) + Y(HumanBodyBones.RightHand)) / 2f;
-            float arm = Mathf.Min(fl, fr), ledge = Mathf.Clamp(arm - 0.06f, restChestY - 0.25f, restChestY + 0.05f); // 前臂整条露在窗台上面
+            float arm = Mathf.Min(fl, fr), ledge = Mathf.Clamp(arm - (vroid ? 0.06f : 0.035f), restChestY - 0.25f, restChestY + 0.05f); // 前臂整条露在窗台上面
             Log($"bust measure chest {restChestY:F3} head {restHeadY:F3} elbowL {Y(HumanBodyBones.LeftLowerArm):F3} handL {Y(HumanBodyBones.LeftHand):F3} elbowR {Y(HumanBodyBones.RightLowerArm):F3} handR {Y(HumanBodyBones.RightHand):F3} → ledge {ledge:F3}");
             BustView(ledge, 0.5f);
         }
@@ -564,7 +564,7 @@ namespace Kiko
                 case "lie":
                 {
                     // 任务栏上优先趴着（EJ_17）
-                    var m = onH == IntPtr.Zero && motions.ContainsKey(MiniLieSet[1]) && Random.value < 0.6f ? MiniLieSet[1] : PickMotion(MiniLieSet);
+                    var m = onH == IntPtr.Zero && motions.ContainsKey(MiniLieSet[1]) && Random.value < 0.6f ? MiniLieSet[1] : PickMotion(SkirtOn ? MiniLieSet.Take(2).ToArray() : MiniLieSet); // 穿短蓬蓬裙不团着睡（裙子整个翻开）
                     if (m == null) goto default;
                     sec = Night ? 3600f : Random.Range(120f, 300f);
                     Act(m);

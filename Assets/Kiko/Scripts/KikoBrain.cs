@@ -145,17 +145,19 @@ namespace Kiko
         }
 
         // ---------- 发生的事 / 记仇本（不等回应，失败就算了）----------
+        /// 编辑器里批量试动作/拍图时关掉：不往共用记忆里写「睡着了、趴任务栏」这些假事件
+        public static bool Mute;
         public void Tell(string text)
         {
-            if (Online && !string.IsNullOrEmpty(text)) StartCoroutine(Fire("event", JsonUtility.ToJson(new EventReq { text = text })));
+            if (Online && !Mute && !string.IsNullOrEmpty(text)) StartCoroutine(Fire("event", JsonUtility.ToJson(new EventReq { text = text })));
         }
         public void Grudge(string type)
         {
-            if (Online) StartCoroutine(Fire("grudge", JsonUtility.ToJson(new GrudgeReq { type = type })));
+            if (Online && !Mute) StartCoroutine(Fire("grudge", JsonUtility.ToJson(new GrudgeReq { type = type })));
         }
         public void PayPat()
         {
-            if (Online) StartCoroutine(Fire("grudge/pay", JsonUtility.ToJson(new PayReq { how = "pat" })));
+            if (Online && !Mute) StartCoroutine(Fire("grudge/pay", JsonUtility.ToJson(new PayReq { how = "pat" })));
         }
 
         IEnumerator Fire(string path, string json)

@@ -228,7 +228,7 @@ namespace Kiko
         SkinnedMeshRenderer faceSmr;
         readonly Dictionary<string, int> faceBS = new();
         [Tooltip("非 VRoid 模型的尾巴放大倍数")] public float localTailScale = 1.25f;
-        [Tooltip("非 VRoid 模型：尾巴根部往上抬多少度 / 第 3~5 节每节往下弯多少度（从裙子上方绕过去）")] public float localTailLift = 28f, localTailCurl = 8f;
+        const float LocalTailSweep = 14f; // 非 VRoid 模型：尾巴第 4~6 节每节往身后扫多少度（不存进场景，改这里就生效）
         float headTopOff = 0.26f; // 头骨到头顶（含耳朵）的高度
         void DetectModel()
         {
@@ -266,8 +266,9 @@ namespace Kiko
                 // 买来的模型尾巴本来就摆好了，只整条放大一点（希狐的大尾巴）
                 var lc = vrm.GetComponentsInChildren<Transform>(true)
                     .Where(t => t.name.StartsWith(tailPrefix) && !t.name.Contains("_end")).OrderBy(t => t.name).ToList();
-                // 尾巴是从裙腰上面伸出来的，原来的角度（斜向下 45°）正好扎进蓬蓬裙的后摆：加碰撞体会把后裙掀起来露出内衣（主人 11-10）。
-                // 改成根部先往后上方抬，中间几节再弯回来往下垂 → 从裙子上方绕过去，不碰后裙。弹簧骨在这之后才初始化，这就是它的静止形状。
+                // 作者的摆法：尾巴根在髋的高度（裙子里面），被髋上的大球碰撞体（Tail_C）往后顶开，前几节贴着身后垂到裙摆下面才露出来，尾尖往外勾。
+                // 放大 1.25 倍以后垂到地上拖着（主人 11-10）→ 上半截不动（留在裙子里，不顶后裙、不露内衣），
+                // 裙摆以下的第 4~6 节每节往身后扫一点，下半截斜着往后翘起来、离开地面。弹簧骨在这之后才初始化，这就是它的静止形状。
                 void Bend(Transform b, Vector3 dir, float deg)
                 {
                     if (b.childCount == 0) return;
@@ -276,10 +277,10 @@ namespace Kiko
                     var nd = Vector3.RotateTowards(d, dir * d.magnitude, deg * Mathf.Deg2Rad, 0);
                     b.rotation = Quaternion.FromToRotation(d, nd) * b.rotation;
                 }
-                if (lc.Count > 0) Bend(lc[0], Vector3.up, localTailLift);
-                for (int i = 2; i < Mathf.Min(5, lc.Count); i++) Bend(lc[i], Vector3.down, localTailCurl);
+                var back = (-vrm.transform.forward + Vector3.up * 0.25f).normalized;
+                for (int i = 3; i < Mathf.Min(6, lc.Count); i++) Bend(lc[i], back, LocalTailSweep);
                 if (lc.Count > 0) lc[0].localScale *= localTailScale;
-                Log($"tail posed (local): {lc.Count} bones lift {localTailLift} curl {localTailCurl} scale {localTailScale}");
+                Log($"tail posed (local): {lc.Count} bones sweep {LocalTailSweep} scale {localTailScale}");
                 return;
             }
             var chain = vrm.GetComponentsInChildren<Transform>(true)
@@ -746,6 +747,20 @@ namespace Kiko
             "L_EJ_09_wait_sitliedown_F", "L_EJ_10_wait_sitliedown_F", "L_EJ_11_wait_sitliedown_F", "L_EJ_12_wait_sitliedown_F",
             "L_EJ_13_wait_sitliedown_F", "L_Saneko_sitAFK",
         };
+        // 穿短蓬蓬裙时能用的坐姿：伸腿坐、跪坐、单膝（抱膝 EJ_05、侧坐 EJ_06 正面会露出内衣，11-10 拍图确认）
+        static readonly string[] SitSetSkirt = { "L_EJ_07_wait_sitliedown_F", "L_EJ_08_wait_sitliedown_F", "L_AFK_HITOYASUMI" };
+        // 穿短蓬蓬裙时的睡法：跪坐着打瞌睡（团成一团浮着睡，裙子整个翻开）。头和上身不用动捕的，用站姿 + 往前耷拉
+        const string DozeMotion = "L_EJ_08_wait_sitliedown_F";
+        bool Dozing => rest == Rest.Sleep && motion != null && motion.name == DozeMotion;
+        static readonly Dictionary<HumanBodyBones, float> DozeMask = new()
+        {
+            [HumanBodyBones.Head] = 0f, [HumanBodyBones.Neck] = 0f, [HumanBodyBones.UpperChest] = 0.5f, [HumanBodyBones.Chest] = 0.5f, [HumanBodyBones.Spine] = 0.7f,
+        };
+        static readonly Dictionary<HumanBodyBones, Vector3> DozeAdd = new()
+        {
+            [HumanBodyBones.Spine] = new(6, 0, 0), [HumanBodyBones.Chest] = new(8, 0, 0), [HumanBodyBones.Neck] = new(14, 0, 4), [HumanBodyBones.Head] = new(20, 0, 8),
+        };
+        string SleepMotion() => SkirtOn && motions.ContainsKey(DozeMotion) ? DozeMotion : PickMotion(SleepSet);
         static readonly string[] WalkSet = { "Walk", "L_AGIA_Other_walking_01" };
         static readonly string[] SleepSet = { "L_AFK_manmaruCat" }; // 11-07：抱膝守护睡、Lunalit 蜷睡从正面看会走光，不用了
         // 待机里偶尔插的（女仆站、玩头发、背着手、AGIA 普通待机）
@@ -785,7 +800,7 @@ namespace Kiko
 
         public bool SitDown(float sec)
         {
-            var m = PickMotion(SitSet);
+            var m = PickMotion(SkirtOn ? SitSetSkirt : SitSet);
             if (m == null) return false;
             action = null;
             if (mood != "idle") SetMood("idle", 0);
@@ -798,10 +813,11 @@ namespace Kiko
 
         public bool GoSleep()
         {
-            var m = PickMotion(SleepSet);
+            var m = SleepMotion();
             if (m == null) return false;
             SetMood("sleep", 0); // 闭眼脸（会顺手做一下 Slump，马上被睡姿盖掉）
             Act(m);
+            if (m == DozeMotion) action = null; // 打瞌睡：头的耷拉由 DozeAdd 管，不要再叠 Slump
             blendDur = 1.2f; // 慢慢躺/蜷下去
             rest = Rest.Sleep;
             restUntil = Night ? float.MaxValue : Time.time + Random.Range(600f, 1200f);
@@ -1119,6 +1135,8 @@ namespace Kiko
                 else goal = action != null && clipPose.TryGetValue(b, out var cp) ? cp : Base(b);
                 if (spring && idle) goal += Idle(b, br, ws, now);
                 if (spring && jumpAdd.TryGetValue(b, out var ja)) goal += ja; // 小只跳：蹲 / 收腿
+                bool doze = Dozing;
+                if (spring && doze && DozeAdd.TryGetValue(b, out var da)) goal += da; // 跪坐打瞌睡：头往前耷拉
                 var v = vel[b];
                 v += ((goal - cur[b]) * ST - v * DM) * dt;
                 vel[b] = v;
@@ -1126,6 +1144,7 @@ namespace Kiko
                 // 动捕在播：直接用动捕；切换时从冻结的姿势 Slerp 过来
                 float bm = mw;
                 if (mo && Walking && WalkMask.TryGetValue(b, out var wm)) bm = wm; // 走路：上半身用站姿，腿步子缩小
+                if (mo && doze && DozeMask.TryGetValue(b, out var dzm)) bm = dzm;
                 var q = mo && motionPose.TryGetValue(b, out var mq) ? (bm < 1 ? Quaternion.Slerp(KikoPose.ToUnity(cur[b]), mq, bm) : mq) : KikoPose.ToUnity(cur[b]);
                 if (breathe && spring) q *= KikoPose.ToUnity(Idle(b, br, ws, now) * 0.8f); // 坐着 / 躺着的动捕上叠一点呼吸
                 if (bw > 0 && fromQ.TryGetValue(b, out var fq)) q = Quaternion.Slerp(q, fq, bw);
@@ -1424,6 +1443,118 @@ namespace Kiko
             cam.transform.SetPositionAndRotation(camPos, camRot);
             shooting = false;
             Log("quick shots → " + dir);
+        }
+
+        /// 各个模式过一遍并拍下来（换模型以后验证用，一分半左右）：站 / 走 / 坐地 / 睡 / 趴任务栏 / 壁纸坐姿 / 变小去窗口上坐、躺
+        public void StartModeShots() { if (!shooting && !modeShots) StartCoroutine(ModeShotSet()); }
+        bool modeShots;
+        System.Collections.IEnumerator ModeShotSet()
+        {
+            modeShots = true;
+            KikoBrain.Mute = true; // 别把试出来的「睡着了、趴任务栏」写进共用记忆
+            var dir = Application.isEditor ? Path.Combine(Application.dataPath, "..", "Shots") : Path.Combine(Application.persistentDataPath, "shots");
+            Directory.CreateDirectory(dir);
+            void Floor()
+            {
+                var w = Win32.WindowRect; var wa = Win32.WorkAreaAt(new Vector2Int(w.x + w.width / 2, w.y + w.height / 2));
+                Win32.MoveWindow(new Vector2Int(Mathf.Max(w.x, wa.xMin + wa.width / 3), wa.yMax - w.height));
+            }
+            void Stand(float blend) { rest = Rest.None; action = null; StopMotion(blend); yawGoal = 0; SetMood("idle", 0); Touch(); }
+            System.Collections.IEnumerator Two(string name) // 正面 + 转 40° 各一张
+            {
+                yield return Shot(dir, name, 2f);
+                yawGoal = 40;
+                yield return new WaitForSeconds(0.9f);
+                yield return Shot(dir, name + "_q", 2f);
+                yawGoal = 0;
+            }
+            Floor(); Stand(0.3f);
+            yield return new WaitForSeconds(1.2f);
+            yield return Shot(dir, "m_stand", 2f);
+            if (StartWalk())
+            {
+                yield return new WaitForSeconds(1.6f);
+                yield return Shot(dir, "m_walk_a", 2f);
+                yield return new WaitForSeconds(0.3f);
+                yield return Shot(dir, "m_walk_b", 2f);
+                StopWalk();
+                yield return new WaitForSeconds(1.2f);
+            }
+            else Log("mode shots: 走路没开始");
+            int si = 0;
+            foreach (var m in (SkirtOn ? SitSetSkirt : SitSet).Where(motions.ContainsKey))
+            {
+                action = null; Act(m); rest = Rest.Sit; restUntil = Time.time + 60f;
+                yield return new WaitForSeconds(5.5f);
+                yield return Two($"m_sit{si++}");
+                Stand(0.6f);
+                yield return new WaitForSeconds(1.3f);
+            }
+            foreach (var m in new[] { SleepMotion() }.Where(x => x != null))
+            {
+                SetMood("sleep", 0); Act(m); if (m == DozeMotion) action = null; blendDur = 1.2f; rest = Rest.Sleep; restUntil = float.MaxValue;
+                yield return new WaitForSeconds(6f);
+                yield return Two("m_sleep");
+                Stand(1.0f);
+                yield return new WaitForSeconds(1.6f);
+            }
+            Floor();
+            if (EnterBust(120))
+            {
+                yield return new WaitForSeconds(3f);
+                yield return Shot(dir, "m_bust", 2f);
+                foreach (var (a, t) in new[] { ("PeekPat", 0.8f), ("PeekWave", 1.0f), ("PeekCheek", 0.7f), ("PeekSleep", 1.6f) })
+                {
+                    Act(a);
+                    yield return new WaitForSeconds(t);
+                    yield return Shot(dir, "m_bust_" + a, 2f);
+                    action = null;
+                    yield return new WaitForSeconds(1.2f);
+                }
+                ExitBust();
+                yield return new WaitForSeconds(1.6f);
+            }
+            else Log("mode shots: 趴任务栏没开始");
+            foreach (var yaw in new[] { 18f, 60f })
+            {
+                DebugLedgeSit(yaw);
+                yield return new WaitForSeconds(5.5f);
+                yield return Shot(dir, $"m_ledge_{yaw:00}", 2f);
+                Stand(0.6f);
+                yield return new WaitForSeconds(1.3f);
+            }
+            // 变小以后坐窗口边 / 躺窗口顶上用的姿势：原大小各摆一次（编辑器里假窗口够不着，跳不上去）
+            int mi = 0;
+            foreach (var m in MiniEdgeSet.Concat(MiniLieSet).Where(motions.ContainsKey))
+            {
+                action = null; Act(m); rest = Rest.Sit; restUntil = Time.time + 60f;
+                yield return new WaitForSeconds(5.5f);
+                yield return Shot(dir, $"m_minipose{mi}", 2f, 2f);
+                yawGoal = 40;
+                yield return new WaitForSeconds(0.9f);
+                yield return Shot(dir, $"m_minipose{mi++}_q", 2f, 2f);
+                Stand(0.6f);
+                yield return new WaitForSeconds(1.3f);
+            }
+            foreach (var goal in new[] { "sit", "lie" })
+            {
+                Floor();
+                DebugPrefer = "window";
+                if (!EnterMini(goal)) { Log("mode shots: 变小没开始 " + goal); continue; }
+                for (int i = 0; i < 6; i++)
+                {
+                    yield return new WaitForSeconds(1.5f);
+                    yield return Shot(dir, $"m_mini_{goal}_{i:00}", 2f);
+                }
+                ComeBack();
+                yield return new WaitForSeconds(4.5f);
+                yield return Shot(dir, $"m_mini_{goal}_back", 2f);
+            }
+            DebugPrefer = null;
+            Stand(0.5f);
+            KikoBrain.Mute = false;
+            modeShots = false;
+            Log("mode shots → " + dir);
         }
 
         System.Collections.IEnumerator Shot(string dir, string name, float res = 3f, float wide = 1f)
