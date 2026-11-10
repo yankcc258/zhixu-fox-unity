@@ -437,7 +437,7 @@ namespace Kiko
                 pts = smr.sharedMesh.GetTriangles(sub).Distinct().Select(i => tr.position + tr.rotation * verts[i]).ToArray();
                 Destroy(mesh);
             }
-            float[] fixedR = { 0.045f, 0.065f, 0.08f, 0.085f }; // 买来的模型：尾巴根部几节的大概粗细（米，放大前）
+            float[] fixedR = { 0.028f, 0.038f, 0.048f, 0.055f }; // 买来的模型：尾巴根部几节的大概粗细（米，放大前）
             var group = chain[0].gameObject.AddComponent<VRM10SpringBoneColliderGroup>();
             group.Name = "KikoTail";
             var radii = new List<string>();
