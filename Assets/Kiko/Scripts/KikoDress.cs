@@ -97,7 +97,10 @@ namespace Kiko
                 for (var t = top; t; t = t.childCount > 0 ? t.GetChild(0) : null)
                 {
                     var j = t.gameObject.AddComponent<VRM10SpringBoneJoint>();
-                    j.m_stiffnessForce = 0.6f; j.m_gravityPower = 0.2f; j.m_gravityDir = Vector3.down; j.m_dragForce = 0.5f; j.m_jointRadius = 0.02f;
+                    // 裙摆：衬裙撑着的蓬蓬裙 → 硬一点、重力小，站着保持原来的形状，动起来才晃；带子、挂件软一点
+                    bool skirt = top.name.Contains("Skirt");
+                    j.m_stiffnessForce = skirt ? 1.6f : 0.6f; j.m_gravityPower = skirt ? 0.08f : 0.2f; j.m_gravityDir = Vector3.down;
+                    j.m_dragForce = skirt ? 0.6f : 0.5f; j.m_jointRadius = 0.02f;
                     joints.Add(j);
                 }
                 if (joints.Count < 2) continue;

@@ -317,6 +317,7 @@ namespace Kiko
             foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
             {
                 if (!j.name.Contains("Skirt")) continue;
+                if (!vroid) { n++; continue; } // 换装的裙子：KikoDress 里已经按「有衬裙、撑得住」的手感设好了
                 j.m_stiffnessForce = skirtStiff;
                 j.m_gravityPower = skirtGravity;
                 j.m_gravityDir = Vector3.down;
@@ -423,15 +424,20 @@ namespace Kiko
                 .OrderBy(t => t.name).ToList();
             var smr = vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true)
                 .FirstOrDefault(r => r.sharedMaterials.Any(m => m && m.name.Contains("FoxTail")));
-            if (!smr || chain.Count < 2) { Log("tail skirt: 没找到尾巴网格/骨骼"); return; }
-            var mesh = new Mesh();
-            smr.BakeMesh(mesh, true);
-            var tr = smr.transform;
-            // 尾巴是 Body 网格里的一个子网格：只取尾巴材质那个子网格用到的顶点（之前把整个身体都算进去了，半径量成 20~40cm，把裙子整圈撑开）
-            int sub = System.Array.FindIndex(smr.sharedMaterials, m => m && m.name.Contains("FoxTail"));
-            var verts = mesh.vertices;
-            var pts = smr.sharedMesh.GetTriangles(sub).Distinct().Select(i => tr.position + tr.rotation * verts[i]).ToArray();
-            Destroy(mesh);
+            if (chain.Count < 2 || (vroid && !smr)) { Log("tail skirt: 没找到尾巴网格/骨骼"); return; }
+            Vector3[] pts = null;
+            if (vroid)
+            {
+                var mesh = new Mesh();
+                smr.BakeMesh(mesh, true);
+                var tr = smr.transform;
+                // 尾巴是 Body 网格里的一个子网格：只取尾巴材质那个子网格用到的顶点（之前把整个身体都算进去了，半径量成 20~40cm，把裙子整圈撑开）
+                int sub = System.Array.FindIndex(smr.sharedMaterials, m => m && m.name.Contains("FoxTail"));
+                var verts = mesh.vertices;
+                pts = smr.sharedMesh.GetTriangles(sub).Distinct().Select(i => tr.position + tr.rotation * verts[i]).ToArray();
+                Destroy(mesh);
+            }
+            float[] fixedR = { 0.045f, 0.065f, 0.08f, 0.085f }; // 买来的模型：尾巴根部几节的大概粗细（米，放大前）
             var group = chain[0].gameObject.AddComponent<VRM10SpringBoneColliderGroup>();
             group.Name = "KikoTail";
             var radii = new List<string>();
@@ -440,16 +446,21 @@ namespace Kiko
                 Vector3 a = chain[i].position, b = chain[i + 1].position, ab = b - a;
                 float l2 = ab.sqrMagnitude;
                 if (l2 < 1e-8f) continue;
-                var ds = new List<float>();
-                foreach (var p in pts)
+                float r;
+                if (pts != null)
                 {
-                    float t = Vector3.Dot(p - a, ab) / l2;
-                    if (t < 0 || t > 1) continue;
-                    ds.Add(Vector3.Distance(p, a + ab * t));
+                    var ds = new List<float>();
+                    foreach (var p in pts)
+                    {
+                        float t = Vector3.Dot(p - a, ab) / l2;
+                        if (t < 0 || t > 1) continue;
+                        ds.Add(Vector3.Distance(p, a + ab * t));
+                    }
+                    if (ds.Count < 8) continue;
+                    ds.Sort();
+                    r = ds[(int)(ds.Count * 0.6f)] * tailSkirtPush + tailFurMargin;
                 }
-                if (ds.Count < 8) continue;
-                ds.Sort();
-                float r = ds[(int)(ds.Count * 0.6f)] * tailSkirtPush + tailFurMargin;
+                else r = fixedR[i] * localTailScale * tailSkirtPush;
                 var go = new GameObject("KikoTailCollider" + i);
                 go.transform.SetParent(chain[i], false);
                 var c = go.AddComponent<VRM10SpringBoneCollider>();
