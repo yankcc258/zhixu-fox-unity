@@ -162,7 +162,7 @@ namespace Kiko
 
         // ================= 小只：在桌面窗口上跑来跑去 =================
         const float MiniK = 0.4f;
-        enum Mini { Shrink, Idle, Walk, Jump, Sit, Lie, Look, Grow }
+        enum Mini { Shrink, Idle, Walk, Jump, Land, Sit, Lie, Look, Grow }
         Mini ms;
         float msT, msUntil;
         struct Plat { public IntPtr h; public int x0, x1, y; public string title; public bool icon; }
@@ -180,7 +180,10 @@ namespace Kiko
         Plat goalPlat;
         int goalX;
         Vector2 jumpFrom, jumpTo;
-        float jumpDur, jumpH, walkToX, walkX, miniDrop;
+        float walkToX, walkX, miniDrop;
+        KikoHop.Flight hop;
+        IntPtr failedPlatform;
+        float failedUntil;
         bool mini => rest == Rest.Mini;
         [NonSerialized] public string DebugPrefer; // 编辑器菜单试：指定去 "icon" / "window"
         public bool InMini => mini;
@@ -212,6 +215,7 @@ namespace Kiko
             rest = Rest.Mini;
             ms = Mini.Shrink; msT = 0;
             miniGoal = goal; hasGoal = false; returning = false; lieAsleep = false;
+            SetJumpPose(null, 0);
             SetView(camBottom, camTotal / MiniK, 1.0f);
             if (mood != "idle") SetMood("idle", 0);
             ScanPlats();
@@ -226,6 +230,7 @@ namespace Kiko
             if (!mini || returning) return;
             returning = true;
             hasGoal = false;
+            SetJumpPose(null, 0);
             if (ms == Mini.Walk) EndMiniWalk();
             if (motion != null) StopMotion(0.35f);
             action = null;
@@ -250,7 +255,7 @@ namespace Kiko
             plats.Clear();
             var me = Win32.WindowRect;
             var wa = Win32.WorkAreaAt(new Vector2Int(me.x + me.width / 2, me.yMax - 4));
-            int headroom = Mathf.RoundToInt(baseHeight * scale * MiniK * 0.9f), minW = Mathf.RoundToInt(110 * scale);
+            int headroom = Mathf.RoundToInt(baseHeight * scale * MiniK * 1.1f + 32 * scale), minW = Mathf.RoundToInt(110 * scale);
             var above = new List<RectInt>();
             foreach (var w in Win32.TopWindows())
             {
@@ -330,6 +335,7 @@ namespace Kiko
 
         void MiniFall(string why)
         {
+            SetJumpPose(null, 0);
             Log("mini: fall (" + why + ")");
             if (ms == Mini.Walk) EndMiniWalk();
             if (motion != null) StopMotion(0.3f);
@@ -352,7 +358,7 @@ namespace Kiko
             var w = Win32.WindowRect;
             ScanPlats();
             StandOn(SurfaceBelow(w.x + w.width / 2, w.yMax));
-            ms = Mini.Idle; msUntil = Time.time + 1.2f;
+            ms = returning ? Mini.Look : Mini.Idle; msT = 0; msUntil = Time.time + 1.2f;
         }
 
         void UpdateMini(float dt)
@@ -363,12 +369,11 @@ namespace Kiko
                 nextScan = Time.time + 0.4f;
                 ScanPlats();
                 // 站着的那段边被别的窗口盖住了（脚下不再是能站的边）→ 掉下去
-                if (onH != IntPtr.Zero && state == State.Idle && ms is Mini.Idle or Mini.Walk or Mini.Sit or Mini.Lie
+                if (onH != IntPtr.Zero && state == State.Idle && ms is Mini.Idle or Mini.Walk or Mini.Land or Mini.Sit or Mini.Lie
                     && !plats.Any(p => p.h == onH && FeetX >= p.x0 && FeetX <= p.x1)) MiniFall("被盖住了");
             }
             FollowPlatform();
-            if (landUntil > 0 && Time.time > landUntil) { landUntil = 0; SetJumpPose(null, 0); }
-            if (state != State.Idle) { if (ms == Mini.Jump) { ms = Mini.Idle; SetJumpPose(null, 0); } return; } // 被拖着 / 正在掉：UpdateInput 管
+            if (state != State.Idle) { SetJumpPose(null, 0); if (ms is Mini.Jump or Mini.Land) { ms = Mini.Idle; hasGoal = false; } return; } // 被拖着 / 正在掉：UpdateInput 管
             msT += dt;
             switch (ms)
             {
@@ -390,23 +395,42 @@ namespace Kiko
                 }
                 case Mini.Jump:
                 {
-                    // 先蹲一下蓄力（窗口不动）→ 蹬出去 → 空中收腿 → 快落地时腿伸直 → 落地蹲一下缓冲
-                    if (msT < JumpPre) { SetJumpPose(Crouch, -0.07f); break; }
-                    float u = Mathf.Clamp01((msT - JumpPre) / jumpDur);
-                    SetJumpPose(u < 0.12f || u > 0.82f ? null : Tuck, 0);
-                    float x = Mathf.Lerp(jumpFrom.x, jumpTo.x, u);
-                    float y = Mathf.Lerp(jumpFrom.y, jumpTo.y, u) - jumpH * 4f * u * (1 - u);
+                    if (msT < JumpPre)
+                    {
+                        BlendJumpPose(Crouch, Mathf.SmoothStep(0, 1, msT / JumpPre), -0.035f);
+                        break;
+                    }
+                    float u = Mathf.Clamp01((msT - JumpPre) / hop.Duration);
+                    // Gradually tuck, then reach for the ledge; arms open with the legs.
+                    float tuck = Mathf.SmoothStep(0, 1, u / 0.24f) * (1 - Mathf.SmoothStep(0, 1, (u - 0.55f) / 0.40f));
+                    BlendJumpPose(Tuck, tuck, 0);
+                    hop.Sample(u, out float x, out float y);
                     PlaceFeet(x, y);
                     if (u >= 1)
                     {
-                        SetJumpPose(Crouch, -0.06f);
-                        landUntil = Time.time + 0.22f;
+                        ScanPlats();
+                        if (!RefreshGoal() || Mathf.Abs(goalPlat.y - jumpTo.y) > 6 ||
+                            FeetX < goalPlat.x0 || FeetX > goalPlat.x1)
+                        { RejectGoal(); MiniFall("跳跃目标移动或消失"); break; }
                         StandOn(goalPlat);
-                        surfY = jumpTo.y;
-                        yawGoal = 0;
-                        ms = Mini.Idle; msUntil = Time.time + 0.5f;
+                        if (onH != goalPlat.h) { RejectGoal(); MiniFall("落点失效"); break; }
+                        PlaceFeet(FeetX, goalPlat.y);
+                        hasGoal = false; // Arrived: never send this consumed destination back to Think.
+                        ms = Mini.Land; msT = 0;
                         Log($"mini: landed on {goalPlat.title}");
-                        if (returning) StartGrow();
+                    }
+                    break;
+                }
+                case Mini.Land:
+                {
+                    float k = msT / JumpLand;
+                    float weight = k < 0.3f ? Mathf.SmoothStep(0, 1, k / 0.3f) : 1 - Mathf.SmoothStep(0, 1, (k - 0.3f) / 0.7f);
+                    BlendJumpPose(Crouch, weight * 0.8f, -0.035f);
+                    if (k >= 1)
+                    {
+                        SetJumpPose(null, 0);
+                        yawGoal = 0; // Turn back only after absorbing the landing.
+                        if (returning) StartGrow(); else DoActivity();
                     }
                     break;
                 }
@@ -471,7 +495,10 @@ namespace Kiko
             if (!hasGoal)
             {
                 if (string.IsNullOrEmpty(miniGoal)) miniGoal = Night ? "lie" : Random.value < 0.5f ? "sit" : Random.value < 0.6f ? "wander" : "lie";
-                var wins = plats.Where(p => p.h != IntPtr.Zero && p.x1 - p.x0 >= (p.icon ? 0 : Margin * 3)).ToList();
+                var curPlat = SurfaceBelow(FeetX, Mathf.RoundToInt(surfY));
+                var wins = plats.Where(p => p.h != IntPtr.Zero && p.x1 - p.x0 >= (p.icon ? 0 : Margin * 3)
+                    && (p.h != failedPlatform || Time.time >= failedUntil)
+                    && KikoHop.Reachable(surfY - p.y, Mathf.Max(0, Mathf.Max(p.x0 - curPlat.x1, curPlat.x0 - p.x1)) + M(p) + M(curPlat), scale)).ToList();
                 // 图标和窗口都有时，四成去图标上
                 var ic = wins.Where(p => p.icon).ToList();
                 var wn = wins.Where(p => !p.icon).ToList();
@@ -487,6 +514,7 @@ namespace Kiko
                 hasGoal = true;
                 Log($"mini: goal {miniGoal} → {goalPlat.title} x {goalX}");
             }
+            if (!RefreshGoal()) { RejectGoal(); return; }
             var cur = SurfaceBelow(FeetX, Mathf.RoundToInt(surfY));
             bool sameSurface = goalPlat.h == onH && Mathf.Abs(goalPlat.y - surfY) < 4;
             if (sameSurface)
@@ -498,7 +526,7 @@ namespace Kiko
             }
             // 换到别的边：离得够近就直接跳；太远先沿着现在这条边走近一点（一跳最远横着 reach 像素）
             int landX = goalPlat.icon ? goalX : Mathf.Clamp(goalX, goalPlat.x0 + Margin, goalPlat.x1 - Margin);
-            int reach = Mathf.RoundToInt(480 * scale);
+            int reach = Mathf.RoundToInt(KikoHop.Reach * scale);
             int takeoff = Mathf.Clamp(landX + Mathf.Clamp(FeetX - landX, -reach, reach), cur.x0 + M(cur), cur.x1 - M(cur));
             if (Mathf.Abs(FeetX - takeoff) > 6) { StartMiniWalk(takeoff); return; }
             StartJump(new Vector2(landX, goalPlat.y));
@@ -583,38 +611,85 @@ namespace Kiko
             yawGoal = 0;
         }
 
+        bool RefreshGoal()
+        {
+            foreach (var p in plats)
+            {
+                if (p.h != goalPlat.h || goalX < p.x0 || goalX > p.x1) continue;
+                goalPlat = p;
+                return p.icon || p.h == IntPtr.Zero || Win32.RectOf(p.h, out _);
+            }
+            return false;
+        }
+
+        void RejectGoal()
+        {
+            failedPlatform = goalPlat.h; failedUntil = Time.time + 6f;
+            hasGoal = false;
+            SetJumpPose(null, 0);
+            ms = returning ? Mini.Look : Mini.Idle; msT = -2f; msUntil = Time.time + Random.Range(2f, 4f);
+        }
+
         void StartJump(Vector2 to)
         {
+            ScanPlats();
+            // The floor is also used by ComeBack, which has no random goalX.
+            goalX = Mathf.RoundToInt(to.x);
+            if (!RefreshGoal()) { RejectGoal(); return; }
+            to.y = goalPlat.y;
             var w = Win32.WindowRect;
             jumpFrom = new Vector2(w.x + w.width / 2f, w.yMax);
             jumpTo = to;
-            float dx = to.x - jumpFrom.x, up = jumpFrom.y - to.y; // up > 0 = 往上跳
-            jumpH = (up > 0 ? up * 0.75f : 0) + 45f * scale;
-            jumpDur = Mathf.Clamp(0.45f + 0.0006f * (Mathf.Abs(dx) + Mathf.Abs(up)) / scale, 0.45f, 1.4f);
-            yawGoal = Mathf.Abs(dx) > 40 ? (dx > 0 ? -60f : 60f) : 0;
-            if (motion != null) StopMotion(0.2f);
+            float dx = to.x - jumpFrom.x, up = jumpFrom.y - to.y;
+            if (KikoHop.AlreadyThere(dx, up))
+            {
+                StandOn(goalPlat);
+                if (onH != goalPlat.h) { RejectGoal(); return; }
+                hasGoal = false;
+                ms = Mini.Land; msT = 0;
+                return;
+            }
+            // Coming home may drop farther, but never uses a giant upward arc.
+            if (!(returning && goalPlat.h == IntPtr.Zero && up < 0) && !KikoHop.Reachable(up, Mathf.Abs(dx), scale))
+            { RejectGoal(); return; }
+            var wa = Win32.WorkAreaAt(new Vector2Int(FeetX, w.yMax - 4));
+            float room = baseHeight * scale * MiniK * 1.1f;
+            hop = KikoHop.Plan(jumpFrom.x, jumpFrom.y, to.x, to.y, scale, wa.yMin + room);
+            yawGoal = Mathf.Abs(dx) > 20 ? (dx > 0 ? -45f : 45f) : 0;
+            if (motion != null) StopMotion(0.12f);
             action = null;
+            SetJumpPose(null, 0);
             onH = IntPtr.Zero;
             ms = Mini.Jump; msT = 0;
-            Log($"mini: jump {jumpFrom} → {to} ({jumpDur:F2}s, up {up:F0}px) → {goalPlat.title}");
+            Log($"mini: hop {jumpFrom} → {to} ({hop.Duration:F2}s, up {up:F0}px) → {goalPlat.title}");
         }
 
-        // ---------- 跳的姿势：叠在弹簧站姿上（以前放 2 秒多的 Hop 动捕，和窗口的抛物线对不上，看着僵）----------
-        const float JumpPre = 0.2f;
-        float landUntil, jumpSink;
+        // Small anticipation, asymmetric legs, and open arms like the desktop-parkour boards.
+        const float JumpPre = 0.18f, JumpLand = 0.32f;
+        float jumpSink;
         readonly Dictionary<HumanBodyBones, Vector3> jumpAdd = new();
         static readonly Dictionary<HumanBodyBones, Vector3> Crouch = new()
         {
-            [HumanBodyBones.LeftUpperLeg] = new(-28, 0, 0), [HumanBodyBones.RightUpperLeg] = new(-28, 0, 0),
-            [HumanBodyBones.LeftLowerLeg] = new(48, 0, 0), [HumanBodyBones.RightLowerLeg] = new(48, 0, 0),
-            [HumanBodyBones.Spine] = new(12, 0, 0), [HumanBodyBones.Head] = new(-6, 0, 0),
+            [HumanBodyBones.LeftUpperLeg] = new(-16, 0, 0), [HumanBodyBones.RightUpperLeg] = new(-14, 0, 0),
+            [HumanBodyBones.LeftLowerLeg] = new(28, 0, 0), [HumanBodyBones.RightLowerLeg] = new(25, 0, 0),
+            [HumanBodyBones.Spine] = new(6, 0, 0), [HumanBodyBones.Head] = new(-3, 0, 0),
+            [HumanBodyBones.LeftUpperArm] = new(3, 12, 6), [HumanBodyBones.RightUpperArm] = new(3, -12, -6),
+            [HumanBodyBones.LeftLowerArm] = new(0, 18, 0), [HumanBodyBones.RightLowerArm] = new(0, -18, 0),
         };
         static readonly Dictionary<HumanBodyBones, Vector3> Tuck = new()
         {
-            [HumanBodyBones.LeftUpperLeg] = new(-40, 0, 3), [HumanBodyBones.RightUpperLeg] = new(-40, 0, -3),
-            [HumanBodyBones.LeftLowerLeg] = new(72, 0, 0), [HumanBodyBones.RightLowerLeg] = new(72, 0, 0),
-            [HumanBodyBones.Spine] = new(-3, 0, 0), [HumanBodyBones.Head] = new(-5, 0, 0),
+            [HumanBodyBones.LeftUpperLeg] = new(-22, 0, 2), [HumanBodyBones.RightUpperLeg] = new(-12, 0, -2),
+            [HumanBodyBones.LeftLowerLeg] = new(40, 0, 0), [HumanBodyBones.RightLowerLeg] = new(30, 0, 0),
+            [HumanBodyBones.Spine] = new(3, 0, 0), [HumanBodyBones.Head] = new(-3, 0, 2),
+            [HumanBodyBones.LeftUpperArm] = new(-10, 25, 18), [HumanBodyBones.RightUpperArm] = new(-6, -25, -18),
+            [HumanBodyBones.LeftLowerArm] = new(0, 50, 0), [HumanBodyBones.RightLowerArm] = new(0, -50, 0),
         };
+        void BlendJumpPose(Dictionary<HumanBodyBones, Vector3> p, float weight, float sink)
+        {
+            jumpAdd.Clear();
+            foreach (var kv in p) jumpAdd[kv.Key] = kv.Value * weight;
+            jumpSink = sink * weight;
+        }
         void SetJumpPose(Dictionary<HumanBodyBones, Vector3> p, float sink)
         {
             jumpAdd.Clear();

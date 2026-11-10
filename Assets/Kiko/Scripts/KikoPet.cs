@@ -662,7 +662,7 @@ namespace Kiko
                 if (rest == Rest.Bust) ExitBust(0.35f);
                 if (rest == Rest.Mini) { if (ms == Mini.Walk) EndMiniWalk(); StopMotion(0.3f); ms = Mini.Idle; hasGoal = false; lieAsleep = false; returning = false; onH = System.IntPtr.Zero; } // 小只可以拎着放到别的窗口上
                 else rest = Rest.None;
-                yawGoal = 0; SetMood("dangle", 0); // → Hang（循环）
+                yawGoal = 0; SetJumpPose(null, 0); SetMood("dangle", 0); // → Hang（循环）
             }
             else if (s == State.Fall) { SetMood("surprised", 0); Act("Fall"); }
             else if (s == State.Land) { Act("Land"); SetMood("idle", 0); if (userDrop) talk.OnDropped(); userDrop = false; if (mini) MiniLanded(); } // 自己掉下来的不说「放我下来」
@@ -1098,7 +1098,7 @@ namespace Kiko
                 else motionHips = motion.Sample(MotionTime(), motionPose) * hipsBase;
             }
             bool mo = motion != null;
-            bool idle = action == null && !mo && state == State.Idle;
+            bool idle = action == null && !mo && state == State.Idle && !(mini && ms is Mini.Jump or Mini.Land);
             bool breathe = BreatheOnMotion;
             hipsV += ((sink - hipsNow) * ST - hipsV * DM) * dt;
             hipsNow += hipsV * dt;
