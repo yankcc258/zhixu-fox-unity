@@ -92,9 +92,19 @@ namespace Kiko.EditorTools
         }
 
         // ---------------- ② MToon → lilToon ----------------
+        // 当前在换哪个模型的材质（默认仓库里的 kiko.vrm；买来的模型用 Assets/LocalModels/ 下的）
+        static string _vrm = VrmPath, _matDir = Root + "/Materials", _texDir = Root + "/Textures/vrm";
+
         [MenuItem("Kiko/2 材质换成 lilToon")]
         public static void ConvertMaterials()
         {
+            _vrm = VrmPath; _matDir = Root + "/Materials"; _texDir = Root + "/Textures/vrm";
+            ConvertCurrent();
+        }
+
+        static void ConvertCurrent()
+        {
+            string VrmPath = _vrm;
             AssetDatabase.ImportAsset(VrmPath, ImportAssetOptions.ForceUpdate);
             var importer = AssetImporter.GetAtPath(VrmPath) as ScriptedImporter;
             if (!importer) { Debug.LogError("[Kiko] 找不到 VRM 导入器：" + VrmPath + "（UniVRM 装好了吗？）"); return; }
@@ -108,11 +118,11 @@ namespace Kiko.EditorTools
             var lil = Shader.Find("lilToon");
             if (!lil) { Debug.LogError("[Kiko] 找不到 lilToon 着色器"); return; }
             PrepareExternalTextures();
-            Directory.CreateDirectory(Root + "/Materials");
+            Directory.CreateDirectory(_matDir);
             int n = 0;
             foreach (var src in AssetDatabase.LoadAllAssetRepresentationsAtPath(VrmPath).OfType<Material>())
             {
-                var path = $"{Root}/Materials/{Safe(src.name)}.mat";
+                var path = $"{_matDir}/{Safe(src.name)}.mat";
                 var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
                 if (!mat) { mat = new Material(lil) { name = src.name }; AssetDatabase.CreateAsset(mat, path); }
                 FromMToon(src, mat);
@@ -122,7 +132,7 @@ namespace Kiko.EditorTools
             }
             AssetDatabase.SaveAssets();
             importer.SaveAndReimport();
-            Debug.Log($"[Kiko] ② {n} 个材质换成 lilToon（{Root}/Materials），已重映射到 kiko.vrm");
+            Debug.Log($"[Kiko] ② {n} 个材质换成 lilToon（{_matDir}），已重映射到 {VrmPath}");
         }
 
         // ---------- 贴图换成压缩过的外部 PNG（UniVRM 导入的子资源贴图是不压缩的 RGBA32：2048² 一张 21MB，打包 157MB、内存 360MB）----------
@@ -133,13 +143,13 @@ namespace Kiko.EditorTools
 
         static void PrepareExternalTextures()
         {
-            var json = AssetDatabase.LoadAssetAtPath<TextAsset>(Root + "/Textures/vrm/index.json");
-            if (!json) { Debug.LogWarning("[Kiko] 没有 Textures/vrm/index.json，贴图保持不压缩"); _texIndex = null; return; }
+            var json = AssetDatabase.LoadAssetAtPath<TextAsset>(_texDir + "/index.json");
+            if (!json) { Debug.LogWarning("[Kiko] 没有 " + _texDir + "/index.json，贴图保持不压缩"); _texIndex = null; return; }
             _texIndex = JsonUtility.FromJson<TexIndex>(json.text);
             int changed = 0;
             foreach (var it in _texIndex.items)
             {
-                var ti = AssetImporter.GetAtPath($"{Root}/Textures/vrm/{it.file}") as TextureImporter;
+                var ti = AssetImporter.GetAtPath($"{_texDir}/{it.file}") as TextureImporter;
                 if (!ti) continue;
                 var type = it.normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
                 if (ti.textureType == type && ti.textureCompression == TextureImporterCompression.CompressedHQ && ti.anisoLevel == 8) continue;
@@ -158,10 +168,10 @@ namespace Kiko.EditorTools
         /// VRM 子资源贴图 → 同名同尺寸的外部 PNG（唯一匹配才换；几张 64² 的小饰品贴图同名同尺寸，就留着不换）
         static Texture Ext(Texture t)
         {
-            if (!t || _texIndex == null || AssetDatabase.GetAssetPath(t) != VrmPath) return t;
+            if (!t || _texIndex == null || AssetDatabase.GetAssetPath(t) != _vrm) return t;
             var c = _texIndex.items.Where(i => i.name == t.name && i.w == t.width && i.h == t.height).ToList();
             if (c.Count != 1) return t;
-            var ext = AssetDatabase.LoadAssetAtPath<Texture2D>($"{Root}/Textures/vrm/{c[0].file}");
+            var ext = AssetDatabase.LoadAssetAtPath<Texture2D>($"{_texDir}/{c[0].file}");
             return ext ? ext : t;
         }
 
@@ -179,6 +189,10 @@ namespace Kiko.EditorTools
             bool outline = Mathf.RoundToInt(F(s, "_OutlineWidthMode")) > 0 && F(s, "_OutlineWidth") > 0;
             int mode = alphaMode == 1 ? 1 : alphaMode == 2 ? 2 : 0; // lilToon RenderingMode: Opaque 0 / Cutout 1 / Transparent 2
             bool tail = s.name.Contains("FoxTail");
+            // 马努卡：头发/耳朵/尾巴是半透明混合 → 改成裁切（透明窗口里半透明头发会透出桌面，也不用排序）；脸上的贴花（腮红、汗、黑脸…）保持半透明
+            bool manukaHair = s.name.StartsWith("Manuka_hair");
+            if (manukaHair) mode = 1;
+            if (s.name.StartsWith("Manuka_option")) { mode = 2; outline = false; }
             if (tail && FurTail) { mode = 7; outline = false; } // FurTwoPass：底下一层不透明裁切 + 上面半透明毛尖，不怕和裙子排序打架
             LilSetup(d, mode, outline);
 
@@ -235,6 +249,13 @@ namespace Kiko.EditorTools
                 d.SetColor("_OutlineColor", C(s, "_OutlineColor", Color.black));
             }
             Fluffy(s, d);
+            if (manukaHair)
+            {
+                // 改成白毛以后，原来偏棕的描边 / 边缘光换成冷灰
+                d.SetColor("_OutlineColor", new Color(0.56f, 0.59f, 0.70f, 1f));
+                if (d.GetFloat("_UseRim") > 0.5f) d.SetColor("_RimColor", new Color(0.75f, 0.80f, 0.95f, 1f));
+                d.SetFloat("_Cutoff", 0.5f);
+            }
         }
 
         // ---------- 头发 / 耳朵 / 尾巴的「蓬松感」（主人：看上去就是一块）----------
@@ -245,7 +266,7 @@ namespace Kiko.EditorTools
         static void Fluffy(Material s, Material d)
         {
             string n = s.name;
-            bool hair = n.Contains("_HAIR"), tail = n.Contains("FoxTail"), ear = n.Contains("CatEar");
+            bool hair = n.Contains("_HAIR") || n.StartsWith("Manuka_hair"), tail = n.Contains("FoxTail"), ear = n.Contains("CatEar");
             if (!hair && !tail && !ear) return;
             d.SetFloat("_UseShadow", 1);
             d.SetColor("_ShadowColor", new Color(0.87f, 0.89f, 0.96f, 1f));
@@ -327,6 +348,14 @@ namespace Kiko.EditorTools
                 AssetDatabase.Refresh();
             }
             AssetDatabase.ImportAsset(LocalVrm);
+            // 有外部贴图（Tools/manuka_to_kiko.py 导出 + 改色：白毛蓝眼）就换成 lilToon 材质 + 压缩贴图
+            if (File.Exists("Assets/LocalModels/Textures/index.json"))
+            {
+                _vrm = LocalVrm; _matDir = "Assets/LocalModels/Materials"; _texDir = "Assets/LocalModels/Textures";
+                AssetDatabase.Refresh();
+                ConvertCurrent();
+                _vrm = VrmPath; _matDir = Root + "/Materials"; _texDir = Root + "/Textures/vrm";
+            }
             CreateSceneFor(LocalVrm, LocalScene);
             EditorPrefs.SetBool("kiko.localModel", true);
             Debug.Log("[Kiko] 现在用马努卡：Play / 打包 都是 " + LocalScene);

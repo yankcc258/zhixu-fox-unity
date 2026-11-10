@@ -224,6 +224,7 @@ namespace Kiko
         string tailPrefix = "J_Opt_C_FoxTail";
         SkinnedMeshRenderer faceSmr;
         readonly Dictionary<string, int> faceBS = new();
+        [Tooltip("非 VRoid 模型的尾巴放大倍数")] public float localTailScale = 1.25f;
         float headTopOff = 0.26f; // 头骨到头顶（含耳朵）的高度
         void DetectModel()
         {
@@ -253,7 +254,13 @@ namespace Kiko
 
         void PoseTail()
         {
-            if (!vroid) return; // 买来的模型尾巴本来就摆好了
+            if (!vroid)
+            {
+                // 买来的模型尾巴本来就摆好了，只整条放大一点（希狐的大尾巴）
+                var root = vrm.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == tailPrefix);
+                if (root) root.localScale *= localTailScale;
+                return;
+            }
             var chain = vrm.GetComponentsInChildren<Transform>(true)
                 .Where(t => t.name.StartsWith(tailPrefix) && !t.name.Contains("_end"))
                 .OrderBy(t => t.name).ToList();
