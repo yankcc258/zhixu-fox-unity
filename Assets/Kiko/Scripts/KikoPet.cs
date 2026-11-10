@@ -103,6 +103,7 @@ namespace Kiko
             talk.pet = this;
             var json = Resources.Load<TextAsset>("kiko_acts");
             if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
+            if (!vroid && acts != null) foreach (var kv in KikoPose.StandSmall) acts.Stand[kv.Key] = kv.Value; // 小个子模型：手放低，别插进胸里
             // 屑狐狸表情（主人：表情太乖了）：覆盖/新增几种心情的表情，数据在 Resources/kiko_exp_kuzu.json
             var kuzu = Resources.Load<TextAsset>(vroid ? "kiko_exp_kuzu" : "kiko_exp_manuka");
             if (acts != null && kuzu)
@@ -227,6 +228,7 @@ namespace Kiko
         SkinnedMeshRenderer faceSmr;
         readonly Dictionary<string, int> faceBS = new();
         [Tooltip("非 VRoid 模型的尾巴放大倍数")] public float localTailScale = 1.25f;
+        [Tooltip("非 VRoid 模型：尾巴根部往上抬多少度 / 第 3~5 节每节往下弯多少度（从裙子上方绕过去）")] public float localTailLift = 28f, localTailCurl = 8f;
         float headTopOff = 0.26f; // 头骨到头顶（含耳朵）的高度
         void DetectModel()
         {
@@ -262,8 +264,22 @@ namespace Kiko
             if (!vroid)
             {
                 // 买来的模型尾巴本来就摆好了，只整条放大一点（希狐的大尾巴）
-                var root = vrm.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == tailPrefix);
-                if (root) root.localScale *= localTailScale;
+                var lc = vrm.GetComponentsInChildren<Transform>(true)
+                    .Where(t => t.name.StartsWith(tailPrefix) && !t.name.Contains("_end")).OrderBy(t => t.name).ToList();
+                // 尾巴是从裙腰上面伸出来的，原来的角度（斜向下 45°）正好扎进蓬蓬裙的后摆：加碰撞体会把后裙掀起来露出内衣（主人 11-10）。
+                // 改成根部先往后上方抬，中间几节再弯回来往下垂 → 从裙子上方绕过去，不碰后裙。弹簧骨在这之后才初始化，这就是它的静止形状。
+                void Bend(Transform b, Vector3 dir, float deg)
+                {
+                    if (b.childCount == 0) return;
+                    var d = b.GetChild(0).position - b.position;
+                    if (d.sqrMagnitude < 1e-8f) return;
+                    var nd = Vector3.RotateTowards(d, dir * d.magnitude, deg * Mathf.Deg2Rad, 0);
+                    b.rotation = Quaternion.FromToRotation(d, nd) * b.rotation;
+                }
+                if (lc.Count > 0) Bend(lc[0], Vector3.up, localTailLift);
+                for (int i = 2; i < Mathf.Min(5, lc.Count); i++) Bend(lc[i], Vector3.down, localTailCurl);
+                if (lc.Count > 0) lc[0].localScale *= localTailScale;
+                Log($"tail posed (local): {lc.Count} bones lift {localTailLift} curl {localTailCurl} scale {localTailScale}");
                 return;
             }
             var chain = vrm.GetComponentsInChildren<Transform>(true)
@@ -417,6 +433,7 @@ namespace Kiko
         void SetupTailSkirt()
         {
             if (tailSkirtPush <= 0) return;
+            if (!vroid) return; // 买来的模型：尾巴从裙子上方绕过去（PoseTail），不用碰撞体顶裙子
             var chain = vrm.GetComponentsInChildren<Transform>(true)
                 .Where(t => t.name.StartsWith(tailPrefix) && !t.name.Contains("_end"))
                 .OrderBy(t => t.name).ToList();
@@ -1369,6 +1386,44 @@ namespace Kiko
             cam.transform.SetPositionAndRotation(camPos, camRot);
             shooting = false;
             Log("shots → " + dir);
+        }
+
+        /// 快拍：每套衣服 正面 / 侧面 / 斜后 + 脚的特写（十几秒拍完，改衣服时对比用）。shapes：给这些身体形态键各拍一张脚
+        public void StartQuickShots(params string[] shapes) { if (!shooting) StartCoroutine(QuickShotSet(shapes)); }
+        System.Collections.IEnumerator QuickShotSet(string[] shapes)
+        {
+            shooting = true;
+            var dir = Application.isEditor ? Path.Combine(Application.dataPath, "..", "Shots") : Path.Combine(Application.persistentDataPath, "shots");
+            Directory.CreateDirectory(dir);
+            var camPos = cam.transform.position;
+            var camRot = cam.transform.rotation;
+            int keep = outfitIdx;
+            SetMood("idle", 0); action = null; StopMotion();
+            for (int i = 0; i < Mathf.Max(1, OutfitCount); i++)
+            {
+                if (OutfitCount > 0) Wear(i, false);
+                yield return new WaitForSeconds(1.5f);
+                foreach (var yaw in new[] { 0f, 90f, 145f })
+                {
+                    cam.transform.SetPositionAndRotation(Quaternion.Euler(0, yaw, 0) * camPos, Quaternion.Euler(0, 180 + yaw, 0));
+                    yield return new WaitForSeconds(0.3f);
+                    yield return Shot(dir, $"q{i}_{yaw:000}", 2f);
+                }
+                var fc = transform.position + Vector3.up * 0.12f;
+                cam.transform.SetPositionAndRotation(fc + Quaternion.Euler(0, 55, 0) * new Vector3(0, 0.05f, 0.9f), Quaternion.Euler(0, 235, 0));
+                yield return Shot(dir, $"q{i}_feet", 2f);
+                foreach (var sh in shapes)
+                {
+                    SetBodyShape(sh, 100);
+                    yield return new WaitForSeconds(0.2f);
+                    yield return Shot(dir, $"q{i}_feet_{sh}", 2f);
+                    SetBodyShape(sh, 0);
+                }
+            }
+            if (OutfitCount > 0) Wear(keep, false);
+            cam.transform.SetPositionAndRotation(camPos, camRot);
+            shooting = false;
+            Log("quick shots → " + dir);
         }
 
         System.Collections.IEnumerator Shot(string dir, string name, float res = 3f, float wide = 1f)

@@ -246,6 +246,9 @@ namespace Kiko.EditorTools
         [MenuItem("Kiko/9a 试：换下一套衣服（Play 里）")]
         static void TryOutfit() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) Debug.Log("[Kiko] 换衣服 → " + p.NextOutfit()); }
 
+        [MenuItem("Kiko/5a 快拍：每套衣服 正∕侧∕斜后∕脚（Play 里）")]
+        static void QuickShots() { var p = UnityEngine.Object.FindAnyObjectByType<KikoPet>(); if (EditorApplication.isPlaying && p) p.StartQuickShots("Foot_heel", "Foot_heel_high"); }
+
         [MenuItem("Kiko/9 试：睡觉 ∕ 叫醒（Play 里）")]
         static void TrySleep()
         {

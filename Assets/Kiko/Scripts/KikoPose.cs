@@ -30,6 +30,15 @@ namespace Kiko
             (HumanBodyBones.LeftLowerArm, 0, -95, 0), (HumanBodyBones.RightLowerArm, 0, 95, 0),
             (HumanBodyBones.LeftHand, 0, -15, 0), (HumanBodyBones.RightHand, 0, 15, 0));
 
+        // 买来的小个子模型（马努卡：上臂 18cm、躯干短、胸大）的站姿：原来那组角度手会抬到胸口、插进胸里（主人 11-10）。
+        // 按她的骨架重新解的：手腕在小腹前（比胸低 8cm 左右），手肘贴近身侧，右手叠在左手外面一点。
+        public static readonly Dictionary<HumanBodyBones, Vector3> StandSmall = new()
+        {
+            { HumanBodyBones.LeftUpperArm, new Vector3(27, -28, -43) }, { HumanBodyBones.RightUpperArm, new Vector3(23, 29, 46) },
+            { HumanBodyBones.LeftLowerArm, new Vector3(0, -106, 0) }, { HumanBodyBones.RightLowerArm, new Vector3(0, 100, 0) },
+            { HumanBodyBones.LeftHand, new Vector3(0, -11, -28) }, { HumanBodyBones.RightHand, new Vector3(0, 12, 30) },
+        };
+
         // 被拎着：手脚垂下、头往后仰一点（vrm.js Hang 的第一帧附近）
         public static readonly Dictionary<HumanBodyBones, Vector3> Dangle = Make(
             (HumanBodyBones.LeftUpperArm, 0, 0, -72), (HumanBodyBones.RightUpperArm, 0, 0, 72),
