@@ -19,7 +19,6 @@ namespace Kiko
 
         public static bool Apply(Vrm10Instance vrm, GameObject outfit, Action<string> log, string[] hide)
         {
-            Springs.Clear();
             var body = new Dictionary<string, Transform>();
             foreach (var t in vrm.GetComponentsInChildren<Transform>(true)) if (!body.ContainsKey(t.name)) body[t.name] = t;
             var smrs = outfit.GetComponentsInChildren<SkinnedMeshRenderer>(true);

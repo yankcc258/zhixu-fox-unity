@@ -250,8 +250,12 @@ namespace Kiko
                 headTopOff = Mathf.Clamp(top - head.position.y + 0.02f, 0.2f, 0.5f);
             }
             // 换装：场景里有 KikoOutfit（BOOTH 买的对应衣服）就穿上，原来的制服藏起来
+            // 底层：模型自带的内衣（VRM 里没导出，从原版 FBX 拿，场景里叫 KikoBase）——主人 11-10：换衣服时内衣当底层，别让衣服直接套在光身子上
+            KikoDress.Springs.Clear();
+            var baseLayer = GameObject.Find("KikoBase");
+            if (baseLayer) KikoDress.Apply(vrm, baseLayer, Log, new string[0]);
             var outfit = GameObject.Find("KikoOutfit");
-            if (outfit) dressed = KikoDress.Apply(vrm, outfit, Log, new[] { "Manuka_costume", "Manuka_underwear" });
+            if (outfit) dressed = KikoDress.Apply(vrm, outfit, Log, new[] { "Manuka_costume", "Manuka_underwear_stocking" });
             Log($"model: 非 VRoid（tail {tailPrefix}，脸 {(faceSmr ? faceSmr.name : "?")} {faceBS.Count} 形态键，头顶 +{headTopOff:F2}m）");
         }
 

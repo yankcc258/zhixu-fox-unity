@@ -357,6 +357,7 @@ namespace Kiko.EditorTools
                 _vrm = VrmPath; _matDir = Root + "/Materials"; _texDir = Root + "/Textures/vrm";
             }
             CreateSceneFor(LocalVrm, LocalScene);
+            AddBaseLayer();
             AddOutfit();
             EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
             EditorPrefs.SetBool("kiko.localModel", true);
@@ -365,6 +366,41 @@ namespace Kiko.EditorTools
 
         // 衣服：BOOTH 买的马努卡对应衣服（本机 Assets/Demicrown/…，不进仓库）。预制体实例放进场景叫 KikoOutfit，运行时 KikoDress 把它穿到身上。
         // 材质换成我们自己的 lilToon 裁切材质（原来是半透明模式，在透明窗口里会透出桌面）；FBX 打开 Read/Write（运行时要改 bindpose）
+        // 底层内衣：原版 MANUKA.fbx 里有 Manuka_underwear_bra / _panty 两个网格（VRM 里没有）。把 FBX 拷进 LocalModels，实例放进场景叫 KikoBase，
+        // 只留这两个网格，材质用已经换好的衣服材质（内衣画在 Manuka_costume 那张贴图上）；运行时 KikoDress 把它当「最里面一层衣服」穿上。
+        const string BaseFbx = "Assets/LocalModels/manuka_base.fbx";
+        static void AddBaseLayer()
+        {
+            if (!File.Exists(BaseFbx))
+            {
+                var from = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.DesktopDirectory), "to luna");
+                var src = Directory.Exists(from) ? Directory.GetFiles(from, "MANUKA.fbx", SearchOption.AllDirectories).FirstOrDefault() : null;
+                if (src == null) { Debug.LogWarning("[Kiko] 没找到 MANUKA.fbx，没有内衣底层"); return; }
+                File.Copy(src, BaseFbx);
+                AssetDatabase.Refresh();
+            }
+            if (AssetImporter.GetAtPath(BaseFbx) is ModelImporter mi && (!mi.isReadable || mi.materialImportMode != ModelImporterMaterialImportMode.None))
+            {
+                mi.isReadable = true; mi.materialImportMode = ModelImporterMaterialImportMode.None; mi.importAnimation = false;
+                mi.SaveAndReimport();
+            }
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BaseFbx);
+            var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/LocalModels/Materials/Manuka_costume_mtoon.mat");
+            if (!prefab || !mat) { Debug.LogWarning("[Kiko] 内衣底层：缺 FBX 或衣服材质"); return; }
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            go.name = "KikoBase";
+            int kept = 0;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+            {
+                bool keep = r is SkinnedMeshRenderer && (r.name.Contains("underwear_bra") || r.name.Contains("underwear_panty"));
+                if (!keep) { UnityEngine.Object.DestroyImmediate(r.gameObject); continue; }
+                r.sharedMaterials = r.sharedMaterials.Select(_ => mat).ToArray();
+                kept++;
+            }
+            Debug.Log($"[Kiko] 内衣底层放进场景了（{kept} 个网格）");
+        }
+
         const string OutfitDir = "Assets/Demicrown/Cyber Maid_Manuka";
         static void AddOutfit()
         {
