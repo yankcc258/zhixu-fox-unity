@@ -1243,7 +1243,8 @@ namespace Kiko
         System.Collections.IEnumerator ShotSet()
         {
             shooting = true;
-            var dir = Path.Combine(Application.persistentDataPath, "shots");
+            // 编辑器里存到工程文件夹的 Shots/（不进 git），方便拿出来看
+            var dir = Application.isEditor ? Path.Combine(Application.dataPath, "..", "Shots") : Path.Combine(Application.persistentDataPath, "shots");
             Directory.CreateDirectory(dir);
             Log("shots start → " + dir);
             var camPos = cam.transform.position;
@@ -1267,7 +1268,7 @@ namespace Kiko
             }
             // 表情特写
             var head = rig[HumanBodyBones.Head];
-            foreach (var m in new[] { "idle", "happy", "smug", "surprised", "angry", "pout", "sleepy", "pat", "excited", "smirk", "bleh", "scheme", "tease" })
+            foreach (var m in new[] { "idle", "happy", "smug", "surprised", "angry", "pout", "sleepy", "pat", "excited", "smirk", "bleh", "scheme", "tease", "meh", "dangle", "hot" })
             {
                 cam.transform.SetPositionAndRotation(camPos, camRot);
                 SetMood(m, 0); Calm();
