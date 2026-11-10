@@ -13,6 +13,8 @@ namespace Kiko
 {
     [Serializable] class KikoLineGroup { public string key; public string[] lines; }
     [Serializable] class KikoLineData { public KikoLineGroup[] groups; }
+    [Serializable] class KikoJaPair { public string zh; public string ja; }
+    [Serializable] class KikoJaData { public KikoJaPair[] pairs; }
 
     public class KikoTalk : MonoBehaviour
     {
@@ -44,6 +46,11 @@ namespace Kiko
             if (ta)
                 foreach (var g in JsonUtility.FromJson<KikoLineData>(ta.text).groups)
                     lines[g.key] = g.lines;
+            // 本地台词的日语版（只给声音用，气泡还是中文）：Resources/kiko_lines_ja.json，按中文原句查
+            var tj = Resources.Load<TextAsset>("kiko_lines_ja");
+            if (tj)
+                foreach (var p in JsonUtility.FromJson<KikoJaData>(tj.text).pairs)
+                    if (!string.IsNullOrEmpty(p.zh)) ja[p.zh] = p.ja ?? "";
             startedAt = Time.time;
             ScheduleChat();
             KikoPet.Log($"talk: {lines.Count} line groups, chatty {Chatty}, name {Name}");
@@ -52,6 +59,8 @@ namespace Kiko
         // ---------- 台词 ----------
         string Pick(string key) => lines.TryGetValue(key, out var a) && a.Length > 0 ? a[Random.Range(0, a.Length)] : null;
 
+        readonly Dictionary<string, string> ja = new Dictionary<string, string>();
+        string Fill(string s, bool forJa) => forJa ? Fill(s.Replace("{s}", "ジーシュー")) : Fill(s);
         string Fill(string s)
         {
             var now = DateTime.Now;
@@ -79,7 +88,8 @@ namespace Kiko
         }
 
         /// delay > 0：先让正在做的反应（戳一下的缩、落地）做完再换表情动作
-        public void Say(string line, string mood, float sec, float delay = 0)
+        /// voice：这句话的日语（知序回复带的 ja）；本地台词不用给，自己查 kiko_lines_ja
+        public void Say(string line, string mood, float sec, float delay = 0, string voice = null)
         {
             if (line == null) return;
             text = Fill(line);
@@ -91,7 +101,18 @@ namespace Kiko
                 else pet.SetMood(mood, sec);
             }
             KikoPet.Log("say: " + text);
-            if (pet.Voice) pet.Voice.Speak(text); // 出声（KikoVoice.cs；语音服务没开就只有气泡）
+            // 出声（KikoVoice.cs）：有日语版就念日语（参考音频是日语，口音自然），没有就照气泡念中文
+            if (pet.Voice)
+            {
+                string say = null;
+                if (pet.Voice.Japanese)
+                {
+                    if (!string.IsNullOrWhiteSpace(voice)) say = voice;
+                    else if (ja.TryGetValue(line, out var j)) say = Fill(j, true);
+                }
+                if (say != null) pet.Voice.Speak(say, "ja");
+                else pet.Voice.Speak(text);
+            }
         }
 
         /// 声音还没放完：气泡至少再留 sec 秒

@@ -17,7 +17,7 @@ namespace Kiko
 {
     [Serializable] class BrainConfig { public string @base = ""; public string clientId = ""; public string clientSecret = ""; }
     [Serializable] class ChatReq { public string message; }
-    [Serializable] class ChatRes { public string reply; public string mood; public string outfit; public string error; }
+    [Serializable] class ChatRes { public string reply; public string ja; public string mood; public string outfit; public string error; }
     [Serializable] class EventReq { public string text; }
     [Serializable] class GrudgeReq { public string type; }
     [Serializable] class PayReq { public string how; }
@@ -98,7 +98,7 @@ namespace Kiko
             {
                 MoodMap.TryGetValue(res.mood ?? "", out var mood);
                 float sec = Mathf.Clamp(3f + res.reply.Length * 0.12f, 4f, 14f);
-                talk.Say(res.reply, mood, sec);
+                talk.Say(res.reply, mood, sec, 0, res.ja); // ja：这句话的日语（给声音用），知序没给就念中文
                 KikoPet.Log($"brain: chat ok ({res.mood}) {res.reply.Length} 字");
             }
             else
@@ -131,7 +131,7 @@ namespace Kiko
             if (r.result == UnityWebRequest.Result.Success && !string.IsNullOrEmpty(res?.reply))
             {
                 MoodMap.TryGetValue(res.mood ?? "", out var mood);
-                talk.Say(res.reply, mood, Mathf.Clamp(3f + res.reply.Length * 0.12f, 5f, 12f));
+                talk.Say(res.reply, mood, Mathf.Clamp(3f + res.reply.Length * 0.12f, 5f, 12f), 0, res.ja);
                 KikoPet.Log("brain: muse ok");
             }
             else

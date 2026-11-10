@@ -4,6 +4,7 @@
 //  · 新的一句会顶掉上一句（还在合成的取消，正在放的停下）——气泡换了，声音也跟着换。
 //  · 括号里的动作描写、表情符号不念；念不出字的（「……」）不送。
 //  · 短句存在 persistentDataPath/voice/ 里，下次同一句直接放，不用引擎（戳她的台词来回就那些）。
+//  · 有日语版的句子念日语、气泡还是中文：本地台词查 Resources/kiko_lines_ja.json，知序的回复看它带不带 ja 字段；没有日语版就照气泡念中文。
 //  · 右键菜单「出声说话」开关，存 PlayerPrefs kiko.voice（默认开）；关掉时引擎也关。
 // 设置：%APPDATA%\ZhixuFox\voice.json（第一次启动自动建）——GPT-SoVITS 装在哪、参考音频、参考文本、多久没说话就关引擎……
 // 参考音频找的顺序：voice.json 的 refAudio → %APPDATA%\ZhixuFox\reference.wav → 工程里的 Tools/GptSovitsVoice/reference.wav。
@@ -29,6 +30,7 @@ namespace Kiko
         public string promptText = "また、東寺のように、五大明王と呼ばれる、主要な明王の中央に配されることも多い";
         public string promptLang = "ja";
         public string textLang = "auto"; // 中文台词里夹一点日语（こんこん）和英文（Yank）→ 让引擎自己分语种
+        public bool japanese = true;     // 有日语版的句子念日语（气泡还是中文）；false = 全部照气泡念中文
         public int port = 9880;
         public float idleMinutes = 10;
         public int sampleSteps = 32;
@@ -71,6 +73,7 @@ namespace Kiko
         /// 现在嘴该张多大（0–1），KikoPet.UpdateFace 每帧读
         public float Mouth { get; private set; }
         public bool Speaking => source && source.isPlaying;
+        public bool Japanese => cfg.japanese;
         public bool Enabled
         {
             get => PlayerPrefs.GetInt("kiko.voice", 1) == 1;
@@ -255,13 +258,14 @@ namespace Kiko
         }
 
         // ---------- 说 ----------
-        public void Speak(string line)
+        /// lang：这句话的语种（"ja" = 日语里可以夹英文）；不给就用 voice.json 的 textLang
+        public void Speak(string line, string lang = null)
         {
             Stop();
             if (!Enabled || !isActiveAndEnabled) return;
             var t = Clean(line);
             if (t.Length == 0) return;
-            StartCoroutine(SpeakCo(t, gen));
+            StartCoroutine(SpeakCo(t, string.IsNullOrEmpty(lang) ? cfg.textLang : lang, gen));
         }
 
         public void Stop()
@@ -272,17 +276,17 @@ namespace Kiko
             Mouth = 0;
         }
 
-        string CachePath(string t)
+        string CachePath(string t, string lang)
         {
             using var sha = SHA1.Create();
-            var h = sha.ComputeHash(Encoding.UTF8.GetBytes($"{cfg.promptText}|{cfg.textLang}|{cfg.sampleSteps}|{cfg.topK}|{cfg.speed}|{t}"));
+            var h = sha.ComputeHash(Encoding.UTF8.GetBytes($"{cfg.promptText}|{lang}|{cfg.sampleSteps}|{cfg.topK}|{cfg.speed}|{t}"));
             return Path.Combine(dataDir, "voice", BitConverter.ToString(h, 0, 10).Replace("-", "") + ".wav");
         }
 
-        IEnumerator SpeakCo(string t, int id)
+        IEnumerator SpeakCo(string t, string lang, int id)
         {
             byte[] wav = null;
-            string file = CachePath(t);
+            string file = CachePath(t, lang);
             float asked = Time.realtimeSinceStartup;
             if (File.Exists(file))
             {
@@ -304,7 +308,7 @@ namespace Kiko
                 var mine = cts = new CancellationTokenSource();
                 var req = new TtsReq
                 {
-                    text = t, text_lang = cfg.textLang, ref_audio_path = refPath, prompt_lang = cfg.promptLang, prompt_text = cfg.promptText,
+                    text = t, text_lang = lang, ref_audio_path = refPath, prompt_lang = cfg.promptLang, prompt_text = cfg.promptText,
                     top_k = cfg.topK, speed_factor = cfg.speed, sample_steps = cfg.sampleSteps,
                 };
                 var body = new StringContent(JsonUtility.ToJson(req), Encoding.UTF8, "application/json");
@@ -338,7 +342,7 @@ namespace Kiko
                 }
                 wav = data;
                 told = false;
-                KikoPet.Log($"voice: 合成 {t.Length} 字 {Time.realtimeSinceStartup - t0:F1}s {wav.Length / 1024}KB");
+                KikoPet.Log($"voice: 合成 {lang} {t.Length} 字 {Time.realtimeSinceStartup - t0:F1}s {wav.Length / 1024}KB");
                 if (t.Length <= 80)
                     try { Directory.CreateDirectory(Path.GetDirectoryName(file)); File.WriteAllBytes(file, wav); } catch { }
                 // 合成好了但气泡已经换了 / 等太久了（引擎刚启动）：存下来，这次不放
