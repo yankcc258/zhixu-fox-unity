@@ -315,7 +315,17 @@ namespace Kiko.EditorTools
         [MenuItem("Kiko/M1 换成马努卡（LocalModels／manuka.vrm）")]
         public static void UseManuka()
         {
-            if (!File.Exists(LocalVrm)) { Debug.LogError("[Kiko] 没有 " + LocalVrm); return; }
+            if (!File.Exists(LocalVrm))
+            {
+                // 第一次：从桌面「to luna」里解压出来的文件夹把 MANUKA.vrm 拷进工程（Assets/LocalModels 不进 git）
+                var from = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.DesktopDirectory), "to luna");
+                var src = Directory.Exists(from) ? Directory.GetFiles(from, "MANUKA.vrm", SearchOption.AllDirectories).FirstOrDefault() : null;
+                if (src == null) { Debug.LogError("[Kiko] 没有 " + LocalVrm + "，桌面 to luna 里也没找到 MANUKA.vrm"); return; }
+                Directory.CreateDirectory(Path.GetDirectoryName(LocalVrm));
+                File.Copy(src, LocalVrm);
+                Debug.Log("[Kiko] 拷贝 " + src + " → " + LocalVrm);
+                AssetDatabase.Refresh();
+            }
             AssetDatabase.ImportAsset(LocalVrm);
             CreateSceneFor(LocalVrm, LocalScene);
             EditorPrefs.SetBool("kiko.localModel", true);
