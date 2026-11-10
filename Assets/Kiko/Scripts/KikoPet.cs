@@ -1427,6 +1427,105 @@ namespace Kiko
             Log("quick shots → " + dir);
         }
 
+        /// 各个模式过一遍并拍下来（换模型以后验证用，一分半左右）：站 / 走 / 坐地 / 睡 / 趴任务栏 / 壁纸坐姿 / 变小去窗口上坐、躺
+        public void StartModeShots() { if (!shooting && !modeShots) StartCoroutine(ModeShotSet()); }
+        bool modeShots;
+        System.Collections.IEnumerator ModeShotSet()
+        {
+            modeShots = true;
+            KikoBrain.Mute = true; // 别把试出来的「睡着了、趴任务栏」写进共用记忆
+            var dir = Application.isEditor ? Path.Combine(Application.dataPath, "..", "Shots") : Path.Combine(Application.persistentDataPath, "shots");
+            Directory.CreateDirectory(dir);
+            void Floor()
+            {
+                var w = Win32.WindowRect; var wa = Win32.WorkAreaAt(new Vector2Int(w.x + w.width / 2, w.y + w.height / 2));
+                Win32.MoveWindow(new Vector2Int(Mathf.Max(w.x, wa.xMin + wa.width / 3), wa.yMax - w.height));
+            }
+            void Stand(float blend) { rest = Rest.None; action = null; StopMotion(blend); yawGoal = 0; SetMood("idle", 0); Touch(); }
+            System.Collections.IEnumerator Two(string name) // 正面 + 转 40° 各一张
+            {
+                yield return Shot(dir, name, 2f);
+                yawGoal = 40;
+                yield return new WaitForSeconds(0.9f);
+                yield return Shot(dir, name + "_q", 2f);
+                yawGoal = 0;
+            }
+            Floor(); Stand(0.3f);
+            yield return new WaitForSeconds(1.2f);
+            yield return Shot(dir, "m_stand", 2f);
+            if (StartWalk())
+            {
+                yield return new WaitForSeconds(1.6f);
+                yield return Shot(dir, "m_walk_a", 2f);
+                yield return new WaitForSeconds(0.3f);
+                yield return Shot(dir, "m_walk_b", 2f);
+                StopWalk();
+                yield return new WaitForSeconds(1.2f);
+            }
+            else Log("mode shots: 走路没开始");
+            int si = 0;
+            foreach (var m in SitSet.Where(motions.ContainsKey))
+            {
+                action = null; Act(m); rest = Rest.Sit; restUntil = Time.time + 60f;
+                yield return new WaitForSeconds(5.5f);
+                yield return Two($"m_sit{si++}");
+                Stand(0.6f);
+                yield return new WaitForSeconds(1.3f);
+            }
+            foreach (var m in SleepSet.Where(motions.ContainsKey))
+            {
+                SetMood("sleep", 0); Act(m); blendDur = 1.2f; rest = Rest.Sleep; restUntil = float.MaxValue;
+                yield return new WaitForSeconds(3.5f);
+                yield return Two("m_sleep");
+                Stand(1.0f);
+                yield return new WaitForSeconds(1.6f);
+            }
+            Floor();
+            if (EnterBust(120))
+            {
+                yield return new WaitForSeconds(3f);
+                yield return Shot(dir, "m_bust", 2f);
+                foreach (var (a, t) in new[] { ("PeekPat", 0.8f), ("PeekWave", 1.0f), ("PeekCheek", 0.7f), ("PeekSleep", 1.6f) })
+                {
+                    Act(a);
+                    yield return new WaitForSeconds(t);
+                    yield return Shot(dir, "m_bust_" + a, 2f);
+                    action = null;
+                    yield return new WaitForSeconds(1.2f);
+                }
+                ExitBust();
+                yield return new WaitForSeconds(1.6f);
+            }
+            else Log("mode shots: 趴任务栏没开始");
+            foreach (var yaw in new[] { 18f, 60f })
+            {
+                DebugLedgeSit(yaw);
+                yield return new WaitForSeconds(5.5f);
+                yield return Shot(dir, $"m_ledge_{yaw:00}", 2f);
+                Stand(0.6f);
+                yield return new WaitForSeconds(1.3f);
+            }
+            foreach (var goal in new[] { "sit", "lie" })
+            {
+                Floor();
+                DebugPrefer = "window";
+                if (!EnterMini(goal)) { Log("mode shots: 变小没开始 " + goal); continue; }
+                for (int i = 0; i < 16; i++)
+                {
+                    yield return new WaitForSeconds(1.0f);
+                    yield return Shot(dir, $"m_mini_{goal}_{i:00}", 2f);
+                }
+                ComeBack();
+                yield return new WaitForSeconds(4.5f);
+                yield return Shot(dir, $"m_mini_{goal}_back", 2f);
+            }
+            DebugPrefer = null;
+            Stand(0.5f);
+            KikoBrain.Mute = false;
+            modeShots = false;
+            Log("mode shots → " + dir);
+        }
+
         System.Collections.IEnumerator Shot(string dir, string name, float res = 3f, float wide = 1f)
         {
             yield return new WaitForEndOfFrame();
