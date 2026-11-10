@@ -638,7 +638,7 @@ namespace Kiko
             if (!RefreshGoal()) { RejectGoal(); return; }
             to.y = goalPlat.y;
             var w = Win32.WindowRect;
-            jumpFrom = new Vector2(w.x + w.width / 2f, w.yMax);
+            jumpFrom = new Vector2(FeetX, w.yMax); // Match the integer foot anchor used by approach planning.
             jumpTo = to;
             float dx = to.x - jumpFrom.x, up = jumpFrom.y - to.y;
             if (KikoHop.AlreadyThere(dx, up))
