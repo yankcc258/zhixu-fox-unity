@@ -13,13 +13,14 @@ Setup
 3. Run Start-Voice.ps1 -GptSovitsRoot <installation-directory>.
    Dependencies come from the installation's bundled Python (gradio_client 0.14.0
    was tested). This adapter targets the installed 20250422fix WebUI API.
-4. Add KikoVoice to a scene object; AudioSource is added automatically.
-   In Unity Play mode, use its component menu: Test Japanese voice.
-5. Once the chat integration exists, call Speak(replyText) after a completed reply.
-   Set language to 日文 for Japanese or 中文 for Chinese. DeepSeek must supply the
-   matching language; this service does not translate replies.
-   Subscribe to SpeakingChanged for future animation integration.
-   Call StopSpeaking when interrupting a reply.
+4. Nothing to add in Unity: KikoPet attaches KikoVoice at startup, and every
+   speech bubble (KikoTalk.Say: local lines, chat replies, muse) is sent here.
+   A new bubble replaces the previous voice. Stage directions in brackets and
+   emoji are not spoken. Short lines are cached under persistentDataPath/voice.
+   The mouth follows the audio level. Right-click menu: 出声说话 turns it off/on.
+5. KikoVoice sends language 多语种混合 (Chinese lines with some Japanese and
+   English). If this service is not running, she only shows bubbles and retries
+   after 20 seconds; see pet.log lines starting with "voice:".
 
 API
 POST http://127.0.0.1:9876/tts
@@ -30,8 +31,9 @@ GET /health only checks the adapter, not the upstream model service.
 The server binds loopback only and rejects browser Origin headers. Use native
 Unity networking or a later explicit local bridge, not direct website fetch.
 The website-to-desktop transport and authentication remain to be designed.
-For a localhost HTTP development endpoint, Unity may require Allow downloads
-over HTTP under Player Settings. Do not expose these services to the internet.
+KikoVoice uses System.Net.Http for this loopback endpoint, so Unity's
+"Allow downloads over HTTP" setting is not involved. Do not expose these
+services to the internet.
 
 The model weights are the existing s1v3.ckpt + gsv-v4-pretrained/s2Gv4.pth.
 No new model has been trained. Voice identity comes from the reference plus
@@ -42,7 +44,7 @@ before enabling continuous chat. The Unity queue is bounded and plays sequential
 Validation on the user's Windows machine:
 - Python -> installed WebUI synthesis: passed, 3.56-second Japanese WAV.
 - HTTP POST -> bridge -> WebUI -> WAV: passed.
-- Unity compilation/playback and live DeepSeek integration: not yet tested.
+- Unity compilation/playback with live chat replies: see Docs or pet.log.
 
 Audio credit: つくよみちゃんコーパス Vol.1 / CV.夢前黎
 Source and terms: https://tyc.rei-yumesaki.net/material/corpus/

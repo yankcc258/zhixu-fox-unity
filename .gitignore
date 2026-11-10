@@ -49,3 +49,6 @@ crashlytics-build.properties
 # BOOTH 买的衣服（Beach maid for Manuka，relee）
 /Assets/relee/
 /Assets/relee.meta
+
+# 语音：参考音频和试听文件只在本机（つくよみちゃんコーパス 不允许再分发原始音频）
+/Tools/GptSovitsVoice/*.wav

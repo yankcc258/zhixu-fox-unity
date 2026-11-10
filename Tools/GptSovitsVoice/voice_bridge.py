@@ -19,19 +19,29 @@ def synthesize(text, language='日文'):
         raise ValueError('Unsupported language.')
     with LOCK:
         if CLIENT is None:
-            CLIENT = Client('http://127.0.0.1:9872/', verbose=False)
-            CLIENT.predict(gpt_path=PROFILE['gpt_model_path'], api_name='/change_gpt_weights')
-            CLIENT.predict(sovits_path=PROFILE['sovits_model_path'], prompt_language='日文',
+            # Only keep the client once both weights are loaded: if the WebUI is
+            # not up yet, the next request starts over instead of using wrong models.
+            client = Client('http://127.0.0.1:9872/', verbose=False)
+            client.predict(gpt_path=PROFILE['gpt_model_path'], api_name='/change_gpt_weights')
+            client.predict(sovits_path=PROFILE['sovits_model_path'], prompt_language='日文',
                            text_language=language, api_name='/change_sovits_weights')
-        result = CLIENT.predict(
-            ref_wav_path=file(str(ROOT / PROFILE['reference_audio_path'])),
-            prompt_text=PROFILE['prompt_text'], prompt_language='日文',
-            text=text, text_language=language, how_to_cut=PROFILE['webui_text_split_label'],
-            top_k=PROFILE['top_k'], top_p=PROFILE['top_p'], temperature=PROFILE['temperature'],
-            ref_free=False, speed=PROFILE['speed_factor'], if_freeze=False, inp_refs=None,
-            sample_steps=PROFILE['sample_steps'], if_sr=False,
-            pause_second=PROFILE['webui_sentence_pause_seconds'], api_name='/get_tts_wav')
-        return Path(result).read_bytes()
+            CLIENT = client
+        try:
+            return _predict(text, language)
+        except Exception:
+            CLIENT = None  # WebUI restarted or dropped: reconnect on the next request
+            raise
+
+def _predict(text, language):
+    result = CLIENT.predict(
+        ref_wav_path=file(str(ROOT / PROFILE['reference_audio_path'])),
+        prompt_text=PROFILE['prompt_text'], prompt_language='日文',
+        text=text, text_language=language, how_to_cut=PROFILE['webui_text_split_label'],
+        top_k=PROFILE['top_k'], top_p=PROFILE['top_p'], temperature=PROFILE['temperature'],
+        ref_free=False, speed=PROFILE['speed_factor'], if_freeze=False, inp_refs=None,
+        sample_steps=PROFILE['sample_steps'], if_sr=False,
+        pause_second=PROFILE['webui_sentence_pause_seconds'], api_name='/get_tts_wav')
+    return Path(result).read_bytes()
 
 class Handler(BaseHTTPRequestHandler):
     def reply(self, status, data, mime='application/json'):

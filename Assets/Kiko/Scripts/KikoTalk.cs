@@ -1,7 +1,7 @@
 // 希狐说话：气泡 + 台词 + 右键菜单（移植 Tauri 版 pet.js 的 say / poke / chat / 菜单，台词是 feature/kiko-fox 的 lines.js）。
 // 台词表：Resources/kiko_lines.json（Tools/export_lines.js 从 lines.js 导出）。
 // 气泡用 IMGUI 画在窗口顶上留出来的空白里（KikoPet.bubbleSpace），透明窗口里只有气泡本身不透明，所以只有气泡挡鼠标。
-// 设置存在 PlayerPrefs：kiko.name（称呼，默认 Yank）、kiko.chatty（0 安静 / 1 少 / 2 正常 / 3 多）。
+// 设置存在 PlayerPrefs：kiko.name（称呼，默认 Yank）、kiko.chatty（0 安静 / 1 少 / 2 正常 / 3 多）、kiko.voice（出声说话，默认开）。
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -91,6 +91,13 @@ namespace Kiko
                 else pet.SetMood(mood, sec);
             }
             KikoPet.Log("say: " + text);
+            if (pet.Voice) pet.Voice.Speak(text); // 出声（KikoVoice.cs；语音服务没开就只有气泡）
+        }
+
+        /// 声音还没放完：气泡至少再留 sec 秒
+        public void Hold(float sec)
+        {
+            if (text != null) until = Mathf.Max(until, Time.time + sec);
         }
 
         IEnumerator MoodLater(string mood, float sec, float delay)
@@ -105,7 +112,11 @@ namespace Kiko
             if (l != null) Say(l, mood ?? MoodFor(l), sec, delay);
         }
 
-        public void Hide() => text = null;
+        public void Hide()
+        {
+            text = null;
+            if (pet.Voice) pet.Voice.Stop();
+        }
 
         // ---------- 事件 ----------
         public void Hello() => SayKey("hello", "wave", 5f);
@@ -260,6 +271,7 @@ namespace Kiko
                 (4, pet.InMini ? "找个窗口坐会儿" : "坐下歇会儿（变小去窗口上坐）", false), (7, pet.InBust ? "从任务栏上起来" : "趴在任务栏上（大头）", false),
                 (6, "走走", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (8, "变回来", false),
                 (9, pet.OutfitCount > 1 ? "换衣服（现在：" + pet.OutfitLabel + "）" : "换衣服（衣柜是空的）", false), (0, "-", false),
+                (14, "出声说话", pet.Voice && pet.Voice.Enabled), (0, "-", false),
                 (13, "话多一点", c == 3), (12, "正常", c == 2), (11, "话少一点", c == 1), (10, "安静", c == 0), (0, "-", false),
                 (20, "退出", false));
             KikoPet.Log("menu → " + id);
@@ -312,6 +324,12 @@ namespace Kiko
                 case 10: case 11: case 12: case 13:
                     Chatty = id - 10;
                     Say(Chatty == 0 ? "好吧，我安静待着……有事戳我。" : Chatty == 3 ? "那我可要多嘴了哦，{n}～" : "知道啦。", Chatty == 0 ? "meh" : "smug", 3f);
+                    break;
+                case 14:
+                    if (!pet.Voice) break;
+                    pet.Voice.Enabled = !pet.Voice.Enabled;
+                    if (pet.Voice.Enabled) Say("啊——啊——。听得见吗，{n}？", "smug", 4f);
+                    else Say("好，我闭嘴，只冒泡泡。", "meh", 3f);
                     break;
                 case 20: StartCoroutine(Quit()); break;
             }

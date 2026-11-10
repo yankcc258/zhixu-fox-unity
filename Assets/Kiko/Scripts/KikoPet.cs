@@ -98,6 +98,8 @@ namespace Kiko
             talk = gameObject.AddComponent<KikoTalk>();
             Brain = gameObject.AddComponent<KikoBrain>();
             Brain.pet = this; Brain.talk = talk;
+            Voice = gameObject.AddComponent<KikoVoice>();
+            Voice.pet = this; Voice.talk = talk;
             talk.pet = this;
             var json = Resources.Load<TextAsset>("kiko_acts");
             if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
@@ -748,6 +750,7 @@ namespace Kiko
         };
         public bool Sleeping => rest == Rest.Sleep || MiniAsleep;
         public KikoBrain Brain { get; private set; }
+        public KikoVoice Voice { get; private set; }
         public bool Resting => rest != Rest.None;
         static bool Night { get { int h = System.DateTime.Now.Hour; return h >= 23 || h < 6; } }
 
@@ -1194,7 +1197,27 @@ namespace Kiko
                 else ex.SetWeight(Key(kv.Key), Mathf.Clamp01(w));
             }
             if (!expNow.ContainsKey("blink")) ex.SetWeight(ExpressionKey.Blink, blink);
+            // 出声说话时嘴跟着音量张合（KikoVoice.Mouth）：模型有 VRM 的「aa」表情就用它，没有就找脸上的「あ」形态键
+            float vm = Voice ? Voice.Mouth : 0;
+            if (vm > 0.001f || mouthWas)
+            {
+                if (mouthBS == -2)
+                {
+                    mouthVrm = vrm.Vrm && vrm.Vrm.Expression != null && vrm.Vrm.Expression.Aa != null;
+                    mouthBS = -1;
+                    if (!mouthVrm)
+                        foreach (var n in new[] { "vrc.v_aa", "あ", "mouth_a", "mouth_wa" })
+                            if (faceBS.TryGetValue(n, out int mi)) { mouthBS = mi; break; }
+                    Log($"voice mouth: {(mouthVrm ? "VRM aa" : mouthBS >= 0 ? "形态键 #" + mouthBS : "没找到张嘴的形态键")}");
+                }
+                expNow.TryGetValue("aa", out var a0);
+                if (mouthVrm) ex.SetWeight(ExpressionKey.Aa, Mathf.Clamp01(Mathf.Max(a0, vm * 0.8f)));
+                else if (mouthBS >= 0) faceSmr.SetBlendShapeWeight(mouthBS, Mathf.Clamp01(vm) * 80f);
+                mouthWas = vm > 0.001f;
+            }
         }
+        int mouthBS = -2;
+        bool mouthVrm, mouthWas;
 
         // ---------- 编辑器试玩用：数字键换心情，F1 依次播所有动作 ----------
 #if UNITY_EDITOR
