@@ -536,7 +536,7 @@ namespace Kiko
                 case "lie":
                 {
                     // 任务栏上优先趴着（EJ_17）
-                    var m = onH == IntPtr.Zero && motions.ContainsKey(MiniLieSet[1]) && Random.value < 0.6f ? MiniLieSet[1] : PickMotion(MiniLieSet);
+                    var m = onH == IntPtr.Zero && motions.ContainsKey(MiniLieSet[1]) && Random.value < 0.6f ? MiniLieSet[1] : PickMotion(SkirtOn ? MiniLieSet.Take(2).ToArray() : MiniLieSet); // 穿短蓬蓬裙不团着睡（裙子整个翻开）
                     if (m == null) goto default;
                     sec = Night ? 3600f : Random.Range(120f, 300f);
                     Act(m);
