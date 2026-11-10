@@ -2,7 +2,7 @@
 //  · 衣服网格的骨骼按名字换成身体的骨骼；身体里没有的骨骼（裙摆、带子…）整串挂到身体对应的父骨骼下面
 //  · 衣服骨架是 FBX 原样（骨骼带旋转），VRM 的骨骼是规范化过的（T-pose、旋转清零）→ 先把衣服骨架摆到和身体重合，再重算每根骨骼的 bindpose
 //  · 挂过来的裙摆/带子骨骼链做成 VRM 弹簧骨（在 Awake 里做，Vrm10Instance.Start 建运行时的时候就带上了）
-//  · 原来的衣服网格藏起来
+//  · 显示哪一套、原来的制服藏不藏：KikoWardrobe 管
 // 衣服文件（VN3 规约，禁止再配布）只在本机 Assets/ 下，不进仓库；场景里叫 KikoOutfit 的物体就是衣服预制体实例。
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,10 @@ namespace Kiko
         /// 穿上以后新做的弹簧链（名字, 关节）——KikoPet 调裙子物理、盖腿用
         public static readonly List<(string name, List<VRM10SpringBoneJoint> joints)> Springs = new();
 
-        public static bool Apply(Vrm10Instance vrm, GameObject outfit, Action<string> log, string[] hide)
+        /// 最近一次 Apply 穿上的网格（衣柜用来显示 / 隐藏整套）
+        public static SkinnedMeshRenderer[] LastMeshes = new SkinnedMeshRenderer[0];
+
+        public static bool Apply(Vrm10Instance vrm, GameObject outfit, Action<string> log)
         {
             var body = new Dictionary<string, Transform>();
             foreach (var t in vrm.GetComponentsInChildren<Transform>(true)) if (!body.ContainsKey(t.name)) body[t.name] = t;
@@ -109,12 +112,9 @@ namespace Kiko
                 vrm.SpringBone.Springs.Add(sp);
                 Springs.Add((top.name, joints));
             }
-            // 5) 原来的衣服藏起来
-            int hidden = 0;
-            foreach (var r in vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-                if (!smrs.Contains(r) && hide.Any(h => r.name.Contains(h))) { r.enabled = false; hidden++; }
+            LastMeshes = smrs;
             outfit.SetActive(false); // 剩下的是衣服自带的那副骨架，用不着了
-            log($"dress: {smrs.Length} 个网格穿上了，骨架对齐转了 {aligned} 根，挂过来 {extraRoots.Count} 串骨骼、{Springs.Count} 条弹簧链（碰撞组 {groups.Count}），藏起原衣服 {hidden} 件");
+            log($"dress: {smrs.Length} 个网格穿上了，骨架对齐转了 {aligned} 根，挂过来 {extraRoots.Count} 串骨骼、{Springs.Count} 条弹簧链（碰撞组 {groups.Count}）");
             return true;
         }
     }

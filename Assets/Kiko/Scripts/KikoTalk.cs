@@ -258,7 +258,8 @@ namespace Kiko
             int id = Win32.PopupMenu(
                 (1, "说句话", false), (2, "摸摸头", false), (3, "打开知序（双击也行）", false), (0, "-", false),
                 (4, pet.InMini ? "找个窗口坐会儿" : "坐下歇会儿（变小去窗口上坐）", false), (7, pet.InBust ? "从任务栏上起来" : "趴在任务栏上（大头）", false),
-                (6, "走走", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (8, "变回来", false), (0, "-", false),
+                (6, "走走", false), (5, pet.Sleeping ? "叫醒她" : "去睡觉", false), (8, "变回来", false),
+                (9, pet.OutfitCount > 1 ? "换衣服（现在：" + pet.OutfitLabel + "）" : "换衣服（衣柜是空的）", false), (0, "-", false),
                 (13, "话多一点", c == 3), (12, "正常", c == 2), (11, "话少一点", c == 1), (10, "安静", c == 0), (0, "-", false),
                 (20, "退出", false));
             KikoPet.Log("menu → " + id);
@@ -290,6 +291,10 @@ namespace Kiko
                     if (pet.InMini) pet.ComeBack();
                     else if (pet.InBust) pet.ExitBust();
                     else Say("我本来就是这么大呀？", "smug", 3f);
+                    break;
+                case 9:
+                    if (pet.OutfitCount > 1) Say("换好了——" + pet.NextOutfit() + "。……看够了没？", "smug", 4f);
+                    else Say("就这一身，没得换。", "meh", 3f);
                     break;
                 case 3: OpenSite(); break;
                 case 6:

@@ -401,47 +401,73 @@ namespace Kiko.EditorTools
             Debug.Log($"[Kiko] 内衣底层放进场景了（{kept} 个网格）");
         }
 
-        const string OutfitDir = "Assets/Demicrown/Cyber Maid_Manuka";
-        static void AddOutfit()
+        // 衣柜里的衣服（都只在本机）。贴图用 Tools 里烤好的不透明版本（Assets/LocalModels/Textures/outfit_*.png）：
+        // 原贴图的丝袜、薄纱是半透明的，在透明窗口里会把桌面透出来（主人 11-10「腿不见了」）→ 透肤的地方直接把肤色烤进贴图。
+        static Material OutfitMat(string name, string baked, string fallback)
         {
-            var prefabPath = OutfitDir + "/cybermaid_Manuka.prefab";
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-            if (!prefab) { Debug.Log("[Kiko] 没有衣服预制体 " + prefabPath + "，先穿原来的制服"); return; }
-            if (AssetImporter.GetAtPath(OutfitDir + "/cybermaid_Manuka.fbx") is ModelImporter mi && !mi.isReadable) { mi.isReadable = true; mi.SaveAndReimport(); }
-            Directory.CreateDirectory("Assets/LocalModels/Materials");
-            Material Make(string name, string tex)
+            var texPath = File.Exists(baked) ? baked : fallback;
+            if (AssetImporter.GetAtPath(texPath) is TextureImporter ti && (ti.maxTextureSize != 2048 || ti.textureCompression != TextureImporterCompression.CompressedHQ))
             {
-                var texPath = $"{OutfitDir}/Materials/Texture/{tex}.png";
-                if (AssetImporter.GetAtPath(texPath) is TextureImporter ti && (ti.maxTextureSize != 2048 || ti.textureCompression != TextureImporterCompression.CompressedHQ))
-                {
-                    ti.maxTextureSize = 2048; ti.textureCompression = TextureImporterCompression.CompressedHQ; ti.anisoLevel = 8; ti.SaveAndReimport();
-                }
-                var path = $"Assets/LocalModels/Materials/{name}.mat";
-                var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
-                if (!mat) { mat = new Material(Shader.Find("lilToon")) { name = name }; AssetDatabase.CreateAsset(mat, path); }
-                LilSetup(mat, 1, true);
-                mat.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
-                mat.SetColor("_Color", Color.white);
-                mat.SetFloat("_Cutoff", 0.5f);
-                mat.SetFloat("_Cull", 0); // 裙子里面也画
-                mat.SetFloat("_UseShadow", 1);
-                mat.SetColor("_ShadowColor", new Color(0.78f, 0.78f, 0.88f, 1f));
-                mat.SetFloat("_ShadowBorder", 0.5f);
-                mat.SetFloat("_ShadowBlur", 0.2f);
-                mat.SetFloat("_OutlineWidth", 0.04f);
-                mat.SetColor("_OutlineColor", new Color(0.22f, 0.22f, 0.30f, 1f));
-                EditorUtility.SetDirty(mat);
-                return mat;
+                ti.maxTextureSize = 2048; ti.textureCompression = TextureImporterCompression.CompressedHQ; ti.anisoLevel = 8; ti.SaveAndReimport();
             }
-            Material bodyMat = Make("Outfit_Body", "c002_Body_c"), accMat = Make("Outfit_Acc", "c002_Acc_c");
-            AssetDatabase.SaveAssets();
+            Directory.CreateDirectory("Assets/LocalModels/Materials");
+            var path = $"Assets/LocalModels/Materials/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (!mat) { mat = new Material(Shader.Find("lilToon")) { name = name }; AssetDatabase.CreateAsset(mat, path); }
+            LilSetup(mat, 1, true);
+            mat.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
+            mat.SetColor("_Color", Color.white);
+            mat.SetFloat("_Cutoff", 0.5f);
+            mat.SetFloat("_Cull", 0); // 裙子里面也画
+            mat.SetFloat("_UseShadow", 1);
+            mat.SetColor("_ShadowColor", new Color(0.78f, 0.78f, 0.88f, 1f));
+            mat.SetFloat("_ShadowBorder", 0.5f);
+            mat.SetFloat("_ShadowBlur", 0.2f);
+            mat.SetFloat("_OutlineWidth", 0.04f);
+            mat.SetColor("_OutlineColor", new Color(0.22f, 0.22f, 0.30f, 1f));
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        static void PlaceOutfit(string prefabPath, string fbxPath, string label, bool keepBase, Func<SkinnedMeshRenderer, Material, Material> pick)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (!prefab) { Debug.Log("[Kiko] 没有衣服预制体 " + prefabPath + "，跳过「" + label + "」"); return; }
+            if (AssetImporter.GetAtPath(fbxPath) is ModelImporter mi && !mi.isReadable) { mi.isReadable = true; mi.SaveAndReimport(); }
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             PrefabUtility.UnpackPrefabInstance(go, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
-            go.name = "KikoOutfit";
+            go.name = "KikoOutfit_" + label;
             foreach (var t in go.GetComponentsInChildren<Transform>(true)) GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject); // VRChat 的 PhysBone 脚本这里没有
+            foreach (var a in go.GetComponentsInChildren<Animator>(true)) UnityEngine.Object.DestroyImmediate(a);
             foreach (var r in go.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-                r.sharedMaterials = r.sharedMaterials.Select(m => m && m.name.Contains("Body") ? bodyMat : accMat).ToArray();
-            Debug.Log("[Kiko] 衣服放进场景了：" + prefabPath);
+            {
+                r.sharedMaterials = r.sharedMaterials.Select(m => pick(r, m)).ToArray();
+                if (r.name.Contains("(Grab)") || r.name.Contains("Breast_big")) r.enabled = false; // VRChat 机关用的备用网格
+            }
+            var info = go.AddComponent<Kiko.KikoOutfitInfo>();
+            info.label = label; info.keepBase = keepBase;
+            Debug.Log("[Kiko] 衣服放进场景了：" + label + " ← " + prefabPath);
+        }
+
+        const string OutfitDir = "Assets/Demicrown/Cyber Maid_Manuka";
+        const string BeachDir = "Assets/relee/beach_maid";
+        static void AddOutfit()
+        {
+            const string T = "Assets/LocalModels/Textures/";
+            if (File.Exists(OutfitDir + "/cybermaid_Manuka.prefab"))
+            {
+                Material body = OutfitMat("Outfit_Body", T + "outfit_cyber_body.png", OutfitDir + "/Materials/Texture/c002_Body_c.png"),
+                         acc = OutfitMat("Outfit_Acc", T + "outfit_cyber_acc.png", OutfitDir + "/Materials/Texture/c002_Acc_c.png");
+                PlaceOutfit(OutfitDir + "/cybermaid_Manuka.prefab", OutfitDir + "/cybermaid_Manuka.fbx", "赛博女仆", true, (r, m) => m && m.name.Contains("Body") ? body : acc);
+            }
+            if (File.Exists(BeachDir + "/Prefab/Manuka/Manuka_sky.prefab") && File.Exists(T + "outfit_beach_1.png"))
+            {
+                Material m1 = OutfitMat("Outfit_Beach1", T + "outfit_beach_1.png", null), m2 = OutfitMat("Outfit_Beach2", T + "outfit_beach_2.png", null);
+                // 比基尼女仆：自己就是贴身的，下面不留底层内衣；围裙、袜子、鞋是第二张贴图
+                PlaceOutfit(BeachDir + "/Prefab/Manuka/Manuka_sky.prefab", BeachDir + "/FBX/Manuka_beach_maid.fbx", "沙滩女仆", false,
+                    (r, m) => r.name.Contains("Apron") || r.name.Contains("Socks") || r.name.Contains("Shoes") ? m2 : m1);
+            }
+            AssetDatabase.SaveAssets();
         }
 
         [MenuItem("Kiko/M2 换回 VRoid 希狐")]

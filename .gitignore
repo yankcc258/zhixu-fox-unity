@@ -46,3 +46,6 @@ crashlytics-build.properties
 # BOOTH 买的衣服（Cyber Maid for Manuka，Demicrown）
 /Assets/Demicrown/
 /Assets/Demicrown.meta
+# BOOTH 买的衣服（Beach maid for Manuka，relee）
+/Assets/relee/
+/Assets/relee.meta
