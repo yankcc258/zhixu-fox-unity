@@ -228,7 +228,7 @@ namespace Kiko
         SkinnedMeshRenderer faceSmr;
         readonly Dictionary<string, int> faceBS = new();
         [Tooltip("非 VRoid 模型的尾巴放大倍数")] public float localTailScale = 1.25f;
-        [Tooltip("非 VRoid 模型：尾巴根部往上抬多少度 / 第 3~5 节每节往下弯多少度（从裙子上方绕过去）")] public float localTailLift = 28f, localTailCurl = 8f;
+        const float LocalTailSweep = 14f; // 非 VRoid 模型：尾巴第 4~6 节每节往身后扫多少度（不存进场景，改这里就生效）
         float headTopOff = 0.26f; // 头骨到头顶（含耳朵）的高度
         void DetectModel()
         {
@@ -266,8 +266,9 @@ namespace Kiko
                 // 买来的模型尾巴本来就摆好了，只整条放大一点（希狐的大尾巴）
                 var lc = vrm.GetComponentsInChildren<Transform>(true)
                     .Where(t => t.name.StartsWith(tailPrefix) && !t.name.Contains("_end")).OrderBy(t => t.name).ToList();
-                // 尾巴是从裙腰上面伸出来的，原来的角度（斜向下 45°）正好扎进蓬蓬裙的后摆：加碰撞体会把后裙掀起来露出内衣（主人 11-10）。
-                // 改成根部先往后上方抬，中间几节再弯回来往下垂 → 从裙子上方绕过去，不碰后裙。弹簧骨在这之后才初始化，这就是它的静止形状。
+                // 作者的摆法：尾巴根在髋的高度（裙子里面），被髋上的大球碰撞体（Tail_C）往后顶开，前几节贴着身后垂到裙摆下面才露出来，尾尖往外勾。
+                // 放大 1.25 倍以后垂到地上拖着（主人 11-10）→ 上半截不动（留在裙子里，不顶后裙、不露内衣），
+                // 裙摆以下的第 4~6 节每节往身后扫一点，下半截斜着往后翘起来、离开地面。弹簧骨在这之后才初始化，这就是它的静止形状。
                 void Bend(Transform b, Vector3 dir, float deg)
                 {
                     if (b.childCount == 0) return;
@@ -276,10 +277,10 @@ namespace Kiko
                     var nd = Vector3.RotateTowards(d, dir * d.magnitude, deg * Mathf.Deg2Rad, 0);
                     b.rotation = Quaternion.FromToRotation(d, nd) * b.rotation;
                 }
-                if (lc.Count > 0) Bend(lc[0], Vector3.up, localTailLift);
-                for (int i = 2; i < Mathf.Min(5, lc.Count); i++) Bend(lc[i], Vector3.down, localTailCurl);
+                var back = (-vrm.transform.forward + Vector3.up * 0.25f).normalized;
+                for (int i = 3; i < Mathf.Min(6, lc.Count); i++) Bend(lc[i], back, LocalTailSweep);
                 if (lc.Count > 0) lc[0].localScale *= localTailScale;
-                Log($"tail posed (local): {lc.Count} bones lift {localTailLift} curl {localTailCurl} scale {localTailScale}");
+                Log($"tail posed (local): {lc.Count} bones sweep {LocalTailSweep} scale {localTailScale}");
                 return;
             }
             var chain = vrm.GetComponentsInChildren<Transform>(true)
