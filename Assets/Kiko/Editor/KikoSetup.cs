@@ -436,7 +436,7 @@ namespace Kiko.EditorTools
             return mat;
         }
 
-        static void PlaceOutfit(string prefabPath, string fbxPath, string label, bool keepBase, Func<SkinnedMeshRenderer, Material, Material> pick)
+        static void PlaceOutfit(string prefabPath, string fbxPath, string label, bool keepBase, Func<SkinnedMeshRenderer, Material, Material> pick, string[] off = null)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             if (!prefab) { Debug.Log("[Kiko] 没有衣服预制体 " + prefabPath + "，跳过「" + label + "」"); return; }
@@ -450,10 +450,30 @@ namespace Kiko.EditorTools
             {
                 r.sharedMaterials = r.sharedMaterials.Select(m => pick(r, m)).ToArray();
                 if (r.name.Contains("(Grab)") || r.name.Contains("Breast_big")) r.enabled = false; // VRChat 机关用的备用网格
+                if (off != null && off.Any(o => r.name.Contains(o))) r.enabled = false; // 这套衣服里不要的部件
             }
             var info = go.AddComponent<Kiko.KikoOutfitInfo>();
             info.label = label; info.keepBase = keepBase;
             Debug.Log("[Kiko] 衣服放进场景了：" + label + " ← " + prefabPath);
+        }
+
+        // 主人 11-10：泳装（沙滩女仆）的丝袜去掉，只留腿环
+        static readonly string[] BeachOff = { "High_Knee_Socks" };
+
+        // 只改场景里已有衣服的部件开关，不重建场景（主人自己在场景里调过的东西不会被 M1 冲掉）
+        [MenuItem("Kiko/M1a 更新衣服部件开关（不重建场景）")]
+        public static void RefreshOutfitParts()
+        {
+            int n = 0;
+            foreach (var info in UnityEngine.Object.FindObjectsByType<Kiko.KikoOutfitInfo>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (!info.label.Contains("沙滩")) continue;
+                foreach (var r in info.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                    if (r.enabled && BeachOff.Any(o => r.name.Contains(o))) { r.enabled = false; EditorUtility.SetDirty(r); n++; }
+            }
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            if (n > 0) { EditorSceneManager.MarkSceneDirty(scene); EditorSceneManager.SaveScene(scene); }
+            Debug.Log($"[Kiko] 衣服部件开关：关掉 {n} 个（{scene.path}）");
         }
 
         const string OutfitDir = "Assets/Demicrown/Cyber Maid_Manuka";
@@ -472,7 +492,7 @@ namespace Kiko.EditorTools
                 Material m1 = OutfitMat("Outfit_Beach1", T + "outfit_beach_1.png", null), m2 = OutfitMat("Outfit_Beach2", T + "outfit_beach_2.png", null);
                 // 比基尼女仆：自己就是贴身的，下面不留底层内衣；围裙、袜子、鞋是第二张贴图
                 PlaceOutfit(BeachDir + "/Prefab/Manuka/Manuka_sky.prefab", BeachDir + "/FBX/Manuka_beach_maid.fbx", "沙滩女仆", false,
-                    (r, m) => r.name.Contains("Apron") || r.name.Contains("Socks") || r.name.Contains("Shoes") ? m2 : m1);
+                    (r, m) => r.name.Contains("Apron") || r.name.Contains("Socks") || r.name.Contains("Shoes") ? m2 : m1, BeachOff);
             }
             AssetDatabase.SaveAssets();
         }
