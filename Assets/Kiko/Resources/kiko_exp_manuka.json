@@ -1,0 +1,340 @@
+{
+ "exps": [
+  {
+   "mood": "idle",
+   "names": [],
+   "values": []
+  },
+  {
+   "mood": "run",
+   "names": [
+    "mouth_wa"
+   ],
+   "values": [
+    0.5
+   ]
+  },
+  {
+   "mood": "wave",
+   "names": [
+    "eye_happy",
+    "mouth_smile 2"
+   ],
+   "values": [
+    0.6,
+    1
+   ]
+  },
+  {
+   "mood": "happy",
+   "names": [
+    "eye_happy",
+    "mouth_smile 2",
+    "option_cheek 1"
+   ],
+   "values": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "excited",
+   "names": [
+    "option_kirakira",
+    "mouth_wa",
+    "brow_up"
+   ],
+   "values": [
+    1,
+    1,
+    0.5
+   ]
+  },
+  {
+   "mood": "newyear",
+   "names": [
+    "option_kirakira",
+    "mouth_wa"
+   ],
+   "values": [
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "smug",
+   "names": [
+    "eye_doya",
+    "mouth_ω",
+    "brow_tsuri"
+   ],
+   "values": [
+    1,
+    1,
+    0.5
+   ]
+  },
+  {
+   "mood": "smirk",
+   "names": [
+    "eye_jito",
+    "にやり"
+   ],
+   "values": [
+    0.7,
+    1
+   ]
+  },
+  {
+   "mood": "scheme",
+   "names": [
+    "eye_jito 2",
+    "mouth_ω",
+    "brow_anger",
+    "option_shadow"
+   ],
+   "values": [
+    1,
+    1,
+    0.4,
+    0.6
+   ]
+  },
+  {
+   "mood": "tease",
+   "names": [
+    "ウィンク",
+    "mouth_tehe"
+   ],
+   "values": [
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "bleh",
+   "names": [
+    "eye_> <",
+    "mouth_tang_a"
+   ],
+   "values": [
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "angry",
+   "names": [
+    "eye_mukamuka",
+    "brow_anger",
+    "mouth_giza",
+    "option_shadow"
+   ],
+   "values": [
+    1,
+    1,
+    1,
+    0.8
+   ]
+  },
+  {
+   "mood": "pout",
+   "names": [
+    "eye_jito 3",
+    "brow_trouble",
+    "mouth_sad 2",
+    "option_cheek 1"
+   ],
+   "values": [
+    0.8,
+    0.6,
+    0.7,
+    1
+   ]
+  },
+  {
+   "mood": "pat",
+   "names": [
+    "eye_nagomi",
+    "mouth_ω",
+    "option_cheek 1"
+   ],
+   "values": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "sleepy",
+   "names": [
+    "eye_sleep",
+    "mouth_○"
+   ],
+   "values": [
+    0.6,
+    0.3
+   ]
+  },
+  {
+   "mood": "wake",
+   "names": [
+    "eye_sleep",
+    "mouth_○"
+   ],
+   "values": [
+    0.5,
+    0.5
+   ]
+  },
+  {
+   "mood": "sleep",
+   "names": [
+    "eye_sleep"
+   ],
+   "values": [
+    1
+   ]
+  },
+  {
+   "mood": "sleepBottom",
+   "names": [
+    "eye_sleep"
+   ],
+   "values": [
+    1
+   ]
+  },
+  {
+   "mood": "surprised",
+   "names": [
+    "eye_O_O",
+    "brow_surprised",
+    "mouth_○"
+   ],
+   "values": [
+    1,
+    1,
+    0.8
+   ]
+  },
+  {
+   "mood": "dangle",
+   "names": [
+    "option_guruguru",
+    "mouth_awawa",
+    "brow_trouble"
+   ],
+   "values": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "meh",
+   "names": [
+    "eye_jito",
+    "mouth_straight",
+    "option_sweat 1"
+   ],
+   "values": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "hot",
+   "names": [
+    "option_sweat 2",
+    "mouth_tang_a 3 (dog)",
+    "eye_tare"
+   ],
+   "values": [
+    1,
+    0.8,
+    0.5
+   ]
+  },
+  {
+   "mood": "cold",
+   "names": [
+    "mouth_awawa",
+    "brow_trouble 2",
+    "option_shadow"
+   ],
+   "values": [
+    1,
+    1,
+    0.4
+   ]
+  },
+  {
+   "mood": "peekBottom",
+   "names": [
+    "eye_jito",
+    "option_sweat 1",
+    "mouth_straight"
+   ],
+   "values": [
+    0.6,
+    1,
+    0.6
+   ]
+  },
+  {
+   "mood": "peekCheek",
+   "names": [
+    "eye_jito 2",
+    "brow_anger",
+    "mouth_△",
+    "option_cheek 1"
+   ],
+   "values": [
+    0.7,
+    0.5,
+    0.6,
+    1
+   ]
+  },
+  {
+   "mood": "peekHead",
+   "names": [
+    "eye_nagomi",
+    "mouth_ω",
+    "option_cheek 1"
+   ],
+   "values": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "mood": "peekEar",
+   "names": [
+    "eye_> <",
+    "mouth_awawa",
+    "option_cheek 1"
+   ],
+   "values": [
+    1,
+    0.8,
+    1
+   ]
+  }
+ ],
+ "eyesShut": [
+  "pat",
+  "sleep",
+  "sleepBottom",
+  "bleh",
+  "peekHead",
+  "peekEar",
+  "happy",
+  "tease",
+  "dangle"
+ ]
+}

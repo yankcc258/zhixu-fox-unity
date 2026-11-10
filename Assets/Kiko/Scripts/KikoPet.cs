@@ -93,6 +93,7 @@ namespace Kiko
             cam = Camera.main;
             vrm = FindAnyObjectByType<Vrm10Instance>();
             if (!vrm) { Log("没找到 Vrm10Instance"); return; }
+            DetectModel();
             gameObject.AddComponent<KikoLate>().pet = this;
             talk = gameObject.AddComponent<KikoTalk>();
             Brain = gameObject.AddComponent<KikoBrain>();
@@ -101,10 +102,11 @@ namespace Kiko
             var json = Resources.Load<TextAsset>("kiko_acts");
             if (json) { acts = KikoActs.Load(json.text); Log($"acts {acts.Clips.Count} exps {acts.Exp.Count}"); }
             // 屑狐狸表情（主人：表情太乖了）：覆盖/新增几种心情的表情，数据在 Resources/kiko_exp_kuzu.json
-            var kuzu = Resources.Load<TextAsset>("kiko_exp_kuzu");
+            var kuzu = Resources.Load<TextAsset>(vroid ? "kiko_exp_kuzu" : "kiko_exp_manuka");
             if (acts != null && kuzu)
             {
                 var k = JsonUtility.FromJson<KikoActData>(kuzu.text);
+                if (!vroid) { acts.Exp.Clear(); acts.EyesShut.Clear(); foreach (var m0 in k.eyesShut) acts.EyesShut.Add(m0); }
                 foreach (var e in k.exps)
                 {
                     var m = new Dictionary<string, float>();
@@ -216,10 +218,44 @@ namespace Kiko
 
         // 尾巴：模型里的静止姿势基本是朝正后方垂着，从正面只露一点尾尖（主人：看不见尾巴）。
         // 在弹簧骨初始化之前（Awake）把每节往侧面、往上再弯一点，弹簧骨就把这个当静止姿势，还是会跟着晃
+        // ---------- 换模型（11-10 起：BOOTH 买的马努卡改成希狐；模型文件不进仓库，在 Assets/LocalModels/）----------
+        // VRoid 版：骨骼叫 J_Opt_C_FoxTail*、表情用 VRM 表情 + Fcl 形态键；别的模型：尾巴骨骼名里带 tail，表情直接写脸上的形态键
+        bool vroid = true;
+        string tailPrefix = "J_Opt_C_FoxTail";
+        SkinnedMeshRenderer faceSmr;
+        readonly Dictionary<string, int> faceBS = new();
+        float headTopOff = 0.26f; // 头骨到头顶（含耳朵）的高度
+        void DetectModel()
+        {
+            var all = vrm.GetComponentsInChildren<Transform>(true);
+            vroid = all.Any(t => t.name.StartsWith("J_Opt_C_FoxTail"));
+            if (vroid) return;
+            var tail = all.FirstOrDefault(t => t.name.ToLowerInvariant().Contains("tail") && !t.name.Contains("_end") && t.GetComponent<Renderer>() == null && t.childCount > 0);
+            tailPrefix = tail ? tail.name : "__no_tail__";
+            // 脸：形态键最多的那个网格
+            faceSmr = vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true).OrderByDescending(r => r.sharedMesh ? r.sharedMesh.blendShapeCount : 0).FirstOrDefault();
+            if (faceSmr) for (int i = 0; i < faceSmr.sharedMesh.blendShapeCount; i++) faceBS[faceSmr.sharedMesh.GetBlendShapeName(i)] = i;
+            // 希狐化：兽耳 → 狐耳；胸前「マヌカ」名牌藏起来
+            foreach (var r in vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (r.name.Contains("nameplate")) r.enabled = false;
+                int fox = r.sharedMesh ? r.sharedMesh.GetBlendShapeIndex("ear_fox") : -1;
+                if (fox >= 0) r.SetBlendShapeWeight(fox, 100);
+            }
+            // 头顶在哪（取景、气泡位置用）：静止姿势下所有网格的最高点
+            if (vrm.TryGetBoneTransform(HumanBodyBones.Head, out var head) && head)
+            {
+                float top = vrm.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).Max(r => r.bounds.max.y);
+                headTopOff = Mathf.Clamp(top - head.position.y + 0.02f, 0.2f, 0.5f);
+            }
+            Log($"model: 非 VRoid（tail {tailPrefix}，脸 {(faceSmr ? faceSmr.name : "?")} {faceBS.Count} 形态键，头顶 +{headTopOff:F2}m）");
+        }
+
         void PoseTail()
         {
+            if (!vroid) return; // 买来的模型尾巴本来就摆好了
             var chain = vrm.GetComponentsInChildren<Transform>(true)
-                .Where(t => t.name.StartsWith("J_Opt_C_FoxTail") && !t.name.Contains("_end"))
+                .Where(t => t.name.StartsWith(tailPrefix) && !t.name.Contains("_end"))
                 .OrderBy(t => t.name).ToList();
             for (int i = 0; i < chain.Count; i++)
             {
@@ -343,10 +379,9 @@ namespace Kiko
         {
             foreach (var j in vrm.GetComponentsInChildren<VRM10SpringBoneJoint>(true))
             {
-                if (!j.name.StartsWith("J_Opt_C_FoxTail")) continue;
-                j.m_stiffnessForce = tailStiff;
-                j.m_gravityPower = tailGravity;
-                j.m_dragForce = tailDrag;
+                if (!j.name.StartsWith(tailPrefix)) continue;
+                if (vroid) { j.m_stiffnessForce = tailStiff; j.m_dragForce = tailDrag; j.m_gravityPower = tailGravity; }
+                else j.m_gravityPower = Mathf.Max(j.m_gravityPower, 0.15f); // 买来的模型：硬度阻尼用作者调好的，只加一点重力让它跟着晃
                 j.m_gravityDir = Vector3.down;
                 tailJoints.Add(j);
             }
@@ -360,7 +395,7 @@ namespace Kiko
         {
             if (tailSkirtPush <= 0) return;
             var chain = vrm.GetComponentsInChildren<Transform>(true)
-                .Where(t => t.name.StartsWith("J_Opt_C_FoxTail") && !t.name.Contains("_end"))
+                .Where(t => t.name.StartsWith(tailPrefix) && !t.name.Contains("_end"))
                 .OrderBy(t => t.name).ToList();
             var smr = vrm.GetComponentsInChildren<SkinnedMeshRenderer>(true)
                 .FirstOrDefault(r => r.sharedMaterials.Any(m => m && m.name.Contains("FoxTail")));
@@ -425,7 +460,7 @@ namespace Kiko
             vrm.SpringBone.ColliderGroups.Add(calves);
             // 尾巴本身也躲开大腿（用模型自带的大腿碰撞组），关节半径按尾巴粗细的一半
             foreach (var sp in vrm.SpringBone.Springs)
-                if (sp.Joints.Count > 0 && sp.Joints[0] && sp.Joints[0].name.StartsWith("J_Opt_C_FoxTail"))
+                if (sp.Joints.Count > 0 && sp.Joints[0] && sp.Joints[0].name.StartsWith(tailPrefix))
                 {
                     if (!sp.ColliderGroups.Contains(calves)) sp.ColliderGroups.Add(calves);
                     foreach (var g in vrm.SpringBone.ColliderGroups)
@@ -465,7 +500,7 @@ namespace Kiko
                     if (m && m.name.Contains("FoxTail"))
                         Log($"tail renderer {r.name} enabled={r.enabled} active={r.gameObject.activeInHierarchy} visible={r.isVisible} bounds={r.bounds.center:F3}/{r.bounds.size:F3} shader={m.shader.name} queue={m.renderQueue} cutoff={(m.HasProperty("_Cutoff") ? m.GetFloat("_Cutoff") : -1):F2}");
             foreach (var t in vrm.GetComponentsInChildren<Transform>(true))
-                if (t.name.StartsWith("J_Opt_C_FoxTail")) Log($"tail bone {t.name} pos={t.position:F3}");
+                if (t.name.StartsWith(tailPrefix)) Log($"tail bone {t.name} pos={t.position:F3}");
             rig.TryGetValue(HumanBodyBones.Hips, out var hips);
             if (hips) Log($"hips pos={hips.position:F3} cam={cam.transform.position:F3}");
         }
@@ -475,7 +510,7 @@ namespace Kiko
         {
             // 头顶到脚底整个人放进画面（上下留 3%），和 three.js 版 frameCamera 一样
             vrm.TryGetBoneTransform(HumanBodyBones.Head, out var head);
-            float top = head.position.y + 0.26f, bottom = 0f;
+            float top = head.position.y + headTopOff, bottom = 0f;
             float hh = (top - bottom) * 1.06f;
             // 人物占窗口下面 baseHeight 那一段，上面 bubbleSpace 留给气泡
             float figBottom = (top + bottom) / 2f - hh / 2f, total = hh * WinH / baseHeight;
@@ -1124,7 +1159,8 @@ namespace Kiko
             {
                 float w = kv.Value;
                 if (kv.Key == "blink") w = Mathf.Max(w, blink);
-                ex.SetWeight(Key(kv.Key), Mathf.Clamp01(w));
+                if (faceBS.TryGetValue(kv.Key, out int bi)) faceSmr.SetBlendShapeWeight(bi, Mathf.Clamp01(w) * 100f); // 非 VRoid：直接写脸上的形态键
+                else ex.SetWeight(Key(kv.Key), Mathf.Clamp01(w));
             }
             if (!expNow.ContainsKey("blink")) ex.SetWeight(ExpressionKey.Blink, blink);
         }

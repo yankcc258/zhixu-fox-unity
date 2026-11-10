@@ -38,3 +38,7 @@ crashlytics-build.properties
 /Assets/LocalMotions.meta
 /Assets/AnimeGirlIdleAnimations_free/
 /Assets/AnimeGirlIdleAnimations_free.meta
+
+# 买来的模型（BOOTH，VN3 规约禁止再配布）：只在本机。仓库转私有以后再考虑放进来
+/Assets/LocalModels/
+/Assets/LocalModels.meta

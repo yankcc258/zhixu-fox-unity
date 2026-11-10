@@ -307,8 +307,34 @@ namespace Kiko.EditorTools
         }
 
         // ---------------- ③ 场景 ----------------
+        // ---------------- 换模型：买来的模型（不进仓库）放 Assets/LocalModels/，场景也生成在那里 ----------------
+        const string LocalVrm = "Assets/LocalModels/manuka.vrm", LocalScene = "Assets/LocalModels/PetLocal.unity";
+        static bool UseLocal => EditorPrefs.GetBool("kiko.localModel", false) && File.Exists(LocalScene);
+        static string ActiveScene => UseLocal ? LocalScene : ScenePath;
+
+        [MenuItem("Kiko/M1 换成马努卡（LocalModels／manuka.vrm）")]
+        public static void UseManuka()
+        {
+            if (!File.Exists(LocalVrm)) { Debug.LogError("[Kiko] 没有 " + LocalVrm); return; }
+            AssetDatabase.ImportAsset(LocalVrm);
+            CreateSceneFor(LocalVrm, LocalScene);
+            EditorPrefs.SetBool("kiko.localModel", true);
+            Debug.Log("[Kiko] 现在用马努卡：Play / 打包 都是 " + LocalScene);
+        }
+
+        [MenuItem("Kiko/M2 换回 VRoid 希狐")]
+        public static void UseVroid()
+        {
+            EditorPrefs.SetBool("kiko.localModel", false);
+            EditorSceneManager.OpenScene(ScenePath);
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+            Debug.Log("[Kiko] 现在用 VRoid 希狐：" + ScenePath);
+        }
+
         [MenuItem("Kiko/3 生成场景")]
-        public static void CreateScene()
+        public static void CreateScene() => CreateSceneFor(VrmPath, ScenePath);
+
+        static void CreateSceneFor(string VrmPath, string ScenePath)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -351,13 +377,13 @@ namespace Kiko.EditorTools
             Directory.CreateDirectory(Path.GetDirectoryName(BuildPath));
             var r = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { ScenePath },
+                scenes = new[] { ActiveScene },
                 locationPathName = BuildPath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.CompressWithLz4HC, // 贴图还没压成 BC7 前，先靠 LZ4HC 把包压小
             });
             var mb = r.summary.totalSize / 1048576.0;
-            Debug.Log($"[Kiko] ④ 打包 {r.summary.result}：{BuildPath}，{mb:F1} MB，{r.summary.totalTime.TotalSeconds:F0} 秒，错误 {r.summary.totalErrors}");
+            Debug.Log($"[Kiko] ④ 打包（{ActiveScene}）{r.summary.result}：{BuildPath}，{mb:F1} MB，{r.summary.totalTime.TotalSeconds:F0} 秒，错误 {r.summary.totalErrors}");
             if (Application.isBatchMode && r.summary.result != BuildResult.Succeeded) EditorApplication.Exit(1);
         }
 

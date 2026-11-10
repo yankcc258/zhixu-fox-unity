@@ -59,7 +59,7 @@ namespace Kiko
             get
             {
                 if (!ready || !rig.TryGetValue(HumanBodyBones.Head, out var h)) return bubbleSpace * scale;
-                return Screen.height - cam.WorldToScreenPoint(h.position + Vector3.up * 0.24f).y;
+                return Screen.height - cam.WorldToScreenPoint(h.position + Vector3.up * (headTopOff - 0.02f)).y;
             }
         }
 
@@ -112,7 +112,7 @@ namespace Kiko
         }
 
         float bustMeasureAt;
-        void BustView(float ledge, float dur) => SetView(ledge, (restHeadY + 0.3f - ledge) * WinH / baseHeight * 1.1f, dur);
+        void BustView(float ledge, float dur) => SetView(ledge, (restHeadY + headTopOff + 0.04f - ledge) * WinH / baseHeight * 1.1f, dur);
 
         void MeasureBust()
         {
