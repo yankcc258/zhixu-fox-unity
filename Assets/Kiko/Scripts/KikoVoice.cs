@@ -3,6 +3,7 @@
 //    一阵子没说话（默认 10 分钟）就关掉把显存还回去；她退出时一起关。不用手动开任何东西。
 //  · 新的一句会顶掉上一句（还在合成的取消，正在放的停下）——气泡换了，声音也跟着换。
 //  · 括号里的动作描写、表情符号不念；念不出字的（「……」）不送。
+//  · 长的话按句子分开，合成好一句先放一句，不用等整段。
 //  · 短句存在 persistentDataPath/voice/ 里，下次同一句直接放，不用引擎（戳她的台词来回就那些）。
 //  · 有日语版的句子念日语、气泡还是中文：本地台词查 Resources/kiko_lines_ja.json，知序的回复看它带不带 ja 字段；没有日语版就照气泡念中文。
 //  · 右键菜单「出声说话」开关，存 PlayerPrefs kiko.voice（默认开）；关掉时引擎也关。
@@ -12,6 +13,7 @@
 // 本机 http 不走 UnityWebRequest（Unity 默认不让连 http），用 System.Net.Http。
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -33,7 +35,8 @@ namespace Kiko
         public bool japanese = true;     // 有日语版的句子念日语（气泡还是中文）；false = 全部照气泡念中文
         public int port = 9880;
         public float idleMinutes = 10;
-        public int sampleSteps = 32;
+        public int steps = 8;            // 采样步数：V4 推理页的默认就是 8；32 更细但慢三四倍
+        public bool warmOnStart = true;  // 她一上桌面就先把引擎叫起来（false = 等到要说话才开）
         public int topK = 15;
         public float speed = 1f;
         public float volume = 0.9f;
@@ -100,6 +103,11 @@ namespace Kiko
             KikoPet.Log($"voice: {(Enabled ? "on" : "off")}，GPT-SoVITS {cfg.gsvRoot}，参考音频 {refPath ?? "没找到"}，{cfg.idleMinutes} 分钟不说话关引擎");
         }
 
+        void Start()
+        {
+            if (cfg.warmOnStart) Warm();
+        }
+
         void LoadConfig()
         {
             try
@@ -110,7 +118,11 @@ namespace Kiko
                     Directory.CreateDirectory(ConfigDir);
                     File.WriteAllText(path, JsonUtility.ToJson(cfg, true), new UTF8Encoding(false));
                 }
-                cfg = JsonUtility.FromJson<VoiceConfig>(File.ReadAllText(path, Encoding.UTF8)) ?? new VoiceConfig();
+                string old = File.ReadAllText(path, Encoding.UTF8);
+                cfg = JsonUtility.FromJson<VoiceConfig>(old) ?? new VoiceConfig();
+                // 新加的设置项补进文件里（原来填的不动）
+                string now = JsonUtility.ToJson(cfg, true);
+                if (now != old) File.WriteAllText(path, now, new UTF8Encoding(false));
                 cfg.gsvRoot = (cfg.gsvRoot ?? "").Trim().TrimEnd('\\', '/');
                 if (cfg.port < 1024 || cfg.port > 65535) cfg.port = 9880;
                 cfg.idleMinutes = Mathf.Max(1f, cfg.idleMinutes);
@@ -208,6 +220,13 @@ namespace Kiko
                 if (es != Engine.Starting) yield break;
                 if (pingOk)
                 {
+                    // 热身：第一句要处理参考音频、显卡也是冷的，会多花三四秒 → 先让它念一句没人听的
+                    var warm = new StringContent(JsonUtility.ToJson(MakeReq("こんこん。", "ja")), Encoding.UTF8, "application/json");
+                    var wt = http.PostAsync(Base + "/tts", warm);
+                    while (!wt.IsCompleted) yield return null;
+                    if (!wt.IsFaulted && !wt.IsCanceled) wt.Result.Dispose();
+                    warm.Dispose();
+                    if (es != Engine.Starting) yield break;
                     es = Engine.Ready; lastUsed = Time.unscaledTime;
                     KikoPet.Log($"voice: 语音引擎好了（{Time.realtimeSinceStartup - t0:F0} 秒）");
                     yield break;
@@ -265,7 +284,7 @@ namespace Kiko
             if (!Enabled || !isActiveAndEnabled) return;
             var t = Clean(line);
             if (t.Length == 0) return;
-            StartCoroutine(SpeakCo(t, string.IsNullOrEmpty(lang) ? cfg.textLang : lang, gen));
+            StartCoroutine(SpeakCo(Split(t), string.IsNullOrEmpty(lang) ? cfg.textLang : lang, gen));
         }
 
         public void Stop()
@@ -276,97 +295,148 @@ namespace Kiko
             Mouth = 0;
         }
 
+        // 一句一句合成、合成好一句就先放一句：长回复不用等整段都好了才出声
+        static readonly Regex SentenceEnd = new Regex(@"(?<=[。！？!?…]+)(?![。！？!?…])");
+        static List<string> Split(string t)
+        {
+            var parts = new List<string>();
+            string cur = "";
+            foreach (var piece in SentenceEnd.Split(t))
+            {
+                cur += piece;
+                if (cur.Length >= 8 && Sayable.IsMatch(cur)) { parts.Add(cur.Trim()); cur = ""; } // 太短的（「ふん。」）并到下一句
+            }
+            if (cur.Trim().Length > 0)
+            {
+                if (parts.Count > 0 && (cur.Length < 8 || !Sayable.IsMatch(cur))) parts[parts.Count - 1] += cur.Trim();
+                else parts.Add(cur.Trim());
+            }
+            return parts;
+        }
+
         string CachePath(string t, string lang)
         {
             using var sha = SHA1.Create();
-            var h = sha.ComputeHash(Encoding.UTF8.GetBytes($"{cfg.promptText}|{lang}|{cfg.sampleSteps}|{cfg.topK}|{cfg.speed}|{t}"));
+            var h = sha.ComputeHash(Encoding.UTF8.GetBytes($"{cfg.promptText}|{lang}|{cfg.steps}|{cfg.topK}|{cfg.speed}|{t}"));
             return Path.Combine(dataDir, "voice", BitConverter.ToString(h, 0, 10).Replace("-", "") + ".wav");
         }
 
-        IEnumerator SpeakCo(string t, string lang, int id)
+        TtsReq MakeReq(string t, string lang) => new TtsReq
         {
-            byte[] wav = null;
-            string file = CachePath(t, lang);
+            text = t, text_lang = lang, ref_audio_path = refPath, prompt_lang = cfg.promptLang, prompt_text = cfg.promptText,
+            top_k = cfg.topK, speed_factor = cfg.speed, sample_steps = cfg.steps,
+            // 已经按句子分好了，短的不让引擎再按逗号切（切碎了每段都有固定开销，停顿也怪）；很长的一句才让它自己切
+            text_split_method = t.Length <= 60 ? "cut0" : "cut5",
+        };
+
+        class Job { public int id; public bool done, abort; public readonly Queue<AudioClip> clips = new Queue<AudioClip>(); }
+
+        IEnumerator SpeakCo(List<string> parts, string lang, int id)
+        {
+            var job = new Job { id = id };
             float asked = Time.realtimeSinceStartup;
-            if (File.Exists(file))
+            bool started = false;
+            StartCoroutine(Fetch(job, parts, lang));
+            while (id == gen)
             {
-                try { wav = File.ReadAllBytes(file); } catch { }
-            }
-            if (wav == null)
-            {
-                if (Time.unscaledTime < retryAt) yield break;
-                // 引擎没开就开（第一句要等它把模型装进显卡）
-                lastUsed = Time.unscaledTime;
-                if (es == Engine.Off) StartCoroutine(StartEngine());
-                while (es == Engine.Starting)
+                if (job.clips.Count > 0)
                 {
-                    if (id != gen) yield break;
+                    // 等太久了（引擎刚启动）：已经存下来了，这次不放
+                    if (!started && Time.realtimeSinceStartup - asked > 45f) break;
+                    started = true;
+                    var clip = job.clips.Dequeue();
+                    source.clip = clip;
+                    source.volume = cfg.volume;
+                    source.Play();
+                    if (talk) talk.Hold(clip.length + 0.6f); // 话没说完气泡别收
+                    float m = Mouth;
+                    while (id == gen && source.clip == clip && source.isPlaying)
+                    {
+                        source.GetOutputData(buf, 0);
+                        float sum = 0;
+                        for (int i = 0; i < buf.Length; i++) sum += buf[i] * buf[i];
+                        float target = Mathf.Clamp01(Mathf.Sqrt(sum / buf.Length) * 9f / Mathf.Max(0.05f, cfg.volume));
+                        m += (target - m) * (target > m ? 0.6f : 0.25f); // 张嘴快、合嘴慢一点
+                        Mouth = m;
+                        yield return null;
+                    }
+                    if (source.clip == clip) { source.Stop(); source.clip = null; Mouth = 0; }
+                    Destroy(clip);
+                }
+                else if (job.done) break;
+                else
+                {
+                    if (started && talk) talk.Hold(1f); // 下一句还在合成：气泡先留着
                     yield return null;
                 }
-                if (es != Engine.Ready || id != gen) yield break;
+            }
+            job.abort = true;
+            while (job.clips.Count > 0) Destroy(job.clips.Dequeue());
+        }
 
-                var mine = cts = new CancellationTokenSource();
-                var req = new TtsReq
-                {
-                    text = t, text_lang = lang, ref_audio_path = refPath, prompt_lang = cfg.promptLang, prompt_text = cfg.promptText,
-                    top_k = cfg.topK, speed_factor = cfg.speed, sample_steps = cfg.sampleSteps,
-                };
-                var body = new StringContent(JsonUtility.ToJson(req), Encoding.UTF8, "application/json");
-                float t0 = Time.realtimeSinceStartup;
-                var task = http.PostAsync(Base + "/tts", body, mine.Token);
-                while (!task.IsCompleted) yield return null;
-                body.Dispose();
-                if (cts == mine) cts = null;
-                mine.Dispose();
-                lastUsed = Time.unscaledTime;
-                if (task.IsCanceled || (id != gen && task.IsFaulted)) yield break; // 被新的一句顶掉了
-                if (task.IsFaulted)
-                {
-                    // 引擎没了（崩了 / 被别人关了）：下次再说话时重新开
-                    StopEngine("连不上");
-                    Fail("连不上语音引擎：" + (task.Exception?.GetBaseException().Message ?? "?"), 20f);
-                    yield break;
-                }
-                var res = task.Result;
-                var read = res.Content.ReadAsByteArrayAsync();
-                while (!read.IsCompleted) yield return null;
-                bool ok = res.IsSuccessStatusCode && !read.IsFaulted;
-                int code = (int)res.StatusCode;
-                var data = read.IsFaulted ? null : read.Result;
-                res.Dispose();
-                if (!ok)
-                {
-                    string why = data != null ? Encoding.UTF8.GetString(data, 0, Mathf.Min(data.Length, 400)) : "";
-                    KikoPet.Log($"voice: 这句没念出来 {code} {why}");
-                    yield break;
-                }
-                wav = data;
-                told = false;
-                KikoPet.Log($"voice: 合成 {lang} {t.Length} 字 {Time.realtimeSinceStartup - t0:F1}s {wav.Length / 1024}KB");
-                if (t.Length <= 80)
-                    try { Directory.CreateDirectory(Path.GetDirectoryName(file)); File.WriteAllBytes(file, wav); } catch { }
-                // 合成好了但气泡已经换了 / 等太久了（引擎刚启动）：存下来，这次不放
-                if (id != gen || Time.realtimeSinceStartup - asked > 45f) yield break;
-            }
-            var clip = ParseWav(wav);
-            if (!clip) { KikoPet.Log("voice: 读不懂返回的 wav"); try { File.Delete(file); } catch { } yield break; }
-            source.clip = clip;
-            source.volume = cfg.volume;
-            source.Play();
-            if (talk) talk.Hold(clip.length + 0.6f); // 话没说完气泡别收
-            float m = 0;
-            while (id == gen && source.clip == clip && source.isPlaying)
+        // 按顺序把每一句变成 AudioClip 放进 job.clips（存过的直接读，没存过的找引擎合成）
+        IEnumerator Fetch(Job job, List<string> parts, string lang)
+        {
+            foreach (var t in parts)
             {
-                source.GetOutputData(buf, 0);
-                float sum = 0;
-                for (int i = 0; i < buf.Length; i++) sum += buf[i] * buf[i];
-                float target = Mathf.Clamp01(Mathf.Sqrt(sum / buf.Length) * 9f / Mathf.Max(0.05f, cfg.volume));
-                m += (target - m) * (target > m ? 0.6f : 0.25f); // 张嘴快、合嘴慢一点
-                Mouth = m;
-                yield return null;
+                if (job.id != gen || job.abort) break;
+                byte[] wav = null;
+                string file = CachePath(t, lang);
+                if (File.Exists(file))
+                {
+                    try { wav = File.ReadAllBytes(file); } catch { }
+                }
+                if (wav == null)
+                {
+                    if (Time.unscaledTime < retryAt) break;
+                    // 引擎没开就开（要等它把模型装进显卡）
+                    lastUsed = Time.unscaledTime;
+                    if (es == Engine.Off) StartCoroutine(StartEngine());
+                    while (es == Engine.Starting && job.id == gen) yield return null;
+                    if (es != Engine.Ready || job.id != gen || job.abort) break;
+
+                    var mine = cts = new CancellationTokenSource();
+                    var body = new StringContent(JsonUtility.ToJson(MakeReq(t, lang)), Encoding.UTF8, "application/json");
+                    float t0 = Time.realtimeSinceStartup;
+                    var task = http.PostAsync(Base + "/tts", body, mine.Token);
+                    while (!task.IsCompleted) yield return null;
+                    body.Dispose();
+                    if (cts == mine) cts = null;
+                    mine.Dispose();
+                    lastUsed = Time.unscaledTime;
+                    if (task.IsCanceled || (job.id != gen && task.IsFaulted)) break; // 被新的一句顶掉了
+                    if (task.IsFaulted)
+                    {
+                        // 引擎没了（崩了 / 被别人关了）：下次再说话时重新开
+                        StopEngine("连不上");
+                        Fail("连不上语音引擎：" + (task.Exception?.GetBaseException().Message ?? "?"), 20f);
+                        break;
+                    }
+                    var res = task.Result;
+                    var read = res.Content.ReadAsByteArrayAsync();
+                    while (!read.IsCompleted) yield return null;
+                    bool ok = res.IsSuccessStatusCode && !read.IsFaulted;
+                    int code = (int)res.StatusCode;
+                    var data = read.IsFaulted ? null : read.Result;
+                    res.Dispose();
+                    if (!ok)
+                    {
+                        string why = data != null ? Encoding.UTF8.GetString(data, 0, Mathf.Min(data.Length, 400)) : "";
+                        KikoPet.Log($"voice: 这句没念出来 {code} {why}");
+                        continue;
+                    }
+                    wav = data;
+                    told = false;
+                    KikoPet.Log($"voice: 合成 {lang} {t.Length} 字 {Time.realtimeSinceStartup - t0:F1}s {wav.Length / 1024}KB");
+                    if (t.Length <= 80)
+                        try { Directory.CreateDirectory(Path.GetDirectoryName(file)); File.WriteAllBytes(file, wav); } catch { }
+                    if (job.id != gen || job.abort) break; // 合成好了但气泡已经换了：存下来，这次不放
+                }
+                var clip = ParseWav(wav);
+                if (!clip) { KikoPet.Log("voice: 读不懂返回的 wav"); try { File.Delete(file); } catch { } continue; }
+                job.clips.Enqueue(clip);
             }
-            if (source.clip == clip) { source.Stop(); source.clip = null; Mouth = 0; }
-            Destroy(clip);
+            job.done = true;
         }
 
         void Fail(string why, float wait)
