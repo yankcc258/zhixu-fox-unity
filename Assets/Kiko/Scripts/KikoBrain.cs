@@ -88,6 +88,7 @@ namespace Kiko
         {
             Busy = true;
             talk.Say("……（竖起耳朵）", null, 40f);
+            if (pet.Voice) pet.Voice.Warm();
             var r = Req("chat", "POST", JsonUtility.ToJson(new ChatReq { message = msg }));
             yield return r.SendWebRequest();
             Busy = false;
@@ -178,6 +179,7 @@ namespace Kiko
             draft = "";
             typingSince = Time.time;
             talk.Hide();
+            if (pet.Voice) pet.Voice.Warm(); // 趁他打字先把语音引擎叫起来，回话时就不用等
             Win32.Focus(); // 让键盘输入进到这个窗口
             Input.imeCompositionMode = IMECompositionMode.On;
         }

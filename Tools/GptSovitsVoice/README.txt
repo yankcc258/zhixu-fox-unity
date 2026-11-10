@@ -1,3 +1,11 @@
+2026-11-10: Kiko no longer needs anything in this folder to be started by hand.
+KikoVoice.cs starts GPT-SoVITS api_v2.py itself (hidden, on 127.0.0.1:9880) when
+she first needs to speak, stops it after 10 idle minutes and when she exits.
+Settings: %APPDATA%\ZhixuFox\voice.json. Engine output: voice_engine.log next to
+pet.log. Only reference.wav in this folder is still used (kept out of Git).
+The WebUI bridge below (voice_bridge.py, start-voice.bat) is kept as a fallback
+and for testing; Unity does not call it any more.
+
 GPT-SoVITS voice for Kiko (Unity integration groundwork)
 
 This provides a local voice service and a Unity AudioSource component.
