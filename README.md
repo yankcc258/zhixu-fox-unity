@@ -68,7 +68,7 @@ $U = "C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe"
 
 聊天里的学习记忆问题（`offered`）不会另外播报；收到 `answered` 时显示「回答已记下，稍后批改」。评分沿用网页或后台处理，不在桌面编造分数。编号和回执存在按站点/服务身份隔离的 PlayerPrefs 中，不保存问题正文、回答或服务密钥。
 
-后端先合并知序 S/A 系列 PR，尤其幂等回执修复（见知序 `docs/desktop-attention.md`），再合并本次桌面接线。`brain.json` 继续在本机配置，不提交仓库。
+后端先合并知序 #161 → #162 → #163 → #164 → #165 → [#166（幂等回执）](https://github.com/yankcc258/yank-study-lab/pull/166)，再合并本次桌面接线。`brain.json` 继续在本机配置，不提交仓库。
 
 验证：`.NET 8` 执行 `dotnet run --project Tests/Attention/Attention.csproj`。它编译实际 `KikoBrain.cs` 与回执状态类，用替身提供 Unity UI/网络，覆盖静音、睡觉、全屏、输入、请求中变忙、断网重启及聊天去重；不代表 Unity/Windows 或语音引擎实测。Actions 有同一套无需 Unity 许可证的检查。
 
