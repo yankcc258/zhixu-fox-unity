@@ -1,9 +1,9 @@
 # 知序 Fox · 希狐 Kiko（Unity 版）
 
 Tauri 版桌宠（[zhixu-whale-maid-pet](https://github.com/yankcc258/zhixu-whale-maid-pet)）的 3D 希狐搬到 Unity：URP + lilToon + UniVRM + UniWindowController（透明窗口、鼠标穿透）。
-在功能追上来之前，Tauri 版照常用。
+当前代码已包含聊天气泡、睡觉、换装、与知序共用的聊天记忆及本机 GPT-SoVITS 语音。下面保留早期迁移目标作为背景。
 
-## 现在是「阶段 1：技术验证」
+## 早期技术验证目标（历史）
 目标是量出换引擎的 Go/No-go 五条：
 1. 画质（lilToon）明显比 Tauri 版好
 2. 待机内存 < 400MB，CPU/GPU 低到感觉不到
@@ -24,7 +24,7 @@ Tauri 版桌宠（[zhixu-whale-maid-pet](https://github.com/yankcc258/zhixu-whal
   python3 Tools/bake_vrma.py <zpm>/src/vrm/motion Assets/Kiko/Resources/kiko_acts.json Assets/Kiko/Resources/kiko_motions.json
   ```
 - 编辑器里试玩：Game 视图里按 **0–9** 换心情（idle/happy/angry/surprised/smug/sleepy/pat/wave/pout/excited），**F1** 依次播每个动作
-- 还没搬：对话气泡/台词、睡觉、贴边趴着（Peek，打算用 IK 重做）、换装、和知序聊天、自动更新
+- 已接入：对话气泡/台词、睡觉、贴边休息、换装、知序聊天与 GPT-SoVITS 语音（见 `KikoTalk` / `KikoBrain` / `KikoVoice`）。自动更新等迁移工作仍单独推进。
 
 ## 第一次打开（Unity 6000.3.28f1）
 包（UniVRM v0.131.4、lilToon 2.4.1、UniWindowController v0.9.8）直接放在 `Packages/` 里（嵌入式包），不需要装 Git。
@@ -60,3 +60,16 @@ $U = "C:\Program Files\Unity\Hub\Editor\6000.3.28f1\Editor\Unity.exe"
 - 模型：知序原创角色希狐（VRoid Studio 制作）
 - 动捕：fumi2kick「使いどころに困るモーションセット」（CC0，BOOTH 5527394）、Josie 动画重定向包的走路（CC0，BOOTH 7861818）；
   掉落/落地/跳/待机两段来自 Mixamo（用 Tauri 版 tools/vrm3d/fbx2vrma.py 重定向），只随本程序一起分发
+
+
+## v1.1.0 · Agent 提醒接入（2026-11-13）
+
+每分钟通过现有服务身份检查知序的「待你决定」。只在空闲时显示一条问题，可沿用现有语音读出；静音（Chatty=0）、隐藏、睡觉、全屏、正在输入/聊天/说话时不插话。气泡实际显示后才发送回执，断网重启只补回执，不再重复展示，十五分钟内不接着问下一题。
+
+聊天里的学习记忆问题（`offered`）不会另外播报；收到 `answered` 时显示「回答已记下，稍后批改」。评分沿用网页或后台处理，不在桌面编造分数。编号和回执存在按站点/服务身份隔离的 PlayerPrefs 中，不保存问题正文、回答或服务密钥。
+
+后端先合并知序 #161 → #162 → #163 → #164 → #165 → [#166（幂等回执）](https://github.com/yankcc258/yank-study-lab/pull/166)，再合并本次桌面接线。`brain.json` 继续在本机配置，不提交仓库。
+
+验证：`.NET 8` 执行 `dotnet run --project Tests/Attention/Attention.csproj`。它编译实际 `KikoBrain.cs` 与回执状态类，用替身提供 Unity UI/网络，覆盖静音、睡觉、全屏、输入、请求中变忙、断网重启及聊天去重；不代表 Unity/Windows 或语音引擎实测。Actions 有同一套无需 Unity 许可证的检查。
+
+Windows 接力：打开 Unity 编译；配置现有本机凭据；检验全屏/睡觉不插话、断网显示后重启不重复、聊天回答在网页待批改、语音关闭仍能看到气泡。没有改自动发布流程，也没有触发正式安装包发布。

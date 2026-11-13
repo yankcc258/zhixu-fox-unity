@@ -52,3 +52,7 @@ crashlytics-build.properties
 
 # 语音：参考音频和试听文件只在本机（つくよみちゃんコーパス 不允许再分发原始音频）
 /Tools/GptSovitsVoice/*.wav
+
+# 无 Unity 的桌面协议测试
+Tests/**/bin/
+Tests/**/obj/

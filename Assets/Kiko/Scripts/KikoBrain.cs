@@ -17,7 +17,10 @@ namespace Kiko
 {
     [Serializable] class BrainConfig { public string @base = ""; public string clientId = ""; public string clientSecret = ""; }
     [Serializable] class ChatReq { public string message; }
-    [Serializable] class ChatRes { public string reply; public string ja; public string mood; public string outfit; public string error; }
+    [Serializable] class ChatRes { public string reply; public string ja; public string mood; public string outfit; public string error; public string offered; public string answered; }
+    [Serializable] class AttentionItem { public string id; public string say; }
+    [Serializable] class AttentionRes { public bool quiet; public AttentionItem[] items; }
+    [Serializable] class AttentionSaid { public string id; }
     [Serializable] class EventReq { public string text; }
     [Serializable] class GrudgeReq { public string type; }
     [Serializable] class PayReq { public string how; }
@@ -38,7 +41,7 @@ namespace Kiko
             ["surprised"] = "surprised", ["excited"] = "excited", ["onigiri"] = "happy", ["sleepy"] = "sleepy", ["strike"] = "angry",
         };
 
-        void Awake() => LoadConfig();
+        void Awake() { LoadConfig(); LoadAttention(); }
 
         void LoadConfig()
         {
@@ -97,6 +100,8 @@ namespace Kiko
             if (r.result == UnityWebRequest.Result.Success && !string.IsNullOrEmpty(res?.reply))
             {
                 MoodMap.TryGetValue(res.mood ?? "", out var mood);
+                if (KikoAttentionState.Valid(res.offered)) RememberAttention(res.offered, true);
+                if (KikoAttentionState.Valid(res.answered)) res.reply += "\n（回答已记下，稍后批改）";
                 float sec = Mathf.Clamp(3f + res.reply.Length * 0.12f, 4f, 14f);
                 talk.Say(res.reply, mood, sec, 0, res.ja); // ja：这句话的日语（给声音用），知序没给就念中文
                 KikoPet.Log($"brain: chat ok ({res.mood}) {res.reply.Length} 字");
@@ -115,7 +120,7 @@ namespace Kiko
         float museBlockedUntil;
         public bool Muse()
         {
-            if (!Online || Busy || Time.time < museBlockedUntil) return false;
+            if (!Online || Busy || attentionBusy || attention.Cooling(NowMs) || Time.time < museBlockedUntil) return false;
             StartCoroutine(MuseCo());
             return true;
         }
@@ -168,6 +173,72 @@ namespace Kiko
             r.Dispose();
         }
 
+        // ---------- 总管的「待你决定」：一分钟看一眼，显示后才回执 ----------
+        KikoAttentionState attention = new KikoAttentionState();
+        string attentionKey;
+        float nextAttention = 15f;
+        bool attentionBusy;
+        static long NowMs => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        bool CanAttention => Online && !Mute && !Busy && !typing && pet && pet.CanChat && !pet.Sleeping
+            && talk && !talk.Hidden && talk.Chatty > 0 && !talk.Showing
+            && (!pet.Voice || !pet.Voice.Speaking) && !Win32.ForegroundFullscreen;
+
+        void LoadAttention()
+        {
+            // 按站点和服务身份隔离，配置里换账号后不会沿用另一份回执。
+            using (var sha = System.Security.Cryptography.SHA256.Create())
+                attentionKey = "kiko.attention." + BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(cfg.@base + "|" + cfg.clientId))).Replace("-", "");
+            try { attention = JsonUtility.FromJson<KikoAttentionState>(PlayerPrefs.GetString(attentionKey, "{}")) ?? new KikoAttentionState(); }
+            catch { attention = new KikoAttentionState(); }
+            attention.Clean();
+        }
+
+        void RememberAttention(string id, bool acked)
+        {
+            attention.Remember(id, NowMs, acked);
+            PlayerPrefs.SetString(attentionKey, JsonUtility.ToJson(attention));
+            PlayerPrefs.Save();
+        }
+
+        IEnumerator AttentionAck(string id)
+        {
+            using (var r = Req("attention/said", "POST", JsonUtility.ToJson(new AttentionSaid { id = id })))
+            {
+                yield return r.SendWebRequest();
+                if (r.result == UnityWebRequest.Result.Success || r.responseCode == 404) RememberAttention(id, true);
+                else KikoPet.Log($"brain: attention 回执稍后再交 ({r.responseCode})");
+            }
+        }
+
+        IEnumerator AttentionPoll()
+        {
+            attentionBusy = true;
+            try
+            {
+                foreach (var item in attention.Pending()) yield return AttentionAck(item.id);
+                if (attention.Pending().Length > 0 || !CanAttention || attention.Cooling(NowMs)) yield break;
+                AttentionRes data = null;
+                using (var r = Req("attention", "GET", null))
+                {
+                    yield return r.SendWebRequest();
+                    if (r.result != UnityWebRequest.Result.Success) { KikoPet.Log($"brain: attention 稍后再看 ({r.responseCode})"); yield break; }
+                    try { data = JsonUtility.FromJson<AttentionRes>(r.downloadHandler.text); } catch { }
+                }
+                if (data == null || data.quiet || data.items == null || !CanAttention) yield break;
+                foreach (var item in data.items)
+                {
+                    if (item == null || !KikoAttentionState.Valid(item.id) || attention.Seen(item.id) || string.IsNullOrWhiteSpace(item.say)) continue;
+                    talk.Say(item.say, "smug", Mathf.Clamp(5f + item.say.Length * 0.15f, 8f, 20f));
+                    yield return new WaitForEndOfFrame();
+                    if (!talk.IsShowing(item.say)) yield break;
+                    RememberAttention(item.id, false);
+                    yield return AttentionAck(item.id);
+                    break; // 留十五分钟给这道题，不连着问。
+                }
+            }
+            finally { attentionBusy = false; }
+        }
+
         // ---------- 输入框 ----------
         bool typing;
         string draft = "";
@@ -196,6 +267,11 @@ namespace Kiko
         {
             // 点到别的程序上了 → 收起输入框
             if (typing && Time.time - typingSince > 0.8f && !Application.isFocused) CloseInput();
+            if (Online && !Mute && !attentionBusy && Time.unscaledTime >= nextAttention)
+            {
+                nextAttention = Time.unscaledTime + 60f;
+                StartCoroutine(AttentionPoll());
+            }
         }
 
         void OnGUI()
