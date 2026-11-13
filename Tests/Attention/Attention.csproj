@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><EnableDefaultCompileItems>false</EnableDefaultCompileItems><NoWarn>0649;0169</NoWarn></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Assets/Kiko/Scripts/KikoBrain.cs" />
+    <Compile Include="../../Assets/Kiko/Scripts/KikoAttentionState.cs" />
+    <Compile Include="Stubs.cs" /><Compile Include="Program.cs" />
+  </ItemGroup>
+</Project>

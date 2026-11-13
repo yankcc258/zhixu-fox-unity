@@ -39,6 +39,8 @@ namespace Kiko
             set { PlayerPrefs.SetInt("kiko.chatty", value); PlayerPrefs.Save(); ScheduleChat(); }
         }
         public bool Showing => text != null && Time.time < until;
+        public bool Hidden => hidden;
+        public bool IsShowing(string line) => Showing && !hidden && pet && pet.Ready && text == Fill(line);
 
         void Awake()
         {

@@ -25,6 +25,20 @@ namespace Kiko
         [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
         [DllImport("user32.dll", CharSet = CharSet.Auto)] static extern int GetClassName(IntPtr hWnd, StringBuilder buf, int max);
         [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr hWnd, out RECT r);
+        [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+        public static bool ForegroundFullscreen
+        {
+            get
+            {
+                var h = GetForegroundWindow();
+                if (h == IntPtr.Zero || h == Hwnd || !GetWindowRect(h, out var r)) return false;
+                var name = new StringBuilder(64); GetClassName(h, name, name.Capacity);
+                if (name.ToString() == "Progman" || name.ToString() == "WorkerW" || name.ToString() == "Shell_TrayWnd") return false;
+                var mi = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+                if (!GetMonitorInfo(MonitorFromWindow(h, 2), ref mi)) return false;
+                return r.Left <= mi.rcMonitor.Left && r.Top <= mi.rcMonitor.Top && r.Right >= mi.rcMonitor.Right && r.Bottom >= mi.rcMonitor.Bottom;
+            }
+        }
         [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hWnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
         [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT p);
         [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr hWnd, uint flags);
@@ -280,6 +294,7 @@ namespace Kiko
             }
         }
 #else
+        public static bool ForegroundFullscreen => false;
         // 编辑器里：用 Unity 自己的窗口坐标模拟，方便在 Game 视图里点着试
         static Vector2Int _fakePos;
         public static IntPtr Hwnd => IntPtr.Zero;
