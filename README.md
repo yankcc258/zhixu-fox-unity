@@ -31,6 +31,8 @@ Tauri 版桌宠（[zhixu-whale-maid-pet](https://github.com/yankcc258/zhixu-whal
 
 ### 编辑器里（推荐）
 Unity Hub → 添加 → 从磁盘添加项目 → 选这个文件夹 → 编辑器版本选 6000.3.28f1。打开后菜单栏 **Kiko** 依次点 1、2、3、4。
+
+> ⚠️ **现在主人电脑上用的是马努卡（`Assets/LocalModels/PetLocal.unity`，只在本机）**。这种情况下不要点 Kiko/3（会生成 VRoid 旧场景，再打包就是旧模型），也不要点 Kiko/M1（会重建场景）。接手前先读 [Docs/现状与待办.md](Docs/现状与待办.md)。
 （编辑器里看不到透明效果，要打包出来看。）
 
 ### 命令行
